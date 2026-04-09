@@ -1,0 +1,12 @@
+packages:
+  - 'app'
+  - 'worker'
+  - 'plugin'
+  - 'plugin/packages/*'
+  - 'test-site'
+allowBuilds:
+  '@parcel/watcher': false
+  better-sqlite3: true
+  esbuild: true
+  sharp: false
+  workerd: true

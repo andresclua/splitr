@@ -1,0 +1,5 @@
+{
+  "imports": {
+    "@splitr/core": "../plugin/packages/core/src/index.ts"
+  }
+}

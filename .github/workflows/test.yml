@@ -1,0 +1,35 @@
+name: Test
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - run: pnpm install
+
+      - name: Run unit + integration tests
+        run: pnpm --filter app test:coverage
+
+      - name: Run Worker tests
+        run: pnpm --filter worker test
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./app/coverage/lcov.info

@@ -1,0 +1,24 @@
+{
+  "name": "splitr",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter app dev",
+    "build": "pnpm --filter app build",
+    "test": "pnpm --filter app test && pnpm --filter worker test",
+    "test:coverage": "pnpm --filter app test:coverage",
+    "worker:dev": "pnpm --filter worker dev",
+    "worker:deploy": "pnpm --filter worker deploy",
+    "test-site:dev": "pnpm --filter test-site dev",
+    "test-site:netlify": "pnpm --filter test-site dev:netlify",
+    "test-site:build": "pnpm --filter test-site build"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "pnpm": {
+    "overrides": {
+      "cookie": "^0.7.0"
+    }
+  }
+}

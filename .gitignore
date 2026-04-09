@@ -1,0 +1,40 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Nuxt
+.nuxt
+.output
+.data
+dist
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Coverage
+coverage
+.nyc_output
+
+# Editor
+.vscode
+.idea
+*.swp
+*.swo
+.DS_Store
+
+# Cloudflare
+.wrangler
+worker/dist
+
+# Plugin build
+plugin/*.zip
+
+# Local Netlify folder
+.netlify

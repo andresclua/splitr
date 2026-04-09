@@ -1,0 +1,13 @@
+name = "splitr-worker"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+SPLITR_API_URL = ""  # set to your deployed app URL, e.g. https://your-app.nuxt.dev
+# SPLITR_API_KEY is a secret — set via: wrangler secret put SPLITR_API_KEY
+
+[[kv_namespaces]]
+binding = "SPLITR_CONFIG"
+id = ""              # fill after: wrangler kv namespace create SPLITR_CONFIG
+preview_id = ""      # fill after: wrangler kv namespace create SPLITR_CONFIG --preview

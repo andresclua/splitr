@@ -1,0 +1,310 @@
+<script setup lang="ts">
+definePageMeta({ layout: 'dashboard', middleware: 'auth' })
+
+const { currentWorkspace, fetchWorkspaces } = useWorkspace()
+const toast = useToast()
+const confirm = useConfirm()
+await fetchWorkspaces()
+
+const route = useRoute()
+const slug = route.params.slug as string
+
+if (!currentWorkspace.value) {
+  await navigateTo('/dashboard', { replace: true })
+}
+
+// ── General ──────────────────────────────────────────────
+const saving = ref(false)
+const saveError = ref('')
+const saveSuccess = ref(false)
+const wsName = ref(currentWorkspace.value?.name ?? '')
+const wsDomain = ref(currentWorkspace.value?.domain ?? '')
+const wsAutoJoin = ref(currentWorkspace.value?.auto_join_domain ?? false)
+
+const saveGeneral = async () => {
+  saving.value = true; saveError.value = ''; saveSuccess.value = false
+  try {
+    await $fetch(`/api/workspaces/${slug}`, {
+      method: 'PUT',
+      body: { name: wsName.value, domain: wsDomain.value || null, auto_join_domain: wsAutoJoin.value },
+    })
+    await fetchWorkspaces()
+    saveSuccess.value = true
+    toast.success('Settings saved')
+    setTimeout(() => saveSuccess.value = false, 2500)
+  } catch (e: any) {
+    saveError.value = e?.data?.message ?? 'Failed to save'
+    toast.error(saveError.value)
+  } finally {
+    saving.value = false
+  }
+}
+
+// ── API Keys ──────────────────────────────────────────────
+interface ApiKey { id: string; key_prefix: string; created_at: string; last_used_at: string | null }
+
+const { data: keys, refresh: refreshKeys } = await useFetch<ApiKey[]>(`/api/workspaces/${slug}/keys`)
+const SESSION_KEY = `splitr-new-key-${slug}`
+const newKey = ref<string | null>(null)
+const generatingKey = ref(false)
+const copied = ref(false)
+
+// Restore key from sessionStorage if user navigated away
+onMounted(() => {
+  const stored = sessionStorage.getItem(SESSION_KEY)
+  if (stored) newKey.value = stored
+})
+
+const generateKey = async () => {
+  generatingKey.value = true
+  try {
+    const data = await $fetch<ApiKey & { key: string }>(`/api/workspaces/${slug}/keys`, { method: 'POST' })
+    newKey.value = data.key
+    sessionStorage.setItem(SESSION_KEY, data.key)
+    await refreshKeys()
+  } catch (e: any) {
+    toast.error(e?.data?.message ?? 'Failed to generate key')
+  } finally {
+    generatingKey.value = false
+  }
+}
+
+const copyKey = () => {
+  if (!newKey.value) return
+  navigator.clipboard.writeText(newKey.value)
+  copied.value = true
+  setTimeout(() => copied.value = false, 2000)
+}
+
+const dismissKey = () => {
+  newKey.value = null
+  sessionStorage.removeItem(SESSION_KEY)
+}
+
+const deleteKey = async (id: string) => {
+  const ok = await confirm.ask({
+    title: 'Delete API key?',
+    message: 'This cannot be undone. Any workers using this key will stop authenticating.',
+    confirmText: 'Delete',
+    variant: 'danger',
+  })
+  if (!ok) return
+  await $fetch(`/api/workspaces/${slug}/keys/${id}`, { method: 'DELETE' })
+  if (newKey.value) newKey.value = null
+  await refreshKeys()
+  toast.success('API key deleted')
+}
+
+// ── Members ───────────────────────────────────────────────
+interface Member { id: string; role: string; email: string; user_id: string; created_at: string }
+
+const { data: members, refresh: refreshMembers } = await useFetch<Member[]>(`/api/workspaces/${slug}/members`)
+const inviteEmail = ref('')
+const inviteRole = ref('member')
+const inviting = ref(false)
+const inviteLink = ref<string | null>(null)
+const inviteError = ref('')
+
+const sendInvite = async () => {
+  if (!inviteEmail.value.trim()) return
+  inviting.value = true; inviteError.value = ''; inviteLink.value = null
+  try {
+    const data = await $fetch<{ invite_url: string }>(`/api/workspaces/${slug}/invites`, {
+      method: 'POST',
+      body: { email: inviteEmail.value.trim(), role: inviteRole.value },
+    })
+    inviteLink.value = data.invite_url
+    inviteEmail.value = ''
+  } catch (e: any) {
+    inviteError.value = e?.data?.message ?? 'Failed to create invite'
+  } finally {
+    inviting.value = false
+  }
+}
+
+const copyInvite = () => {
+  if (!inviteLink.value) return
+  navigator.clipboard.writeText(inviteLink.value)
+}
+
+const removeMember = async (id: string) => {
+  const ok = await confirm.ask({
+    title: 'Remove member?',
+    message: 'They will lose access to this workspace immediately.',
+    confirmText: 'Remove',
+    variant: 'danger',
+  })
+  if (!ok) return
+  await $fetch(`/api/workspaces/${slug}/members/${id}`, { method: 'DELETE' })
+  await refreshMembers()
+  toast.success('Member removed')
+}
+
+const isOwner = computed(() => currentWorkspace.value?.role === 'owner')
+
+const formatDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+</script>
+
+<template>
+  <div class="p-8 max-w-2xl space-y-10">
+
+    <div>
+      <h1 class="text-2xl font-semibold text-gray-900">Settings</h1>
+      <p class="text-sm text-gray-500 mt-0.5">Manage your workspace configuration.</p>
+    </div>
+
+    <!-- General -->
+    <section class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100">
+        <h2 class="text-sm font-semibold text-gray-900">General</h2>
+      </div>
+      <form class="px-6 py-5 space-y-4" @submit.prevent="saveGeneral">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Workspace name</label>
+          <input v-model="wsName" type="text" required :disabled="!isOwner"
+            class="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">
+            Corporate domain
+            <span class="text-gray-400 font-normal ml-1">(e.g. acme.com)</span>
+          </label>
+          <input v-model="wsDomain" type="text" placeholder="acme.com" :disabled="!isOwner"
+            class="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400" />
+        </div>
+        <div class="flex items-center justify-between py-1">
+          <div>
+            <p class="text-sm font-medium text-gray-700">Auto-join by domain</p>
+            <p class="text-xs text-gray-500 mt-0.5">New signups with your domain automatically join this workspace</p>
+          </div>
+          <button type="button" :disabled="!isOwner"
+            :class="wsAutoJoin ? 'bg-blue-600' : 'bg-gray-200'"
+            class="relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors disabled:opacity-40"
+            @click="wsAutoJoin = !wsAutoJoin">
+            <span :class="wsAutoJoin ? 'translate-x-4' : 'translate-x-0.5'"
+              class="inline-block h-4 w-4 mt-0.5 rounded-full bg-white shadow transition-transform" />
+          </button>
+        </div>
+        <div v-if="isOwner" class="flex items-center gap-3 pt-1">
+          <button type="submit" :disabled="saving"
+            class="bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-40 transition-colors">
+            {{ saving ? 'Saving…' : 'Save changes' }}
+          </button>
+          <span v-if="saveSuccess" class="text-sm text-green-600">Saved!</span>
+          <span v-if="saveError" class="text-sm text-red-600">{{ saveError }}</span>
+        </div>
+      </form>
+    </section>
+
+    <!-- API Keys -->
+    <section class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <div>
+          <h2 class="text-sm font-semibold text-gray-900">API Keys</h2>
+          <p class="text-xs text-gray-500 mt-0.5">Authenticate the Cloudflare Worker with your workspace. You'll wire this up in Fase 04.</p>
+        </div>
+        <button v-if="isOwner" :disabled="generatingKey"
+          class="text-sm bg-gray-900 text-white px-3 py-1.5 rounded-lg hover:bg-gray-700 disabled:opacity-40 transition-colors"
+          @click="generateKey">
+          {{ generatingKey ? 'Generating…' : '+ New key' }}
+        </button>
+      </div>
+
+      <!-- New key banner -->
+      <div v-if="newKey" class="mx-6 mt-5 p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-3">
+        <div class="flex items-start justify-between gap-2">
+          <div>
+            <p class="text-xs font-semibold text-amber-800">Save this key — you won't be able to see it again after dismissing.</p>
+            <p class="text-xs text-amber-700 mt-0.5">Add it to your Cloudflare Worker secrets as <code class="font-mono bg-amber-100 px-1 rounded">SPLITR_API_KEY</code> (Fase 04).</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <code class="flex-1 text-xs bg-white border border-amber-200 rounded-lg px-3 py-2 font-mono text-gray-800 break-all select-all">{{ newKey }}</code>
+          <button class="shrink-0 text-xs font-medium text-amber-700 hover:text-amber-900 px-3 py-2 border border-amber-200 rounded-lg bg-white transition-colors"
+            @click="copyKey">
+            {{ copied ? '✓ Copied' : 'Copy' }}
+          </button>
+        </div>
+        <button class="text-xs text-amber-600 hover:text-amber-800 underline" @click="dismissKey">
+          I've saved it, dismiss
+        </button>
+      </div>
+
+      <div class="divide-y divide-gray-100">
+        <div v-if="!keys?.length" class="px-6 py-8 text-center text-sm text-gray-400">No API keys yet.</div>
+        <div v-for="key in keys" :key="key.id" class="px-6 py-3.5 flex items-center gap-3">
+          <div class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center shrink-0">
+            <svg class="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+            </svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <code class="text-sm font-mono text-gray-700">{{ key.key_prefix }}••••••••</code>
+            <p class="text-xs text-gray-400 mt-0.5">
+              Created {{ formatDate(key.created_at) }}
+              <span v-if="key.last_used_at"> · Last used {{ formatDate(key.last_used_at) }}</span>
+              <span v-else> · Never used</span>
+            </p>
+          </div>
+          <button v-if="isOwner" class="text-xs text-red-400 hover:text-red-600 transition-colors" @click="deleteKey(key.id)">
+            Delete
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Members -->
+    <section class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100">
+        <h2 class="text-sm font-semibold text-gray-900">Members</h2>
+      </div>
+      <div class="divide-y divide-gray-100">
+        <div v-for="member in members" :key="member.id" class="px-6 py-3.5 flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center shrink-0">
+            <span class="text-white text-xs font-semibold">{{ member.email?.[0]?.toUpperCase() }}</span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm text-gray-800 truncate">{{ member.email }}</p>
+            <p class="text-xs text-gray-400 capitalize">{{ member.role }}</p>
+          </div>
+          <button v-if="isOwner && member.role !== 'owner'"
+            class="text-xs text-red-400 hover:text-red-600 transition-colors"
+            @click="removeMember(member.id)">
+            Remove
+          </button>
+          <span v-else-if="member.role === 'owner'"
+            class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Owner</span>
+        </div>
+      </div>
+
+      <!-- Invite -->
+      <div v-if="isOwner" class="px-6 py-5 border-t border-gray-100 bg-gray-50">
+        <p class="text-sm font-medium text-gray-700 mb-3">Invite a member</p>
+        <div class="flex gap-2">
+          <input v-model="inviteEmail" type="email" placeholder="colleague@company.com"
+            class="flex-1 border border-gray-300 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <select v-model="inviteRole"
+            class="border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+            <option value="member">Member</option>
+            <option value="readonly">Read-only</option>
+          </select>
+          <button :disabled="inviting || !inviteEmail"
+            class="bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-xl hover:bg-blue-700 disabled:opacity-40 transition-colors shrink-0"
+            @click="sendInvite">
+            {{ inviting ? '…' : 'Invite' }}
+          </button>
+        </div>
+        <p v-if="inviteError" class="text-xs text-red-600 mt-2">{{ inviteError }}</p>
+
+        <div v-if="inviteLink" class="mt-3 p-3 bg-white border border-blue-200 rounded-xl">
+          <p class="text-xs text-gray-500 mb-1.5">Share this invite link (expires in 7 days):</p>
+          <div class="flex items-center gap-2">
+            <code class="flex-1 text-xs text-gray-700 truncate">{{ inviteLink }}</code>
+            <button class="text-xs text-blue-600 font-medium shrink-0" @click="copyInvite">Copy</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</template>

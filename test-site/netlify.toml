@@ -1,0 +1,26 @@
+[build]
+  command = "pnpm build"
+  publish = "dist"
+
+# Deno needs the import map to resolve @splitr/core from the monorepo
+[functions]
+  deno_import_map = "import_map.json"
+
+[dev]
+  command = "pnpm dev"
+  targetPort = 4321
+  port = 8889
+  autoLaunch = false
+
+[dev.environment]
+  SPLITR_API_KEY = "sk_live_..."   # paste your key from the Splitr dashboard → Settings → API Keys
+  SPLITR_API_URL = "http://localhost:3001"
+
+# Edge function intercepts these paths before Astro/static files are served
+[[edge_functions]]
+  function = "splitr"
+  path = "/"
+
+[[edge_functions]]
+  function = "splitr"
+  path = "/pricing"
