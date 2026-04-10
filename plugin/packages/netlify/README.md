@@ -1,11 +1,11 @@
-# @splitr/netlify
+# @koryla/netlify
 
 A/B testing for Netlify sites with zero flicker. Runs on Netlify Edge Functions (Deno).
 
 ## Installation
 
 ```bash
-npm install @splitr/netlify
+npm install @koryla/netlify
 ```
 
 ## Setup
@@ -15,27 +15,27 @@ npm install @splitr/netlify
 In your Netlify dashboard → Site settings → Environment variables:
 
 ```
-SPLITR_API_KEY   = sk_live_...
-SPLITR_API_URL   = https://your-splitr-app.vercel.app
+KORYLA_API_KEY   = sk_live_...
+KORYLA_API_URL   = https://your-koryla-app.vercel.app
 ```
 
 Or in `netlify.toml`:
 
 ```toml
 [build.environment]
-  SPLITR_API_URL = "https://your-splitr-app.vercel.app"
-# SPLITR_API_KEY should be set via the dashboard (never commit secrets)
+  KORYLA_API_URL = "https://your-koryla-app.vercel.app"
+# KORYLA_API_KEY should be set via the dashboard (never commit secrets)
 ```
 
 ### 2. Create an edge function
 
 ```ts
-// netlify/edge-functions/splitr.ts
-import { splitrMiddleware } from '@splitr/netlify'
+// netlify/edge-functions/koryla.ts
+import { korylaMiddleware } from '@koryla/netlify'
 
-export default splitrMiddleware({
-  apiKey: Deno.env.get('SPLITR_API_KEY')!,
-  apiUrl: Deno.env.get('SPLITR_API_URL')!,
+export default korylaMiddleware({
+  apiKey: Deno.env.get('KORYLA_API_KEY')!,
+  apiUrl: Deno.env.get('KORYLA_API_URL')!,
 })
 
 export const config = {
@@ -55,9 +55,9 @@ src/pages/
 
 Works with any Netlify-hosted framework: Astro, SvelteKit, Nuxt, plain HTML.
 
-### 4. Create the experiment in Splitr
+### 4. Create the experiment in Koryla
 
-Go to your Splitr dashboard → New experiment → set to Active.
+Go to your Koryla dashboard → New experiment → set to Active.
 
 ## How it works
 
@@ -67,7 +67,7 @@ User visits /
      ▼
 Netlify Edge Function (runs at Deno edge, before your site)
      │
-     ├── fetches experiment config from Splitr API (cached 60s)
+     ├── fetches experiment config from Koryla API (cached 60s)
      ├── reads variant cookie — if present, reuses it
      └── assigns variant by weight, rewrites via context.rewrite()
      │

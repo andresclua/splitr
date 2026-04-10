@@ -44,7 +44,7 @@ const saveGeneral = async () => {
 interface ApiKey { id: string; key_prefix: string; created_at: string; last_used_at: string | null }
 
 const { data: keys, refresh: refreshKeys } = await useFetch<ApiKey[]>(`/api/workspaces/${slug}/keys`)
-const SESSION_KEY = `splitr-new-key-${slug}`
+const SESSION_KEY = `koryla-new-key-${slug}`
 const newKey = ref<string | null>(null)
 const generatingKey = ref(false)
 const copied = ref(false)
@@ -215,7 +215,7 @@ const formatDate = (d: string) => new Date(d).toLocaleDateString('en-US', { mont
         <div class="flex items-start justify-between gap-2">
           <div>
             <p class="text-xs font-semibold text-amber-800">Save this key — you won't be able to see it again after dismissing.</p>
-            <p class="text-xs text-amber-700 mt-0.5">Add it to your Cloudflare Worker secrets as <code class="font-mono bg-amber-100 px-1 rounded">SPLITR_API_KEY</code> (Fase 04).</p>
+            <p class="text-xs text-amber-700 mt-0.5">Add it to your Cloudflare Worker secrets as <code class="font-mono bg-amber-100 px-1 rounded">KORYLA_API_KEY</code> (Fase 04).</p>
           </div>
         </div>
         <div class="flex items-center gap-2">

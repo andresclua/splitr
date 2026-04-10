@@ -1,14 +1,39 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 @theme {
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Space Grotesk', system-ui, -apple-system, sans-serif;
   --color-brand: #2563eb;
   --color-brand-dark: #1d4ed8;
+
+  /* Koryla Mallorca palette */
+  --color-navy: #0F2235;
+  --color-navy-light: #1A3550;
+  --color-terra: #C96A3F;
+  --color-terra-dark: #A8522D;
+  --color-terra-light: #FEF0E8;
+  --color-sand: #F5EDE0;
+  --color-sand-dark: #EAD9C4;
 }
 
 @layer base {
   html {
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer utilities {
+  .texture-dots-light {
+    background-image: radial-gradient(circle, rgba(15,34,53,0.12) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+  .texture-dots-dark {
+    background-image: radial-gradient(circle, rgba(255,255,255,0.08) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+  .texture-dots-sand {
+    background-image: radial-gradient(circle, rgba(201,106,63,0.15) 1px, transparent 1px);
+    background-size: 22px 22px;
   }
 }

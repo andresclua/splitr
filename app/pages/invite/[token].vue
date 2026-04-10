@@ -76,7 +76,7 @@ const accept = async () => {
         <div>
           <h1 class="text-lg font-semibold text-gray-900">You're invited</h1>
           <p class="text-sm text-gray-500 mt-1">
-            Join <span class="font-medium text-gray-700">{{ (invite.workspace as any).name }}</span> on Splitr as <span class="font-medium capitalize">{{ invite.role }}</span>.
+            Join <span class="font-medium text-gray-700">{{ (invite.workspace as any).name }}</span> on Koryla as <span class="font-medium capitalize">{{ invite.role }}</span>.
           </p>
         </div>
         <button

@@ -1,11 +1,11 @@
-# @splitr/next
+# @koryla/next
 
 A/B testing for Next.js with zero flicker. Runs on the Vercel Edge Network.
 
 ## Installation
 
 ```bash
-npm install @splitr/next
+npm install @koryla/next
 ```
 
 ## Setup
@@ -14,19 +14,19 @@ npm install @splitr/next
 
 ```bash
 # .env.local
-SPLITR_API_KEY=sk_live_...   # generated in Splitr → Settings → API Keys
-SPLITR_API_URL=https://your-splitr-app.vercel.app
+KORYLA_API_KEY=sk_live_...   # generated in Koryla → Settings → API Keys
+KORYLA_API_URL=https://your-koryla-app.vercel.app
 ```
 
 ### 2. Create middleware.ts
 
 ```ts
 // middleware.ts  (project root, next to package.json)
-import { splitrMiddleware } from '@splitr/next'
+import { korylaMiddleware } from '@koryla/next'
 
-export default splitrMiddleware({
-  apiKey: process.env.SPLITR_API_KEY!,
-  apiUrl: process.env.SPLITR_API_URL!,
+export default korylaMiddleware({
+  apiKey: process.env.KORYLA_API_KEY!,
+  apiUrl: process.env.KORYLA_API_URL!,
 })
 
 // Only run on the pages you're testing — keeps other routes fast
@@ -46,9 +46,9 @@ app/
     page.tsx         ← variant  (target_url: https://acme.com/variant-b)
 ```
 
-### 4. Create an experiment in Splitr
+### 4. Create an experiment in Koryla
 
-Go to your Splitr dashboard → New experiment:
+Go to your Koryla dashboard → New experiment:
 
 | Field | Value |
 |-------|-------|
@@ -67,7 +67,7 @@ User visits /
      ▼
 Next.js middleware (runs at Vercel edge, before rendering)
      │
-     ├── calls Splitr API once every 60s to get experiment config
+     ├── calls Koryla API once every 60s to get experiment config
      ├── reads sp_<experimentId> cookie
      │     ├── cookie present → use existing variant (sticky)
      │     └── no cookie → assign variant by traffic weight
@@ -82,7 +82,7 @@ Browser receives variant B HTML — never sees the rewrite
 
 ## Why this is better than VWO / Optimizely
 
-| | VWO / Optimizely | @splitr/next |
+| | VWO / Optimizely | @koryla/next |
 |--|--|--|
 | When variant is decided | In the browser, after JS loads | At the edge, before any HTML |
 | Flicker | Yes (page hides while swapping) | No |

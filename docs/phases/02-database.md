@@ -2,7 +2,7 @@
 
 ## Overview
 
-Defines the Supabase Postgres schema for the entire Splitr platform. All persistent data (workspaces, users, experiments, variants, events, API keys, analytics destinations) is stored in Supabase. Row Level Security (RLS) is not yet explicitly written in the schema file but is assumed at the application layer through service-role key usage in Nitro server routes.
+Defines the Supabase Postgres schema for the entire Koryla platform. All persistent data (workspaces, users, experiments, variants, events, API keys, analytics destinations) is stored in Supabase. Row Level Security (RLS) is not yet explicitly written in the schema file but is assumed at the application layer through service-role key usage in Nitro server routes.
 
 Schema file: `app/db/schema.sql`
 
@@ -74,7 +74,7 @@ Each experiment has 2+ variants.
 - `is_control` — marks the original/baseline variant
 
 **`events`**
-Impression and conversion events. Currently inserted by the worker/adapters via the Splitr API.
+Impression and conversion events. Currently inserted by the worker/adapters via the Koryla API.
 - `event_type` — `impression | conversion | custom`
 - `session_id` — the variant cookie value, used to correlate impressions with conversions
 - `metadata` — `jsonb` for custom event properties

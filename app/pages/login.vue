@@ -14,7 +14,7 @@ const loginWithGoogle = () => {
     <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
       <div class="text-center mb-8">
         <h1 class="text-2xl font-semibold text-gray-900">Welcome back</h1>
-        <p class="text-sm text-gray-500 mt-1">Sign in to your Splitr workspace</p>
+        <p class="text-sm text-gray-500 mt-1">Sign in to your Koryla workspace</p>
       </div>
 
       <button

@@ -1,6 +1,6 @@
-# @splitr/core
+# @koryla/core
 
-Shared engine used by all Splitr adapters. You don't install this directly — it's a dependency of `@splitr/next`, `@splitr/netlify`, and `@splitr/node`.
+Shared engine used by all Koryla adapters. You don't install this directly — it's a dependency of `@koryla/next`, `@koryla/netlify`, and `@koryla/node`.
 
 ## How the algorithm works
 
@@ -12,7 +12,7 @@ On the first request the engine calls `GET /api/worker/config` with your API key
 Authorization: Bearer sk_live_...
 ```
 
-The Splitr server hashes the key, looks it up in the database, and returns all **active** experiments for your workspace:
+The Koryla server hashes the key, looks it up in the database, and returns all **active** experiments for your workspace:
 
 ```json
 [
@@ -63,4 +63,4 @@ Client-side tools (VWO, Optimizely) work by:
 3. Swapping content
 4. Showing the page
 
-This causes a flash of the original content. With Splitr, the variant is decided **before any HTML is sent** — the browser only ever receives the assigned variant. There is nothing to flash.
+This causes a flash of the original content. With Koryla, the variant is decided **before any HTML is sent** — the browser only ever receives the assigned variant. There is nothing to flash.

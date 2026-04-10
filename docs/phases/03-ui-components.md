@@ -2,7 +2,7 @@
 
 ## Overview
 
-Implements two shared UI primitives used throughout the Splitr dashboard: `AppToast` (non-blocking status notifications) and `AppConfirm` (replacement for the browser's native `confirm()` dialog). Both are composable-driven, rendered via Vue's `Teleport`, and animated with `Transition`/`TransitionGroup`.
+Implements two shared UI primitives used throughout the Koryla dashboard: `AppToast` (non-blocking status notifications) and `AppConfirm` (replacement for the browser's native `confirm()` dialog). Both are composable-driven, rendered via Vue's `Teleport`, and animated with `Transition`/`TransitionGroup`.
 
 These components are registered globally through Nuxt's auto-import system and placed in `app/components/`. Their state composables live in `app/composables/`.
 

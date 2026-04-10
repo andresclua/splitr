@@ -52,7 +52,7 @@ export const PROVIDERS = {
     fields: [
       { key: 'url', label: 'Endpoint URL', placeholder: 'https://your-server.com/webhook' },
       { key: 'secret', label: 'Signing Secret', placeholder: 'Optional HMAC secret',
-        help: 'We sign each request with HMAC-SHA256 so you can verify it came from Splitr' },
+        help: 'We sign each request with HMAC-SHA256 so you can verify it came from Koryla' },
       { key: 'headers', label: 'Custom Headers', placeholder: '{"Authorization": "Bearer xxx"}' },
     ],
   },

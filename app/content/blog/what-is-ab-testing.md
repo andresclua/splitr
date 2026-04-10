@@ -21,11 +21,11 @@ After enough data is collected, you can see which version drives more conversion
 
 Traditional A/B testing tools inject JavaScript on the page, which causes a flash of unstyled content (FOUC) — users briefly see the original before the variant loads. It's jarring and hurts your results.
 
-Splitr runs experiments at the **edge** — before the page even reaches the browser. There's no flicker, no layout shift, no performance penalty.
+Koryla runs experiments at the **edge** — before the page even reaches the browser. There's no flicker, no layout shift, no performance penalty.
 
 ## Getting started
 
-1. Create an experiment in your Splitr dashboard
+1. Create an experiment in your Koryla dashboard
 2. Add the script tag to your site
 3. Define your variants
 4. Start collecting data

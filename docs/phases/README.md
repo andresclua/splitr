@@ -1,11 +1,11 @@
-# Splitr — Phase Documentation Index
+# Koryla — Phase Documentation Index
 
-Splitr is an edge-based A/B testing SaaS. Experiments run entirely at the CDN edge (Cloudflare Workers, Netlify Edge Functions, Vercel Edge Middleware) — no client-side JS, no DOM flicker, no layout shift.
+Koryla is an edge-based A/B testing SaaS. Experiments run entirely at the CDN edge (Cloudflare Workers, Netlify Edge Functions, Vercel Edge Middleware) — no client-side JS, no DOM flicker, no layout shift.
 
 **Deployed environments:**
-- Dashboard: [splitr-dev.netlify.app](https://splitr-dev.netlify.app)
-- Worker: [splitr-worker.splitr-app.workers.dev](https://splitr-worker.splitr-app.workers.dev)
-- Test site: [test-site-splitr.netlify.app](https://test-site-splitr.netlify.app)
+- Dashboard: [koryla-dev.netlify.app](https://koryla-dev.netlify.app)
+- Worker: [koryla-worker.koryla-app.workers.dev](https://koryla-worker.koryla-app.workers.dev)
+- Test site: [test-site-koryla.netlify.app](https://test-site-koryla.netlify.app)
 
 ---
 
@@ -19,7 +19,7 @@ Splitr is an edge-based A/B testing SaaS. Experiments run entirely at the CDN ed
 | 04 | [Worker](./04-worker.md) | Cloudflare Worker: KV config cache, weighted variant assignment, analytics fire-and-forget | ✅ Complete |
 | 05 | [Auth](./05-auth.md) | Supabase Auth + Google OAuth, implicit flow, manual hash token parsing on /confirm | ✅ Complete |
 | 06 | [Experiments](./06-experiments.md) | Experiment CRUD dashboard, variant management, Nitro API endpoints, worker config endpoint | ✅ Complete |
-| 07 | [Plugin Adapters](./07-plugin-adapters.md) | @splitr/core, @splitr/next, @splitr/netlify, @splitr/node, test-site (Astro + Netlify Edge) | ✅ Complete |
+| 07 | [Plugin Adapters](./07-plugin-adapters.md) | @koryla/core, @koryla/next, @koryla/netlify, @koryla/node, test-site (Astro + Netlify Edge) | ✅ Complete |
 | 08 | [Integrations Page](./08-integrations.md) | Dashboard integrations page: per-platform tabs, code snippets, copy button, prefilled API URL | ✅ Complete |
 
 ---
@@ -31,7 +31,7 @@ Splitr is an edge-based A/B testing SaaS. Experiments run entirely at the CDN ed
 │              User's Website                      │
 │   (Next.js / Netlify / Node / CF Worker)        │
 │                                                  │
-│   @splitr/core (in middleware)                  │
+│   @koryla/core (in middleware)                  │
 │       ↓ fetch config (cached 60s)               │
 │       ↓ assign variant (weighted random)        │
 │       ↓ rewrite URL server-side                 │
@@ -40,8 +40,8 @@ Splitr is an edge-based A/B testing SaaS. Experiments run entirely at the CDN ed
                  │ Authorization: Bearer sk_live_...
                  ▼
 ┌─────────────────────────────────────────────────┐
-│        Splitr Dashboard (Nuxt 4 / Nitro)        │
-│        splitr-dev.netlify.app                   │
+│        Koryla Dashboard (Nuxt 4 / Nitro)        │
+│        koryla-dev.netlify.app                   │
 │                                                  │
 │   /api/worker/config  → hash API key, query     │
 │                          active experiments      │
@@ -53,7 +53,7 @@ Splitr is an edge-based A/B testing SaaS. Experiments run entirely at the CDN ed
 ## Repository Structure
 
 ```
-splitr/
+koryla/
 ├── app/               Nuxt 4 dashboard (Netlify)
 │   ├── pages/         Route pages (dashboard, login, confirm, onboarding)
 │   ├── server/api/    Nitro server routes
@@ -65,10 +65,10 @@ splitr/
 │   └── src/           index.ts (main handler), analytics.ts
 ├── plugin/
 │   └── packages/
-│       ├── core/      @splitr/core — framework-agnostic engine
-│       ├── next/      @splitr/next — Next.js middleware adapter
-│       ├── netlify/   @splitr/netlify — Netlify Edge Functions adapter
-│       └── node/      @splitr/node — Express/Node.js middleware adapter
+│       ├── core/      @koryla/core — framework-agnostic engine
+│       ├── next/      @koryla/next — Next.js middleware adapter
+│       ├── netlify/   @koryla/netlify — Netlify Edge Functions adapter
+│       └── node/      @koryla/node — Express/Node.js middleware adapter
 ├── test-site/         Astro static site with Netlify Edge Function (proof of concept)
 ├── pnpm-workspace.yaml
 └── package.json

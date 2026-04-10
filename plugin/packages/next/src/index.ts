@@ -1,16 +1,16 @@
 /**
- * @splitr/next
+ * @koryla/next
  *
- * Next.js middleware adapter for Splitr A/B testing.
+ * Next.js middleware adapter for Koryla A/B testing.
  * Runs on the Vercel Edge Network — zero latency, zero flicker.
  *
  * Usage:
  *   // middleware.ts (project root)
- *   import { splitrMiddleware } from '@splitr/next'
+ *   import { korylaMiddleware } from '@koryla/next'
  *
- *   export default splitrMiddleware({
- *     apiKey: process.env.SPLITR_API_KEY!,
- *     apiUrl: process.env.SPLITR_API_URL!,   // e.g. https://your-app.splitr.dev
+ *   export default korylaMiddleware({
+ *     apiKey: process.env.KORYLA_API_KEY!,
+ *     apiUrl: process.env.KORYLA_API_URL!,   // e.g. https://your-app.koryla.com
  *   })
  *
  *   export const config = {
@@ -19,7 +19,7 @@
  *
  * How it works:
  *   1. Middleware intercepts the request before Next.js renders anything
- *   2. Calls Splitr API to get active experiments (cached 60s in memory)
+ *   2. Calls Koryla API to get active experiments (cached 60s in memory)
  *   3. Checks for an existing variant cookie — if found, sticks with it
  *   4. If no cookie, randomly assigns a variant by traffic weight
  *   5. Rewrites the request URL to the variant's target_url (server-side, no redirect)
@@ -32,13 +32,13 @@
 
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { createSplitEngine } from '@splitr/core'
-import type { SplitEngineOptions } from '@splitr/core'
+import { createSplitEngine } from '@koryla/core'
+import type { SplitEngineOptions } from '@koryla/core'
 
 // Engine is created once per cold start and reused across requests
 let engine: ReturnType<typeof createSplitEngine> | null = null
 
-export function splitrMiddleware(options: SplitEngineOptions) {
+export function korylaMiddleware(options: SplitEngineOptions) {
   return async function middleware(request: NextRequest): Promise<NextResponse> {
     // Lazy-init engine (Next.js middleware may run in edge runtime where
     // top-level await is not always available)

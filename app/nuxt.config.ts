@@ -10,6 +10,16 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
+  app: {
+    head: {
+      link: [
+        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+        { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap' },
+      ],
+    },
+  },
+
   vite: {
     plugins: [tailwindcss()],
   },
@@ -24,7 +34,7 @@ export default defineNuxtConfig({
     redirectOptions: {
       login: '/login',
       callback: '/confirm',
-      exclude: ['/signup', '/login', '/verify-email', '/blog', '/blog/**', '/docs', '/docs/**'],
+      exclude: ['/', '/signup', '/login', '/verify-email', '/blog', '/blog/**', '/docs', '/docs/**'],
     },
     clientOptions: {
       auth: {
@@ -45,9 +55,7 @@ export default defineNuxtConfig({
     stripeSecretKey: process.env.STRIPE_SECRET_KEY,
     stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
     resendApiKey: process.env.RESEND_API_KEY,
-    resendFromEmail: process.env.RESEND_FROM_EMAIL || 'hello@splitr.io',
-    githubToken: process.env.GITHUB_TOKEN,
-    githubRepo: process.env.GITHUB_REPO || 'andresclua/splitr',
+    resendFromEmail: process.env.RESEND_FROM_EMAIL || 'hello@koryla.com',
     public: {
       appUrl: process.env.NUXT_PUBLIC_APP_URL || 'http://localhost:3000',
     },

@@ -1,19 +1,19 @@
 /**
- * @splitr/node
+ * @koryla/node
  *
- * Express / Node.js middleware adapter for Splitr A/B testing.
+ * Express / Node.js middleware adapter for Koryla A/B testing.
  * Works anywhere Node.js runs: Railway, Render, Fly.io, Heroku, AWS EC2/ECS,
  * self-hosted servers, or any Express-compatible framework (Fastify via @fastify/express, etc).
  *
  * Usage (Express):
  *   import express from 'express'
- *   import { splitrMiddleware } from '@splitr/node'
+ *   import { korylaMiddleware } from '@koryla/node'
  *
  *   const app = express()
  *
- *   app.use(splitrMiddleware({
- *     apiKey: process.env.SPLITR_API_KEY!,
- *     apiUrl: process.env.SPLITR_API_URL!,
+ *   app.use(korylaMiddleware({
+ *     apiKey: process.env.KORYLA_API_KEY!,
+ *     apiUrl: process.env.KORYLA_API_URL!,
  *   }))
  *
  *   // Your routes come after — they receive the rewritten req.url
@@ -34,11 +34,11 @@
  * Note on latency:
  *   Unlike CF Workers / Vercel Edge / Netlify Edge, this runs in your app server
  *   process — not at the CDN edge. Variant assignment adds ~1ms of in-process work.
- *   The Splitr API call is cached for 60s so it doesn't add per-request latency.
+ *   The Koryla API call is cached for 60s so it doesn't add per-request latency.
  */
 
-import { createSplitEngine } from '@splitr/core'
-import type { SplitEngineOptions } from '@splitr/core'
+import { createSplitEngine } from '@koryla/core'
+import type { SplitEngineOptions } from '@koryla/core'
 
 // Compatible with Express and any framework using (req, res, next) signature
 export interface NodeRequest {
@@ -57,7 +57,7 @@ export type NextFunction = (err?: unknown) => void
 
 let engine: ReturnType<typeof createSplitEngine> | null = null
 
-export function splitrMiddleware(options: SplitEngineOptions) {
+export function korylaMiddleware(options: SplitEngineOptions) {
   return async function middleware(
     req: NodeRequest,
     res: NodeResponse,
@@ -99,7 +99,7 @@ export function splitrMiddleware(options: SplitEngineOptions) {
 
       next()
     } catch {
-      // Never block a request due to Splitr errors
+      // Never block a request due to Koryla errors
       next()
     }
   }

@@ -1,9 +1,9 @@
 import { routeAnalytics } from './analytics'
 
 export interface Env {
-  SPLITR_CONFIG: KVNamespace
-  SPLITR_API_URL: string  // e.g. https://your-app.nuxt.dev
-  SPLITR_API_KEY: string  // sk_live_... (set via wrangler secret put SPLITR_API_KEY)
+  KORYLA_CONFIG: KVNamespace
+  KORYLA_API_URL: string  // e.g. https://your-app.nuxt.dev
+  KORYLA_API_KEY: string  // sk_live_... (set via wrangler secret put KORYLA_API_KEY)
 }
 
 interface Variant {
@@ -40,7 +40,7 @@ export function assignVariant(variants: Pick<Variant, 'id' | 'traffic_weight'>[]
   return variants[variants.length - 1].id
 }
 
-const COOKIE_PREFIX = 'sp_'
+const COOKIE_PREFIX = 'ky_'
 const CONFIG_TTL = 60 // seconds
 
 function getCookieName(experimentId: string): string {
@@ -56,14 +56,14 @@ function parseCookies(header: string | null): Record<string, string> {
 
 async function getConfig(env: Env): Promise<Experiment[]> {
   // Serve from KV cache when available (60-second TTL set on write)
-  const cached = await env.SPLITR_CONFIG.get('experiments', 'json')
+  const cached = await env.KORYLA_CONFIG.get('experiments', 'json')
   if (cached) return cached as Experiment[]
 
-  // Cache miss — fetch fresh config from the Splitr API
+  // Cache miss — fetch fresh config from the Koryla API
   let experiments: Experiment[]
   try {
-    const res = await fetch(`${env.SPLITR_API_URL}/api/worker/config`, {
-      headers: { Authorization: `Bearer ${env.SPLITR_API_KEY}` },
+    const res = await fetch(`${env.KORYLA_API_URL}/api/worker/config`, {
+      headers: { Authorization: `Bearer ${env.KORYLA_API_KEY}` },
     })
     if (!res.ok) return []
     experiments = await res.json() as Experiment[]
@@ -73,7 +73,7 @@ async function getConfig(env: Env): Promise<Experiment[]> {
   }
 
   // Write to KV with TTL so next requests are fast
-  await env.SPLITR_CONFIG.put('experiments', JSON.stringify(experiments), {
+  await env.KORYLA_CONFIG.put('experiments', JSON.stringify(experiments), {
     expirationTtl: CONFIG_TTL,
   })
 

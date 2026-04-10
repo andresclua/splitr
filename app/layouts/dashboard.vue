@@ -23,9 +23,9 @@ const switchWorkspace = (e: Event) => {
       <!-- Logo -->
       <div class="px-4 h-14 flex items-center gap-2 border-b border-gray-100">
         <div class="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center shrink-0">
-          <span class="text-white font-bold text-xs">S</span>
+          <span class="text-white font-bold text-xs">K</span>
         </div>
-        <span class="font-semibold text-gray-900">Splitr</span>
+        <span class="font-semibold text-gray-900">Koryla</span>
       </div>
 
       <!-- Workspace selector -->

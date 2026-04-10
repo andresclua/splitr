@@ -1,4 +1,4 @@
--- Splitr database schema
+-- Koryla database schema
 -- Run this in your Supabase SQL editor
 
 -- Workspaces
@@ -106,6 +106,14 @@ create table events (
 );
 create index on events (experiment_id, variant_id, event_type);
 create index on events (workspace_id, created_at);
+
+-- Waitlist (landing page signups)
+create table waitlist (
+  id uuid primary key default gen_random_uuid(),
+  email text not null unique,
+  created_at timestamptz not null default now()
+);
+alter table waitlist enable row level security;
 
 -- Workspace invites
 create table workspace_invites (

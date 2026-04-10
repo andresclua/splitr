@@ -2,7 +2,7 @@
 
 ## Overview
 
-Initial monorepo setup for the Splitr project. This phase establishes the workspace structure, installs all tooling, and configures the Nuxt 4 dashboard app with Tailwind v4, the Supabase module, and developer-experience tooling (husky, lint-staged, vitest, Playwright).
+Initial monorepo setup for the Koryla project. This phase establishes the workspace structure, installs all tooling, and configures the Nuxt 4 dashboard app with Tailwind v4, the Supabase module, and developer-experience tooling (husky, lint-staged, vitest, Playwright).
 
 The goal is a working development environment where `pnpm dev` starts the dashboard, `pnpm worker:dev` starts the Cloudflare Worker emulator, and `pnpm test` runs the test suite — all from the repo root.
 
@@ -10,7 +10,7 @@ The goal is a working development environment where `pnpm dev` starts the dashbo
 
 ## Why
 
-**pnpm workspaces over npm/yarn:** Symlink-based installs mean `@splitr/core` is available to `@splitr/next` without publishing to npm. `pnpm` also has better support for monorepos with `--filter` flags and `pnpm-workspace.yaml`.
+**pnpm workspaces over npm/yarn:** Symlink-based installs mean `@koryla/core` is available to `@koryla/next` without publishing to npm. `pnpm` also has better support for monorepos with `--filter` flags and `pnpm-workspace.yaml`.
 
 **Nuxt 4 over Next.js for the dashboard:** The product itself is framework-agnostic (adapters exist for Next, Netlify, Node), so the dashboard stack was chosen for developer ergonomics. Nuxt 4's file-based routing, auto-imports, and Nitro server routes reduce boilerplate significantly. The Supabase community module (`@nuxtjs/supabase`) provides server-side helpers (`serverSupabaseUser`) that simplify auth in API routes.
 
@@ -113,7 +113,7 @@ allowBuilds:
 
 ```bash
 # 1. Create monorepo root
-mkdir splitr && cd splitr
+mkdir koryla && cd koryla
 pnpm init
 
 # 2. Create workspace config

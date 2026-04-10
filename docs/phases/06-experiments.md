@@ -144,7 +144,7 @@ Key format: `sk_live_<48 hex chars>`. Only `raw` is shown to the user at creatio
 5. Verify the worker config endpoint:
    ```bash
    curl -H "Authorization: Bearer sk_live_..." \
-     https://splitr-dev.netlify.app/api/worker/config
+     https://koryla-dev.netlify.app/api/worker/config
    ```
    Should return JSON array with the active experiment.
 
@@ -162,6 +162,6 @@ supabase.from('api_keys').update({ last_used_at: ... }).eq('id', apiKey.id).then
 ```
 The `.then()` without `.catch()` means errors are silently swallowed. The update may fail if Supabase is under load; there is no retry.
 
-**Worker config ordering:** The config endpoint returns experiments in Supabase's default row order (effectively insertion order). If two experiments share overlapping `base_url` paths (e.g. `/` and `/pricing`), the worker's `startsWith` match depends on which appears first in the array. The `@splitr/core` package handles this by sorting by pathname length (longer first), but the standalone Cloudflare Worker does not implement this sort.
+**Worker config ordering:** The config endpoint returns experiments in Supabase's default row order (effectively insertion order). If two experiments share overlapping `base_url` paths (e.g. `/` and `/pricing`), the worker's `startsWith` match depends on which appears first in the array. The `@koryla/core` package handles this by sorting by pathname length (longer first), but the standalone Cloudflare Worker does not implement this sort.
 
 **No experiment result analytics yet:** The dashboard shows experiment status and variant config but does not yet display split results (impressions, conversions, lift). The `events` table exists in the schema but the analytics query + visualization UI is not implemented.

@@ -75,7 +75,7 @@ export async function sendPostHog(config: Record<string, string>, p: AnalyticsPa
 export async function sendPlausible(config: Record<string, string>, p: AnalyticsPayload) {
   await fetch('https://plausible.io/api/event', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'User-Agent': 'Splitr/1.0' },
+    headers: { 'Content-Type': 'application/json', 'User-Agent': 'Koryla/1.0' },
     body: JSON.stringify({
       domain: config.domain,
       name: 'Experiment Assigned',
@@ -169,7 +169,7 @@ export async function sendWebhook(config: Record<string, string>, p: AnalyticsPa
       { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
     )
     const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(body))
-    headers['X-Splitr-Signature'] = 'sha256=' + Array.from(new Uint8Array(sig))
+    headers['X-Koryla-Signature'] = 'sha256=' + Array.from(new Uint8Array(sig))
       .map(b => b.toString(16).padStart(2, '0')).join('')
   }
 

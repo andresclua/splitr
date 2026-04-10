@@ -2,7 +2,7 @@
 
 ## Overview
 
-Implements user authentication for the Splitr dashboard using Supabase Auth with Google OAuth as the primary sign-in method. The flow uses Supabase's `implicit` flow type, which returns tokens in the URL hash fragment after OAuth redirect. A dedicated `/confirm` page handles all token parsing and session establishment.
+Implements user authentication for the Koryla dashboard using Supabase Auth with Google OAuth as the primary sign-in method. The flow uses Supabase's `implicit` flow type, which returns tokens in the URL hash fragment after OAuth redirect. A dedicated `/confirm` page handles all token parsing and session establishment.
 
 Relevant files:
 - `app/nuxt.config.ts` — Supabase module configuration
@@ -95,8 +95,8 @@ The confirm page is explicitly marked as client-side only (`ssr: false`). Hash f
 1. In Google Cloud Console: create OAuth 2.0 credentials, set authorized redirect URIs to `https://<project>.supabase.co/auth/v1/callback`
 2. In Supabase dashboard → Authentication → Providers → Google: paste Client ID and Client Secret
 3. In Supabase dashboard → Authentication → URL Configuration:
-   - Site URL: `https://splitr-dev.netlify.app`
-   - Redirect URLs: `https://splitr-dev.netlify.app/confirm`, `http://localhost:3000/confirm`
+   - Site URL: `https://koryla-dev.netlify.app`
+   - Redirect URLs: `https://koryla-dev.netlify.app/confirm`, `http://localhost:3000/confirm`
 
 ### Login trigger
 

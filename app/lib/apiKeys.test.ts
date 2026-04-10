@@ -4,7 +4,7 @@ import { generateApiKey, hashApiKey, generateSlug, generateInviteToken, KEY_PREF
 /**
  * API Keys
  * --------
- * Splitr uses API keys to authenticate the Cloudflare Worker with a workspace.
+ * Koryla uses API keys to authenticate the Cloudflare Worker with a workspace.
  *
  * Flow:
  *  1. Owner generates a key in Settings → the full key is shown ONCE
@@ -17,7 +17,7 @@ import { generateApiKey, hashApiKey, generateSlug, generateInviteToken, KEY_PREF
  * in the dashboard without exposing the secret.
  */
 describe('generateApiKey', () => {
-  it('key starts with "sk_live_" so workers and humans can identify Splitr keys at a glance', () => {
+  it('key starts with "sk_live_" so workers and humans can identify Koryla keys at a glance', () => {
     const { raw } = generateApiKey()
     expect(raw.startsWith('sk_live_')).toBe(true)
   })

@@ -1,4 +1,4 @@
-const FROM = 'Splitr <onboarding@resend.dev>'
+const FROM = 'Koryla <onboarding@resend.dev>'
 
 async function send(payload: {
   to: string
@@ -30,7 +30,7 @@ async function send(payload: {
 export async function sendWelcomeEmail(to: string, workspaceName: string, appUrl: string) {
   await send({
     to,
-    subject: 'Welcome to Splitr',
+    subject: 'Welcome to Koryla',
     html: `
 <!DOCTYPE html>
 <html>
@@ -42,7 +42,7 @@ export async function sendWelcomeEmail(to: string, workspaceName: string, appUrl
         <div style="width: 32px; height: 32px; background: rgba(255,255,255,0.2); border-radius: 8px; display: inline-flex; align-items: center; justify-content: center;">
           <span style="color: white; font-weight: 700; font-size: 14px;">S</span>
         </div>
-        <span style="color: white; font-weight: 600; font-size: 18px;">Splitr</span>
+        <span style="color: white; font-weight: 600; font-size: 18px;">Koryla</span>
       </div>
     </div>
     <div style="padding: 40px 32px;">
@@ -60,15 +60,15 @@ export async function sendWelcomeEmail(to: string, workspaceName: string, appUrl
         <p style="margin: 0 0 8px; font-size: 13px; font-weight: 600; color: #374151;">Quick start</p>
         <ol style="margin: 0; padding-left: 18px; color: #6b7280; font-size: 13px; line-height: 2;">
           <li>Create your first experiment</li>
-          <li>Add the Splitr script to your site</li>
+          <li>Add the Koryla script to your site</li>
           <li>Watch the results come in</li>
         </ol>
       </div>
     </div>
     <div style="padding: 20px 32px; background: #f9fafb; border-top: 1px solid #f3f4f6; text-align: center;">
       <p style="margin: 0; font-size: 12px; color: #9ca3af;">
-        You're receiving this because you signed up for Splitr.
-        <a href="${appUrl}" style="color: #6b7280;">splitr.io</a>
+        You're receiving this because you signed up for Koryla.
+        <a href="${appUrl}" style="color: #6b7280;">koryla.com</a>
       </p>
     </div>
   </div>
@@ -85,7 +85,7 @@ export async function sendInviteEmail(
 ) {
   await send({
     to,
-    subject: `${inviterName} invited you to ${workspaceName} on Splitr`,
+    subject: `${inviterName} invited you to ${workspaceName} on Koryla`,
     html: `
 <!DOCTYPE html>
 <html>
@@ -97,14 +97,14 @@ export async function sendInviteEmail(
         <div style="width: 32px; height: 32px; background: rgba(255,255,255,0.2); border-radius: 8px; display: inline-flex; align-items: center; justify-content: center;">
           <span style="color: white; font-weight: 700; font-size: 14px;">S</span>
         </div>
-        <span style="color: white; font-weight: 600; font-size: 18px;">Splitr</span>
+        <span style="color: white; font-weight: 600; font-size: 18px;">Koryla</span>
       </div>
     </div>
     <div style="padding: 40px 32px;">
       <h1 style="margin: 0 0 8px; font-size: 22px; font-weight: 700; color: #111827;">You're invited!</h1>
       <p style="margin: 0 0 24px; color: #6b7280; font-size: 15px; line-height: 1.6;">
         <strong style="color: #111827;">${inviterName}</strong> invited you to join the
-        <strong style="color: #111827;">${workspaceName}</strong> workspace on Splitr.
+        <strong style="color: #111827;">${workspaceName}</strong> workspace on Koryla.
       </p>
       <a href="${inviteUrl}"
          style="display: inline-block; background: #2563eb; color: white; text-decoration: none;
@@ -117,7 +117,7 @@ export async function sendInviteEmail(
     </div>
     <div style="padding: 20px 32px; background: #f9fafb; border-top: 1px solid #f3f4f6; text-align: center;">
       <p style="margin: 0; font-size: 12px; color: #9ca3af;">
-        Splitr — edge-based A/B testing
+        Koryla — edge-based A/B testing
       </p>
     </div>
   </div>

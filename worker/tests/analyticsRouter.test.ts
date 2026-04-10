@@ -70,8 +70,8 @@ describe('routeAnalytics', () => {
     await routeAnalytics(destinations, mockPayload)
 
     const [, options] = (fetch as ReturnType<typeof vi.fn>).mock.calls[0]
-    expect(options.headers['X-Splitr-Signature']).toBeDefined()
-    expect(options.headers['X-Splitr-Signature']).toMatch(/^sha256=/)
+    expect(options.headers['X-Koryla-Signature']).toBeDefined()
+    expect(options.headers['X-Koryla-Signature']).toMatch(/^sha256=/)
   })
 
   it('sends no signature header when no secret configured', async () => {
@@ -82,6 +82,6 @@ describe('routeAnalytics', () => {
     await routeAnalytics(destinations, mockPayload)
 
     const [, options] = (fetch as ReturnType<typeof vi.fn>).mock.calls[0]
-    expect(options.headers['X-Splitr-Signature']).toBeUndefined()
+    expect(options.headers['X-Koryla-Signature']).toBeUndefined()
   })
 })

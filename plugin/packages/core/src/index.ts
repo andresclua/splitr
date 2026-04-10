@@ -1,11 +1,11 @@
 /**
- * @splitr/core
+ * @koryla/core
  *
- * Shared engine used by all Splitr adapters (Next.js, Netlify, Node/Express).
+ * Shared engine used by all Koryla adapters (Next.js, Netlify, Node/Express).
  * Contains zero framework-specific code — only fetch, URL, and cookie logic.
  *
  * Flow on every request:
- *  1. Load experiment config from Splitr API (cached in memory for 60s)
+ *  1. Load experiment config from Koryla API (cached in memory for 60s)
  *  2. Find an experiment whose base_url matches the incoming pathname
  *  3. Read the variant cookie — if present, honour it (sticky sessions)
  *  4. If no cookie, randomly assign a variant weighted by traffic_weight
@@ -43,9 +43,9 @@ export interface SplitResult {
 }
 
 export interface SplitEngineOptions {
-  /** API key generated in Splitr Settings (sk_live_...) */
+  /** API key generated in Koryla Settings (sk_live_...) */
   apiKey: string
-  /** Base URL of your deployed Splitr app, e.g. https://app.splitr.dev */
+  /** Base URL of your deployed Koryla app, e.g. https://app.koryla.com */
   apiUrl: string
   /** Config cache TTL in ms. Default: 60 000 (60s) */
   cacheTtl?: number

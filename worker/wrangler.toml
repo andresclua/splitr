@@ -1,12 +1,12 @@
-name = "splitr-worker"
+name = "koryla-worker"
 main = "src/index.ts"
 compatibility_date = "2024-11-01"
 compatibility_flags = ["nodejs_compat"]
 
 [vars]
-SPLITR_API_URL = "https://splitr-dev.netlify.app"
-# SPLITR_API_KEY is a secret — set via: wrangler secret put SPLITR_API_KEY
+KORYLA_API_URL = "https://koryla.com"
+# KORYLA_API_KEY is a secret — set via: wrangler secret put KORYLA_API_KEY
 
 [[kv_namespaces]]
-binding = "SPLITR_CONFIG"
+binding = "KORYLA_CONFIG"
 id = "cbc8f00a39134717843e2a1afee8731d"

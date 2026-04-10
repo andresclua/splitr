@@ -1,6 +1,6 @@
 ---
 title: Edge Testing vs Client-Side Testing — What's the Difference?
-description: Most A/B testing tools run in the browser. Splitr runs at the edge. Here's why that matters for performance and accuracy.
+description: Most A/B testing tools run in the browser. Koryla runs at the edge. Here's why that matters for performance and accuracy.
 date: 2026-02-03
 author: Andrés Clúa
 slug: edge-testing-vs-client-testing
@@ -20,7 +20,7 @@ This creates the infamous **flicker effect** — users briefly see the original 
 
 ## How edge testing solves this
 
-With Splitr, variant assignment happens at the **Cloudflare Worker** level — before any HTML is sent to the browser. The user receives the correct variant instantly, with zero flicker.
+With Koryla, variant assignment happens at the **Cloudflare Worker** level — before any HTML is sent to the browser. The user receives the correct variant instantly, with zero flicker.
 
 ```
 User request → Cloudflare Worker → Assigns variant → Serves correct page
@@ -30,7 +30,7 @@ The worker reads a cookie (or sets one if it's a new visitor), decides which var
 
 ## Performance comparison
 
-| | Client-side | Edge (Splitr) |
+| | Client-side | Edge (Koryla) |
 |---|---|---|
 | Flicker | Yes | No |
 | Performance impact | ~200ms | ~0ms |

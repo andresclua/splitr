@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
  * Config fetcher
  * --------------
  * The worker needs experiment config on every request.
- * Reading from the Splitr API on every request would be too slow (~50–200ms round-trip).
+ * Reading from the Koryla API on every request would be too slow (~50–200ms round-trip).
  *
  * Strategy:
  *  1. Check KV cache first — if hit, return immediately (< 1ms)
@@ -19,9 +19,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // Minimal inline re-implementation of getConfig to test the fetch logic in isolation.
 // The real implementation lives in worker/src/index.ts.
 interface MockEnv {
-  SPLITR_CONFIG: { get: (k: string, t: string) => Promise<unknown>; put: (k: string, v: string, opts: object) => Promise<void> }
-  SPLITR_API_URL: string
-  SPLITR_API_KEY: string
+  KORYLA_CONFIG: { get: (k: string, t: string) => Promise<unknown>; put: (k: string, v: string, opts: object) => Promise<void> }
+  KORYLA_API_URL: string
+  KORYLA_API_KEY: string
 }
 
 const EXPERIMENTS = [
@@ -29,13 +29,13 @@ const EXPERIMENTS = [
 ]
 
 async function getConfig(env: MockEnv) {
-  const cached = await env.SPLITR_CONFIG.get('experiments', 'json')
+  const cached = await env.KORYLA_CONFIG.get('experiments', 'json')
   if (cached) return cached
 
   let experiments
   try {
-    const res = await fetch(`${env.SPLITR_API_URL}/api/worker/config`, {
-      headers: { Authorization: `Bearer ${env.SPLITR_API_KEY}` },
+    const res = await fetch(`${env.KORYLA_API_URL}/api/worker/config`, {
+      headers: { Authorization: `Bearer ${env.KORYLA_API_KEY}` },
     })
     if (!res.ok) return []
     experiments = await res.json()
@@ -43,7 +43,7 @@ async function getConfig(env: MockEnv) {
     return []
   }
 
-  await env.SPLITR_CONFIG.put('experiments', JSON.stringify(experiments), { expirationTtl: 60 })
+  await env.KORYLA_CONFIG.put('experiments', JSON.stringify(experiments), { expirationTtl: 60 })
   return experiments
 }
 
@@ -52,17 +52,17 @@ describe('getConfig — KV cache layer', () => {
 
   beforeEach(() => {
     env = {
-      SPLITR_CONFIG: {
+      KORYLA_CONFIG: {
         get: vi.fn().mockResolvedValue(null),
         put: vi.fn().mockResolvedValue(undefined),
       },
-      SPLITR_API_URL: 'https://app.splitr.dev',
-      SPLITR_API_KEY: 'sk_live_abc123',
+      KORYLA_API_URL: 'https://app.koryla.com',
+      KORYLA_API_KEY: 'sk_live_abc123',
     }
   })
 
   it('returns cached experiments without hitting the API — avoids latency on every request', async () => {
-    env.SPLITR_CONFIG.get = vi.fn().mockResolvedValue(EXPERIMENTS)
+    env.KORYLA_CONFIG.get = vi.fn().mockResolvedValue(EXPERIMENTS)
     global.fetch = vi.fn()
 
     const result = await getConfig(env)
@@ -77,7 +77,7 @@ describe('getConfig — KV cache layer', () => {
     await getConfig(env)
 
     expect(fetch).toHaveBeenCalledWith(
-      'https://app.splitr.dev/api/worker/config',
+      'https://app.koryla.com/api/worker/config',
       expect.objectContaining({ headers: { Authorization: 'Bearer sk_live_abc123' } })
     )
   })
@@ -87,7 +87,7 @@ describe('getConfig — KV cache layer', () => {
 
     await getConfig(env)
 
-    expect(env.SPLITR_CONFIG.put).toHaveBeenCalledWith(
+    expect(env.KORYLA_CONFIG.put).toHaveBeenCalledWith(
       'experiments',
       JSON.stringify(EXPERIMENTS),
       { expirationTtl: 60 }
@@ -112,11 +112,11 @@ describe('getConfig — KV cache layer', () => {
 })
 
 describe('getConfig — API key authentication', () => {
-  it('uses SPLITR_API_KEY as the Bearer token — this is the key generated in Settings → API Keys', async () => {
+  it('uses KORYLA_API_KEY as the Bearer token — this is the key generated in Settings → API Keys', async () => {
     const env: MockEnv = {
-      SPLITR_CONFIG: { get: vi.fn().mockResolvedValue(null), put: vi.fn() },
-      SPLITR_API_URL: 'https://app.splitr.dev',
-      SPLITR_API_KEY: 'sk_live_deadbeef',
+      KORYLA_CONFIG: { get: vi.fn().mockResolvedValue(null), put: vi.fn() },
+      KORYLA_API_URL: 'https://app.koryla.com',
+      KORYLA_API_KEY: 'sk_live_deadbeef',
     }
     global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => [] })
 

@@ -1,5 +1,5 @@
 {
-  "name": "@splitr/next",
+  "name": "@koryla/next",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -11,6 +11,6 @@
     "next": ">=13"
   },
   "dependencies": {
-    "@splitr/core": "workspace:*"
+    "@koryla/core": "workspace:*"
   }
 }

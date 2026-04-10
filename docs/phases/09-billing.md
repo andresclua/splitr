@@ -2,7 +2,7 @@
 
 ## Overview
 
-Implements full Stripe billing integration for Splitr: checkout sessions, billing portal, and webhook handling. Users can upgrade their workspace to Starter or Growth plans via a Stripe-hosted checkout flow, manage their subscription through the Stripe billing portal, and the system automatically reflects subscription changes (upgrades, downgrades, cancellations) via webhooks.
+Implements full Stripe billing integration for Koryla: checkout sessions, billing portal, and webhook handling. Users can upgrade their workspace to Starter or Growth plans via a Stripe-hosted checkout flow, manage their subscription through the Stripe billing portal, and the system automatically reflects subscription changes (upgrades, downgrades, cancellations) via webhooks.
 
 The billing page lives at `/dashboard/[slug]/billing` and includes a monthly/yearly price toggle, per-plan upgrade cards, and a "Manage billing" button for existing subscribers.
 
@@ -98,7 +98,7 @@ Updated with:
 
 ## How to Reproduce
 
-1. **Create Stripe products.** In the Stripe Dashboard, create two products: "Splitr Starter" and "Splitr Growth". For each product, add two recurring prices: one monthly (USD) and one yearly (USD), matching the amounts in the plan definitions above.
+1. **Create Stripe products.** In the Stripe Dashboard, create two products: "Koryla Starter" and "Koryla Growth". For each product, add two recurring prices: one monthly (USD) and one yearly (USD), matching the amounts in the plan definitions above.
 
 2. **Copy price IDs into `app/lib/plans.ts`.** After creating each price, copy its `price_1...` ID into the `STRIPE_PRICES` object:
    ```ts
@@ -114,7 +114,7 @@ Updated with:
 3. **Add Stripe secret key to Netlify.** Get the secret key (`sk_live_...` or `sk_test_...`) from Stripe Dashboard → Developers → API keys. Add it to Netlify as `STRIPE_SECRET_KEY`.
 
 4. **Create a webhook endpoint in Stripe.** Go to Stripe Dashboard → Developers → Webhooks → Add destination:
-   - URL: `https://splitr-dev.netlify.app/api/billing/webhook`
+   - URL: `https://koryla-dev.netlify.app/api/billing/webhook`
    - Events to listen for:
      - `checkout.session.completed`
      - `customer.subscription.updated`
