@@ -43,11 +43,23 @@ onMounted(async () => {
     return
   }
 
-  console.log('[confirm] no token_hash or code — waiting for user watcher...')
-  setTimeout(async () => {
-    console.log('[confirm] timeout — user:', user.value?.email ?? 'null')
-    if (!user.value) error.value = 'No se pudo establecer la sesión. Intenta de nuevo.'
-  }, 3000)
+  // Implicit flow: tokens are in the URL hash (Google OAuth)
+  const hash = window.location.hash.substring(1)
+  const hashParams = new URLSearchParams(hash)
+  const accessToken = hashParams.get('access_token')
+  const refreshToken = hashParams.get('refresh_token')
+
+  if (accessToken && refreshToken) {
+    console.log('[confirm] found hash tokens, calling setSession...')
+    const { error: err } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
+    console.log('[confirm] setSession error:', err?.message ?? 'none')
+    if (err) { error.value = err.message; return }
+    await navigateTo('/dashboard', { replace: true })
+    return
+  }
+
+  console.log('[confirm] no params found at all')
+  error.value = 'No se pudo establecer la sesión. Intenta de nuevo.'
 })
 </script>
 
