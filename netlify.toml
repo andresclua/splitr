@@ -1,6 +1,7 @@
 [build]
   command = "pnpm install && pnpm --filter app build && mkdir -p app/.netlify/static"
   publish = "app/.netlify/static"
+  functions = "app/.netlify/functions-internal"
 
 [build.environment]
   NODE_VERSION = "20"
