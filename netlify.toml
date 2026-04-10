@@ -1,5 +1,5 @@
 [build]
-  command = "pnpm install && pnpm --filter app build"
+  command = "pnpm install && pnpm --filter app build && echo '=== app/.output ===' && ls -la app/.output/ 2>/dev/null || echo 'NO .output DIR'"
   publish = "app/.output/public"
 
 [build.environment]
