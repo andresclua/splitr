@@ -28,7 +28,7 @@ export default defineNuxtConfig({
     },
     clientOptions: {
       auth: {
-        flowType: 'implicit',
+        flowType: 'pkce',
       },
     },
   },
