@@ -107,7 +107,7 @@ const openPortal = async () => {
             <h2 class="text-xl font-semibold text-gray-900">{{ planDetails.name }}</h2>
             <span
               v-if="isPaid"
-              class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 capitalize"
+              class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[#FEF0E8] text-[#C96A3F] capitalize"
             >
               {{ currentWorkspace?.billing_period ?? 'monthly' }}
             </span>
@@ -185,12 +185,12 @@ const openPortal = async () => {
           v-for="planKey in upgradeablePlans"
           :key="planKey"
           class="bg-white border rounded-2xl p-6 flex flex-col"
-          :class="planKey === currentPlan ? 'border-green-400 ring-1 ring-green-400' : planKey === 'growth' ? 'border-blue-400 ring-1 ring-blue-400' : 'border-gray-200'"
+          :class="planKey === currentPlan ? 'border-green-400 ring-1 ring-green-400' : planKey === 'growth' ? 'border-[#C96A3F] ring-1 ring-[#C96A3F]' : 'border-gray-200'"
         >
           <div class="flex items-center justify-between mb-1">
             <h3 class="text-base font-semibold text-gray-900">{{ PLANS[planKey].name }}</h3>
             <span v-if="planKey === currentPlan" class="text-xs font-semibold text-green-700 bg-green-50 px-2 py-0.5 rounded-full">Current plan</span>
-            <span v-else-if="planKey === 'growth'" class="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">Popular</span>
+            <span v-else-if="planKey === 'growth'" class="text-xs font-semibold text-[#C96A3F] bg-[#FEF0E8] px-2 py-0.5 rounded-full">Popular</span>
           </div>
 
           <div class="mb-4">
@@ -251,7 +251,7 @@ const openPortal = async () => {
             v-if="planKey !== currentPlan"
             :disabled="planKey === 'free' ? loadingPortal : loadingPriceId === stripePriceId(planKey, billingPeriod)"
             class="w-full py-2.5 rounded-xl text-sm font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-            :class="planKey === 'growth' ? 'bg-blue-600 text-white hover:bg-blue-700' : planKey === 'free' ? 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' : 'bg-gray-900 text-white hover:bg-gray-800'"
+            :class="planKey === 'growth' ? 'bg-[#C96A3F] text-white hover:bg-[#A8522D]' : planKey === 'free' ? 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' : 'bg-gray-900 text-white hover:bg-gray-800'"
             @click="planKey === 'free' ? openPortal() : startCheckout(planKey)"
           >
             <svg

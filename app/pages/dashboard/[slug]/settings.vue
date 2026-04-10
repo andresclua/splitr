@@ -162,7 +162,7 @@ const formatDate = (d: string) => new Date(d).toLocaleDateString('en-US', { mont
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1.5">Workspace name</label>
           <input v-model="wsName" type="text" required :disabled="!isOwner"
-            class="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400" />
+            class="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#C96A3F] disabled:bg-gray-50 disabled:text-gray-400" />
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1.5">
@@ -170,7 +170,7 @@ const formatDate = (d: string) => new Date(d).toLocaleDateString('en-US', { mont
             <span class="text-gray-400 font-normal ml-1">(e.g. acme.com)</span>
           </label>
           <input v-model="wsDomain" type="text" placeholder="acme.com" :disabled="!isOwner"
-            class="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400" />
+            class="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#C96A3F] disabled:bg-gray-50 disabled:text-gray-400" />
         </div>
         <div class="flex items-center justify-between py-1">
           <div>
@@ -178,7 +178,7 @@ const formatDate = (d: string) => new Date(d).toLocaleDateString('en-US', { mont
             <p class="text-xs text-gray-500 mt-0.5">New signups with your domain automatically join this workspace</p>
           </div>
           <button type="button" :disabled="!isOwner"
-            :class="wsAutoJoin ? 'bg-blue-600' : 'bg-gray-200'"
+            :class="wsAutoJoin ? 'bg-[#C96A3F]' : 'bg-gray-200'"
             class="relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors disabled:opacity-40"
             @click="wsAutoJoin = !wsAutoJoin">
             <span :class="wsAutoJoin ? 'translate-x-4' : 'translate-x-0.5'"
@@ -187,7 +187,7 @@ const formatDate = (d: string) => new Date(d).toLocaleDateString('en-US', { mont
         </div>
         <div v-if="isOwner" class="flex items-center gap-3 pt-1">
           <button type="submit" :disabled="saving"
-            class="bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-40 transition-colors">
+            class="bg-[#C96A3F] text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-[#A8522D] disabled:opacity-40 transition-colors">
             {{ saving ? 'Saving…' : 'Save changes' }}
           </button>
           <span v-if="saveSuccess" class="text-sm text-green-600">Saved!</span>
@@ -260,7 +260,7 @@ const formatDate = (d: string) => new Date(d).toLocaleDateString('en-US', { mont
       </div>
       <div class="divide-y divide-gray-100">
         <div v-for="member in members" :key="member.id" class="px-6 py-3.5 flex items-center gap-3">
-          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center shrink-0">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style="background: linear-gradient(135deg, #C96A3F, #0F2235);">
             <span class="text-white text-xs font-semibold">{{ member.email?.[0]?.toUpperCase() }}</span>
           </div>
           <div class="flex-1 min-w-0">
@@ -282,25 +282,25 @@ const formatDate = (d: string) => new Date(d).toLocaleDateString('en-US', { mont
         <p class="text-sm font-medium text-gray-700 mb-3">Invite a member</p>
         <div class="flex gap-2">
           <input v-model="inviteEmail" type="email" placeholder="colleague@company.com"
-            class="flex-1 border border-gray-300 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            class="flex-1 border border-gray-300 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C96A3F]" />
           <select v-model="inviteRole"
-            class="border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+            class="border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C96A3F] bg-white">
             <option value="member">Member</option>
             <option value="readonly">Read-only</option>
           </select>
           <button :disabled="inviting || !inviteEmail"
-            class="bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-xl hover:bg-blue-700 disabled:opacity-40 transition-colors shrink-0"
+            class="bg-[#C96A3F] text-white text-sm font-medium px-4 py-2 rounded-xl hover:bg-[#A8522D] disabled:opacity-40 transition-colors shrink-0"
             @click="sendInvite">
             {{ inviting ? '…' : 'Invite' }}
           </button>
         </div>
         <p v-if="inviteError" class="text-xs text-red-600 mt-2">{{ inviteError }}</p>
 
-        <div v-if="inviteLink" class="mt-3 p-3 bg-white border border-blue-200 rounded-xl">
+        <div v-if="inviteLink" class="mt-3 p-3 bg-white border border-[#F0C9B0] rounded-xl">
           <p class="text-xs text-gray-500 mb-1.5">Share this invite link (expires in 7 days):</p>
           <div class="flex items-center gap-2">
             <code class="flex-1 text-xs text-gray-700 truncate">{{ inviteLink }}</code>
-            <button class="text-xs text-blue-600 font-medium shrink-0" @click="copyInvite">Copy</button>
+            <button class="text-xs text-[#C96A3F] font-medium shrink-0" @click="copyInvite">Copy</button>
           </div>
         </div>
       </div>

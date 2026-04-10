@@ -64,7 +64,7 @@ const statusConfig: Record<string, { label: string; pulse: boolean; dot: string;
   draft:     { label: 'Draft',     pulse: false, dot: 'bg-gray-300',  badge: 'text-gray-500 bg-gray-100' },
   active:    { label: 'Live',      pulse: true,  dot: 'bg-green-500', badge: 'text-green-700 bg-green-50 ring-1 ring-inset ring-green-600/20' },
   paused:    { label: 'Paused',    pulse: false, dot: 'bg-amber-400', badge: 'text-amber-700 bg-amber-50 ring-1 ring-inset ring-amber-600/20' },
-  completed: { label: 'Completed', pulse: false, dot: 'bg-blue-400',  badge: 'text-blue-700 bg-blue-50 ring-1 ring-inset ring-blue-600/20' },
+  completed: { label: 'Completed', pulse: false, dot: 'bg-[#C96A3F]',  badge: 'text-[#C96A3F] bg-[#FEF0E8] ring-1 ring-inset ring-[#C96A3F]/20' },
 }
 
 const formatDate = (d: string | null) =>
@@ -75,8 +75,8 @@ const leadingId = computed(() => {
   return [...(experiment.value.variants ?? [])].sort((a, b) => b.impressions - a.impressions)[0]?.id
 })
 
-const variantColors = ['bg-gray-400', 'bg-blue-500', 'bg-violet-500', 'bg-emerald-500']
-const variantColorDot = ['bg-gray-400', 'bg-blue-500', 'bg-violet-500', 'bg-emerald-500']
+const variantColors = ['bg-gray-400', 'bg-[#C96A3F]', 'bg-[#0F2235]', 'bg-emerald-500']
+const variantColorDot = ['bg-gray-400', 'bg-[#C96A3F]', 'bg-[#0F2235]', 'bg-emerald-500']
 </script>
 
 <template>
@@ -131,7 +131,7 @@ const variantColorDot = ['bg-gray-400', 'bg-blue-500', 'bg-violet-500', 'bg-emer
           </button>
           <button v-if="experiment.status === 'active' || experiment.status === 'paused'"
             :disabled="updating"
-            class="text-sm font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-4 py-2 rounded-lg transition-colors disabled:opacity-40"
+            class="text-sm font-semibold text-[#0F2235] bg-[#FEF0E8] hover:bg-[#F0C9B0] border border-[#F0C9B0] px-4 py-2 rounded-lg transition-colors disabled:opacity-40"
             @click="setStatus('completed')">
             Complete
           </button>
