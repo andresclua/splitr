@@ -76,13 +76,13 @@ importers:
 
   plugin/packages/netlify:
     dependencies:
-      '@splitr/core':
+      '@koryla/core':
         specifier: workspace:*
         version: link:../core
 
   plugin/packages/next:
     dependencies:
-      '@splitr/core':
+      '@koryla/core':
         specifier: workspace:*
         version: link:../core
       next:
@@ -91,7 +91,7 @@ importers:
 
   plugin/packages/node:
     dependencies:
-      '@splitr/core':
+      '@koryla/core':
         specifier: workspace:*
         version: link:../core
 
