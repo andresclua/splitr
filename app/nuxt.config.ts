@@ -57,7 +57,7 @@ export default defineNuxtConfig({
 
   content: {
     highlight: {
-      theme: 'github-dark',
+      theme: 'github-light',
       langs: ['js', 'ts', 'php', 'bash', 'json', 'vue', 'sql'],
     },
   },

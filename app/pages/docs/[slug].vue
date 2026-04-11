@@ -54,9 +54,9 @@ watch(page, (p) => {
       prose-h2:text-xl prose-h2:mt-10 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-gray-100
       prose-h3:text-base prose-h3:mt-6 prose-h3:mb-2
       prose-a:no-underline hover:prose-a:underline
-      prose-code:bg-gray-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:text-sm prose-code:font-normal prose-code:before:content-none prose-code:after:content-none
+      prose-code:bg-[#F0C9B0]/40 prose-code:text-[#A8522D] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:text-sm prose-code:font-normal prose-code:before:content-none prose-code:after:content-none
       [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:before:content-none [&_pre_code]:after:content-none
-      prose-pre:bg-gray-950 prose-pre:rounded-xl prose-pre:border prose-pre:border-gray-800 [&_pre]:!p-4
+      prose-pre:bg-gray-50 prose-pre:rounded-xl prose-pre:border prose-pre:border-gray-200 [&_pre]:!p-5
       prose-table:text-sm prose-th:font-semibold prose-th:bg-gray-50 prose-td:align-top
       prose-blockquote:not-italic prose-blockquote:rounded-r-lg
       prose-li:my-0.5
