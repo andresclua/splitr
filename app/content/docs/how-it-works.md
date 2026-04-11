@@ -1,7 +1,6 @@
 ---
 title: How It Works
 description: A deep dive into the Koryla architecture — edge Workers, KV caching, variant assignment and sticky sessions.
-order: 2
 section: Introduction
 slug: how-it-works
 ---

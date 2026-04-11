@@ -1,7 +1,6 @@
 ---
 title: Mixpanel
 description: Send Koryla experiment assignment events to Mixpanel for funnel analysis and cohort breakdowns.
-order: 74
 section: Integrations
 slug: integrations-mixpanel
 ---

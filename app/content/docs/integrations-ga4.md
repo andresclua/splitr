@@ -1,7 +1,6 @@
 ---
 title: Google Analytics 4
 description: Send Koryla experiment events to GA4 using the Measurement Protocol — no gtag.js required.
-order: 71
 section: Integrations
 slug: integrations-ga4
 ---

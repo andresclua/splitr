@@ -1,7 +1,6 @@
 ---
 title: Custom Webhook
 description: Receive Koryla experiment events as JSON POST requests — forward to any platform or internal system.
-order: 76
 section: Integrations
 slug: integrations-webhook
 ---

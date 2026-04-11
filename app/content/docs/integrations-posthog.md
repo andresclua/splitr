@@ -1,7 +1,6 @@
 ---
 title: PostHog
 description: Forward Koryla experiment assignments to PostHog as $experiment_started events.
-order: 72
 section: Integrations
 slug: integrations-posthog
 ---

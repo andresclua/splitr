@@ -1,7 +1,6 @@
 ---
 title: Astro
 description: A/B test Astro pages with @koryla/astro. Resolve variants in frontmatter, zero client JS.
-order: 11
 section: SDK
 slug: sdk-astro
 ---

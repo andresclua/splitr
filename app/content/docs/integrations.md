@@ -1,7 +1,6 @@
 ---
 title: Analytics Integrations
 description: Send experiment data to GA4, PostHog, Plausible, Mixpanel, Amplitude and custom webhooks.
-order: 70
 section: Integrations
 slug: integrations
 ---
