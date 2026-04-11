@@ -1,5 +1,6 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'default' })
+useSeoMeta({ robots: 'noindex, nofollow' })
 
 const loginWithGoogle = () => {
   const config = useRuntimeConfig()

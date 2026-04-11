@@ -1,0 +1,55 @@
+# Koryla
+
+> Edge-based A/B testing for modern web stacks — zero flicker, zero client JS.
+
+Koryla is a SaaS tool that runs A/B tests at the network edge (Cloudflare Workers, Netlify Edge Functions, Next.js middleware) before the browser renders anything. It is designed for product teams who want to run split tests without the performance cost or flicker of traditional JavaScript-based testing tools like Optimizely or VWO.
+
+## How it works
+
+1. A user visits a URL that has an active experiment (e.g. `/pricing`)
+2. The Koryla edge function intercepts the request, assigns the user to a variant via a persistent cookie, and rewrites the response to serve the correct variant page
+3. Impressions and conversions are tracked server-side — ad blockers cannot interfere
+4. Results appear in the Koryla dashboard in real time
+
+## Key differentiators
+
+- **Zero flicker**: Variants are assigned and served before the browser renders anything. No `body { opacity: 0 }` hack needed.
+- **No client JS**: The testing library runs at the edge, not in the browser. Page performance is unaffected.
+- **Ad-blocker proof**: Because variant assignment happens at the network layer, browser extensions have nothing to intercept.
+- **Any stack**: Works with Next.js, Astro, Nuxt, WordPress, or any site that can run edge middleware.
+
+## SDK
+
+Koryla also provides component-level A/B testing via framework SDKs:
+- `@koryla/react` — React Server Components and client components
+- `@koryla/vue` — Vue 3 / Nuxt
+- `@koryla/astro` — Astro components
+- `@koryla/next` — Next.js middleware
+
+## Pricing
+
+- **Free**: Up to 3 active experiments, 10k impressions/month
+- **Starter**: Unlimited experiments, 100k impressions/month, analytics destinations
+- **Growth**: Unlimited impressions, priority support, custom integrations
+
+## Documentation
+
+- Getting started: https://koryla.com/docs/getting-started
+- Edge function setup: https://koryla.com/docs/worker-setup
+- SDK overview: https://koryla.com/docs/sdk
+- React SDK: https://koryla.com/docs/sdk-react
+- Vue SDK: https://koryla.com/docs/sdk-vue
+- Astro SDK: https://koryla.com/docs/sdk-astro
+- WordPress plugin: https://koryla.com/docs/sdk-wordpress
+
+## Blog
+
+https://koryla.com/blog
+
+Topics covered: A/B testing, conversion rate optimization, edge computing, statistical significance, feature flags, flicker effect, multivariate testing, pricing page optimization, WordPress testing.
+
+## Company
+
+Founded 2026. Based in Europe.
+Contact: hello@koryla.com
+Website: https://koryla.com

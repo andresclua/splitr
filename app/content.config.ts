@@ -11,6 +11,7 @@ export default defineContentConfig({
         date: z.string(),
         author: z.string(),
         slug: z.string(),
+        image: z.string().optional(),
       }),
     }),
     docs: defineCollection({

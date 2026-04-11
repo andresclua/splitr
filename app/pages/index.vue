@@ -1,6 +1,17 @@
 <script setup lang="ts">
 definePageMeta({ layout: false })
 
+useSeoMeta({
+  title: 'Koryla — Edge A/B Testing, Zero Flicker',
+  description: 'Run A/B tests at the Cloudflare edge. No JavaScript on your site, no flicker, no performance hit. Works with any stack.',
+  ogTitle: 'Koryla — Edge A/B Testing, Zero Flicker',
+  ogDescription: 'Run A/B tests at the Cloudflare edge. No JavaScript on your site, no flicker, no performance hit. Works with any stack.',
+  ogUrl: 'https://koryla.com/',
+  ogType: 'website',
+  twitterTitle: 'Koryla — Edge A/B Testing, Zero Flicker',
+  twitterDescription: 'Run A/B tests at the Cloudflare edge. No JavaScript, no flicker, no performance hit.',
+})
+
 const email = ref('')
 const submitted = ref(false)
 const loading = ref(false)

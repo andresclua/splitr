@@ -8,10 +8,45 @@ const { data: post } = await useAsyncData(`blog-${route.params.slug}`, () =>
 
 if (!post.value) throw createError({ statusCode: 404, message: 'Post not found' })
 
-useSeoMeta({ title: `${post.value.title} — Koryla`, description: post.value.description })
+const postUrl = `https://koryla.com/blog/${route.params.slug}`
+
+useSeoMeta({
+  title: `${post.value.title} — Koryla`,
+  description: post.value.description,
+  ogTitle: post.value.title,
+  ogDescription: post.value.description,
+  ogUrl: postUrl,
+  ogType: 'article',
+  articlePublishedTime: post.value.date,
+  articleAuthor: post.value.author,
+  articleSection: 'A/B Testing',
+  twitterTitle: post.value.title,
+  twitterDescription: post.value.description,
+})
+
+useHead({
+  script: [{
+    type: 'application/ld+json',
+    innerHTML: JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: post.value.title,
+      description: post.value.description,
+      datePublished: post.value.date,
+      author: { '@type': 'Person', name: post.value.author },
+      publisher: { '@type': 'Organization', name: 'Koryla', url: 'https://koryla.com' },
+      url: postUrl,
+    }),
+  }],
+})
 
 const formatDate = (d: string) =>
   new Date(d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+
+const readingTime = computed(() => {
+  const words = post.value?.body ? JSON.stringify(post.value.body).split(/\s+/).length : 0
+  return Math.max(1, Math.round(words / 200))
+})
 </script>
 
 <template>
@@ -50,6 +85,8 @@ const formatDate = (d: string) =>
           <span class="text-sm text-gray-400">{{ formatDate(post!.date) }}</span>
           <span class="text-gray-300">·</span>
           <span class="text-sm text-gray-400">{{ post!.author }}</span>
+          <span class="text-gray-300">·</span>
+          <span class="text-sm text-gray-400">{{ readingTime }} min read</span>
         </div>
         <h1 class="text-4xl font-bold leading-tight tracking-tight mb-4" style="color: #0F2235;">{{ post!.title }}</h1>
         <p class="text-xl text-gray-500 leading-relaxed">{{ post!.description }}</p>
