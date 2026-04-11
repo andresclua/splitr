@@ -72,6 +72,18 @@ importers:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@25.5.2)(happy-dom@15.11.7)(lightningcss@1.32.0)(terser@5.46.1)
 
+  astro-demo-internal:
+    dependencies:
+      astro:
+        specifier: ^4.16.0
+        version: 4.16.19(@types/node@25.5.2)(lightningcss@1.32.0)(rollup@4.60.1)(terser@5.46.1)(typescript@5.9.3)
+
+  plugin/packages/astro:
+    dependencies:
+      '@koryla/core':
+        specifier: workspace:*
+        version: link:../core
+
   plugin/packages/core: {}
 
   plugin/packages/netlify:
@@ -95,11 +107,23 @@ importers:
         specifier: workspace:*
         version: link:../core
 
-  test-site:
+  plugin/packages/react:
     dependencies:
-      astro:
-        specifier: ^4.16.0
-        version: 4.16.19(@types/node@25.5.2)(lightningcss@1.32.0)(rollup@4.60.1)(terser@5.46.1)(typescript@5.9.3)
+      '@koryla/core':
+        specifier: workspace:*
+        version: link:../core
+      react:
+        specifier: '>=18'
+        version: 19.2.5
+
+  plugin/packages/vue:
+    dependencies:
+      '@koryla/core':
+        specifier: workspace:*
+        version: link:../core
+      vue:
+        specifier: '>=3'
+        version: 3.5.32(typescript@5.9.3)
 
   worker:
     devDependencies:
