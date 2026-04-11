@@ -47,7 +47,7 @@ compatibility_date = "2024-11-01"
 compatibility_flags = ["nodejs_compat"]
 
 [vars]
-KORYLA_API_URL = "https://your-koryla-app.netlify.app"
+KORYLA_API_URL = "https://koryla.com"
 
 [[kv_namespaces]]
 binding = "KORYLA_CONFIG"
@@ -120,7 +120,7 @@ Then redeploy: `wrangler deploy`
 Visit your site and open DevTools → Application → Cookies. After loading a page that has an active experiment, you should see a cookie:
 
 ```
-Name:  sp_[experiment-id]
+Name:  ky_[experiment-id]
 Value: [variant-id]
 ```
 

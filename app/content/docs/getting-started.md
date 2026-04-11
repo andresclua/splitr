@@ -1,6 +1,6 @@
 ---
 title: Getting Started
-description: Set up Koryla on your site in under 5 minutes.
+description: Set up Koryla on your site in under 5 minutes. Works with Netlify, Next.js, Cloudflare, WordPress, and more.
 order: 1
 section: Introduction
 slug: getting-started
@@ -12,23 +12,14 @@ Koryla runs A/B experiments at the **edge** — before the page reaches the brow
 
 This guide walks you through your first experiment from sign-up to live traffic.
 
-## How it works
-
-When a visitor hits your site, a **Cloudflare Worker** intercepts the request. It checks if there's an active experiment matching that URL, assigns the visitor to a variant (stored in a cookie), and silently rewrites the request to the correct URL. The browser never knows an experiment is running.
-
-1. Visitor makes a request to your domain
-2. Cloudflare Worker intercepts the request
-3. Worker checks KV cache for experiment config (refreshes every 60s from Koryla API)
-4. Worker assigns a variant and rewrites the URL
-5. Your server responds with the correct variant page
-
-This is fundamentally different from client-side tools like Optimizely or Google Optimize, which inject JavaScript that modifies the DOM after load — causing the infamous "flicker" effect.
-
 ## Prerequisites
 
 - A [Koryla account](/signup) (free tier available)
-- A Cloudflare account (free)
-- A website you control (any stack — static, Next.js, Astro, WordPress, etc.)
+- A website you control (any stack — Astro, Next.js, WordPress, etc.)
+
+That's it. No Cloudflare account required unless you specifically want the Cloudflare Worker approach.
+
+---
 
 ## Step 1 — Create your workspace
 
@@ -36,138 +27,135 @@ After signing up, you'll be prompted to create a workspace. This is where all yo
 
 If you sign up with a work email (e.g. `@acme.com`), teammates who sign up with the same domain will be able to join your workspace automatically.
 
+---
+
 ## Step 2 — Create an API key
 
 Go to **Settings → API Keys → New key** in your dashboard.
 
-Give it a name like `Production Worker` and copy the key — it starts with `sk_live_` and is shown only once. If you lose it, delete it and create a new one.
+Give it a name like `Production` and copy the key — it starts with `sk_live_` and is shown only once. If you lose it, delete it and create a new one.
 
 > **Security note:** API keys are hashed before being stored. Koryla can never recover your original key.
 
-## Step 3 — Deploy the Cloudflare Worker
+---
 
-This is the only technical step. You're deploying a small script to Cloudflare that sits in front of your site and handles the traffic splitting. **You don't need to touch your existing site code.**
+## Step 3 — Connect your platform
 
-### What is a Cloudflare Worker?
+Pick the path that matches your stack. You only need one.
 
-A Worker is a tiny script that runs at Cloudflare's edge — in data centers around the world, milliseconds from your visitors. It intercepts requests before they reach your server. Cloudflare's free plan includes 100,000 Worker requests per day, which is more than enough to get started.
+### Netlify
 
-### Before you begin
+The fastest path. Add one file and two lines to `netlify.toml` — no npm install required.
 
-You need:
-- A **free Cloudflare account** at [cloudflare.com](https://cloudflare.com)
-- Your **domain's DNS managed through Cloudflare** — this is how the Worker can intercept your traffic. If your domain is currently at Namecheap, GoDaddy, etc., you'll need to either transfer DNS to Cloudflare (free, takes ~5 minutes) or use a Cloudflare-proxied subdomain. See [Cloudflare's DNS setup guide](https://developers.cloudflare.com/dns/zone-setups/full-setup/).
+**1. Create the edge function**
 
-### Option A — Cloudflare Dashboard (no CLI needed)
+```ts
+// netlify/edge-functions/koryla.ts
+import { korylaMiddleware } from '@koryla/netlify'
 
-This is the easiest path if you've never used a terminal.
+export default korylaMiddleware({
+  apiKey: Deno.env.get('KORYLA_API_KEY')!,
+  apiUrl: Deno.env.get('KORYLA_API_URL')!,
+})
+```
 
-**1. Create the Worker**
+Or copy the self-contained version (no npm) from your **Dashboard → Settings → Edge Function Script**.
 
-Go to [dash.cloudflare.com](https://dash.cloudflare.com) → **Workers & Pages** → **Create** → **Create Worker**. Give it a name like `koryla-worker` and click **Deploy** (the default script doesn't matter, you'll replace it).
+**2. Register the paths in netlify.toml**
 
-**2. Paste the Worker script**
+```toml
+[[edge_functions]]
+  function = "koryla"
+  path = "/"
 
-In your new Worker, click **Edit code**. Delete everything in the editor and paste the Koryla Worker script. You can find the exact script in your Koryla dashboard under **Settings → Worker Script**.
+[[edge_functions]]
+  function = "koryla"
+  path = "/pricing"
+```
 
-**3. Add environment variables**
+Add one `[[edge_functions]]` block per path you want to A/B test.
 
-Go to your Worker → **Settings → Variables** and add:
+**3. Add environment variables in Netlify**
 
-| Variable | Value | Type |
-|---|---|---|
-| `KORYLA_API_URL` | Your Koryla app URL (e.g. `https://app.koryla.io`) | Plain text |
-| `KORYLA_API_KEY` | Your `sk_live_...` key from Step 2 | **Secret** (encrypted) |
+Go to your site in the Netlify dashboard → **Site configuration → Environment variables**:
 
-Always use **Secret** for the API key — it hides the value in the dashboard and in logs.
+| Variable | Value |
+|---|---|
+| `KORYLA_API_KEY` | `sk_live_...` from Step 2 |
+| `KORYLA_API_URL` | `https://koryla.com` |
 
-**4. Create a KV namespace**
-
-Go to **Workers & Pages → KV** → **Create namespace**. Name it `KORYLA_CONFIG`. Copy the namespace ID.
-
-Then go back to your Worker → **Settings → Variables → KV Namespace Bindings** → **Add binding**:
-- Variable name: `KORYLA_CONFIG`
-- KV namespace: the one you just created
-
-**5. Add a Worker Route**
-
-Go to your domain in the Cloudflare dashboard → **Workers Routes** → **Add route**:
-- Route: `yourdomain.com/*`
-- Worker: `koryla-worker`
-
-> Make sure your domain's DNS record has the **orange cloud** (Proxied) enabled — otherwise Cloudflare can't intercept the traffic.
+Deploy and you're done. See the [live demo →](https://astro-demo.koryla.com) for a working example.
 
 ---
 
-### Option B — Wrangler CLI (for developers)
+### Next.js / Vercel
 
-If you're comfortable in a terminal, this is faster.
+Add a single middleware file to your project root. Runs on the Vercel Edge Network — no Cloudflare needed.
 
 ```bash
-# Install Wrangler (Cloudflare's CLI)
-npm install -g wrangler
-
-# Log in to your Cloudflare account
-wrangler login
-
-# Clone the Koryla Worker
-git clone https://github.com/andresclua/koryla-worker
-cd koryla-worker
-
-# Create a KV namespace for caching
-wrangler kv namespace create KORYLA_CONFIG
-# → Copy the "id" from the output into wrangler.toml
-
-# Set your API key as an encrypted secret
-wrangler secret put KORYLA_API_KEY
-# → Paste your sk_live_... key when prompted
-
-# Deploy to Cloudflare
-wrangler deploy
+npm install @koryla/next
 ```
 
-Then add a Worker Route in the Cloudflare dashboard (same as Step 5 above), or add it to `wrangler.toml`:
+```ts
+// middleware.ts
+import { korylaMiddleware } from '@koryla/next'
 
-```toml
-[[routes]]
-pattern = "yourdomain.com/*"
-zone_name = "yourdomain.com"
+export default korylaMiddleware({
+  apiKey: process.env.KORYLA_API_KEY!,
+  apiUrl: process.env.KORYLA_API_URL!,
+})
+
+export const config = {
+  matcher: ['/', '/pricing', '/landing'],
+}
 ```
 
-### Not sure if it's working?
+Add `KORYLA_API_KEY` and `KORYLA_API_URL` to your Vercel project environment variables.
 
-After deploying, visit any page on your domain and open **DevTools → Application → Cookies**. If there's an active experiment, you'll see a cookie named `ky_[experiment-id]`. If you don't see one yet, create your first experiment in Step 5 first, then come back and check.
+Full guide → [React / Next.js SDK →](/docs/sdk-react)
 
-## Step 4 — Point your domain through Cloudflare
+---
 
-If your domain's DNS is already managed by Cloudflare with the orange cloud (Proxied) enabled, you're done — skip this step.
+### Cloudflare Worker
 
-If not, you have two options:
+Best for sites where DNS is already managed through Cloudflare, or when you want the Worker in front of any stack (not just Netlify/Vercel).
 
-**Move your DNS to Cloudflare (recommended)**
-Cloudflare's DNS is free and faster than most registrars. In your domain registrar (Namecheap, GoDaddy, Google Domains, etc.), change the nameservers to the ones Cloudflare gives you. This takes 5–30 minutes to propagate.
+See [Worker Setup →](/docs/worker-setup) for the full installation guide.
 
-**Use a Cloudflare-proxied subdomain**
-If you can't or don't want to move your whole domain, set up a CNAME subdomain (e.g. `www.yourdomain.com`) that points to your server and is proxied through Cloudflare. Run your Worker on that subdomain only.
+---
 
-## Step 5 — Create your first experiment
+### WordPress
+
+No npm, no edge functions — the PHP plugin handles splitting server-side.
+
+See [WordPress SDK →](/docs/sdk-wordpress) for install and configuration.
+
+---
+
+## Step 4 — Create your first experiment
 
 1. In your Koryla dashboard, go to **Experiments → New**
 2. Enter a name (e.g. "Homepage CTA Test")
 3. Set the **Base URL** — the path you want to test (e.g. `/`)
 4. Add variants:
    - **Control** (original page) — weight `50`
-   - **Variant A** — point to an alternate URL (e.g. `/homepage-v2`) — weight `50`
+   - **Variant B** — point to an alternate URL (e.g. `/homepage-v2`) — weight `50`
 5. Click **Start experiment**
 
-## Step 6 — Verify it's working
+Your variant page (`/homepage-v2`) needs to exist in your site. Create it as a duplicate of the original with the change you want to test.
+
+---
+
+## Step 5 — Verify it's working
 
 Open your site in an incognito window and check the browser cookies. You should see a cookie named `ky_{experimentId}` with a variant ID value. That's Koryla assigning you to a group.
 
 Refresh a few times — the cookie persists so you always see the same variant. Open a second incognito window and you may land in a different variant.
 
+---
+
 ## What's next?
 
-- [Experiments →](/docs/experiments) — learn how to read results and manage experiments
+- [Experiments →](/docs/experiments) — read results and manage experiments
 - [Variants →](/docs/variants) — set up multi-variant and multivariate tests
 - [Analytics Integrations →](/docs/integrations) — send data to GA4, PostHog, and more
