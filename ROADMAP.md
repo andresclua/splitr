@@ -33,6 +33,7 @@
 | 17.8 | **Emails Resend** | FROM hardcodeado a `onboarding@resend.dev`. Pendiente: dominio propio, verificación de email, reset de contraseña |
 | 17.9 | **Blog analytics en admin** | El admin dashboard no muestra datos de blog. Integrar GA4 Reporting API o pageviews en `/admin` |
 | 17.10 | **SDK demo — anotaciones visuales** | Añadir etiquetas "Style variation" / "Text variation" sobre el contenido de `/sdk-demo` |
+| 17.15 | **SDK reporting al dashboard** | `<Experiment>` dispara `POST /api/events` (impression + conversion) al mismo backend que el Worker. Dashboard muestra experimentos edge y component en la misma lista con badge de tipo. Incluye `onAssigned` callback para dual reporting a PostHog/GA4. |
 
 ### SEO & visibilidad
 
