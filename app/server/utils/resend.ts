@@ -1,4 +1,4 @@
-const FROM = 'Koryla <onboarding@resend.dev>'
+const FROM = 'Koryla <no-reply@koryla.com>'
 
 async function send(payload: {
   to: string
@@ -37,10 +37,10 @@ export async function sendWelcomeEmail(to: string, workspaceName: string, appUrl
 <head><meta charset="utf-8"></head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f9fafb; margin: 0; padding: 40px 0;">
   <div style="max-width: 520px; margin: 0 auto; background: white; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden;">
-    <div style="background: #2563eb; padding: 32px; text-align: center;">
+    <div style="background: #C96A3F; padding: 32px; text-align: center;">
       <div style="display: inline-flex; align-items: center; gap: 10px;">
         <div style="width: 32px; height: 32px; background: rgba(255,255,255,0.2); border-radius: 8px; display: inline-flex; align-items: center; justify-content: center;">
-          <span style="color: white; font-weight: 700; font-size: 14px;">S</span>
+          <span style="color: white; font-weight: 700; font-size: 14px;">K</span>
         </div>
         <span style="color: white; font-weight: 600; font-size: 18px;">Koryla</span>
       </div>
@@ -52,7 +52,7 @@ export async function sendWelcomeEmail(to: string, workspaceName: string, appUrl
         Start running A/B experiments on your site in minutes — no extra code required.
       </p>
       <a href="${appUrl}/dashboard"
-         style="display: inline-block; background: #2563eb; color: white; text-decoration: none;
+         style="display: inline-block; background: #C96A3F; color: white; text-decoration: none;
                 font-weight: 600; font-size: 14px; padding: 12px 24px; border-radius: 8px;">
         Open Dashboard
       </a>
@@ -92,10 +92,10 @@ export async function sendInviteEmail(
 <head><meta charset="utf-8"></head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f9fafb; margin: 0; padding: 40px 0;">
   <div style="max-width: 520px; margin: 0 auto; background: white; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden;">
-    <div style="background: #2563eb; padding: 32px; text-align: center;">
+    <div style="background: #C96A3F; padding: 32px; text-align: center;">
       <div style="display: inline-flex; align-items: center; gap: 10px;">
         <div style="width: 32px; height: 32px; background: rgba(255,255,255,0.2); border-radius: 8px; display: inline-flex; align-items: center; justify-content: center;">
-          <span style="color: white; font-weight: 700; font-size: 14px;">S</span>
+          <span style="color: white; font-weight: 700; font-size: 14px;">K</span>
         </div>
         <span style="color: white; font-weight: 600; font-size: 18px;">Koryla</span>
       </div>
@@ -107,7 +107,7 @@ export async function sendInviteEmail(
         <strong style="color: #111827;">${workspaceName}</strong> workspace on Koryla.
       </p>
       <a href="${inviteUrl}"
-         style="display: inline-block; background: #2563eb; color: white; text-decoration: none;
+         style="display: inline-block; background: #C96A3F; color: white; text-decoration: none;
                 font-weight: 600; font-size: 14px; padding: 12px 24px; border-radius: 8px;">
         Accept Invitation
       </a>
