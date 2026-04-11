@@ -3,7 +3,7 @@ packages:
   - 'worker'
   - 'plugin'
   - 'plugin/packages/*'
-  - 'test-site'
+  - 'astro-demo-internal'
 allowBuilds:
   '@parcel/watcher': false
   better-sqlite3: true

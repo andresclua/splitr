@@ -27,6 +27,7 @@ export interface Experiment {
   id: string
   name: string
   base_url: string
+  conversion_url?: string
   variants: Variant[]
   destinations: unknown[]
 }
@@ -51,7 +52,7 @@ export interface SplitEngineOptions {
   cacheTtl?: number
 }
 
-const COOKIE_PREFIX = 'sp_'
+export const COOKIE_PREFIX = 'ky_'
 
 /**
  * Creates a split engine instance.
@@ -100,7 +101,7 @@ export function createSplitEngine(options: SplitEngineOptions) {
 
   // ── Cookie parsing ──────────────────────────────────────────────────────────
 
-  function parseCookies(header: string): Record<string, string> {
+  function parseCookiesInternal(header: string): Record<string, string> {
     if (!header) return {}
     return Object.fromEntries(
       header.split(';')
@@ -134,7 +135,7 @@ export function createSplitEngine(options: SplitEngineOptions) {
     if (!experiment || !experiment.variants.length) return null
 
     const cookieName = `${COOKIE_PREFIX}${experiment.id}`
-    const cookies = parseCookies(cookieHeader)
+    const cookies = parseCookiesInternal(cookieHeader)
 
     let variantId = cookies[cookieName]
     let isNewAssignment = false
@@ -160,3 +161,41 @@ export function createSplitEngine(options: SplitEngineOptions) {
 }
 
 export type SplitEngine = ReturnType<typeof createSplitEngine>
+
+// ── Standalone helpers for component-level SDK usage ─────────────────────────
+
+/** Parse a Cookie header string into a key→value map. */
+export function parseCookies(header: string): Record<string, string> {
+  if (!header) return {}
+  return Object.fromEntries(
+    header.split(';')
+      .map(c => c.trim().split('=').map(s => s.trim()))
+      .filter(([k]) => k?.length > 0)
+  )
+}
+
+/**
+ * Read or assign a variant from already-parsed cookies.
+ * Pure function — no network calls, no side effects.
+ * Used by @koryla/react, @koryla/vue, @koryla/astro component SDKs.
+ */
+export function getVariantFromCookies(
+  cookies: Record<string, string>,
+  experimentId: string,
+  variants: Pick<Variant, 'id' | 'traffic_weight'>[],
+): { variantId: string; isNewAssignment: boolean; cookieName: string } {
+  const cookieName = `${COOKIE_PREFIX}${experimentId}`
+  let variantId = cookies[cookieName]
+  let isNewAssignment = false
+
+  const storedVariant = variantId ? variants.find(v => v.id === variantId) : null
+  if (!storedVariant) {
+    const total = variants.reduce((s, v) => s + v.traffic_weight, 0)
+    let rand = Math.random() * total
+    for (const v of variants) { rand -= v.traffic_weight; if (rand <= 0) { variantId = v.id; break } }
+    if (!variantId) variantId = variants[variants.length - 1].id
+    isNewAssignment = true
+  }
+
+  return { variantId, isNewAssignment, cookieName }
+}
