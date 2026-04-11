@@ -13,7 +13,7 @@ Koryla can forward experiment assignment events to your analytics platform autom
 
 Every time a visitor is assigned to a variant for the first time, the edge function calls your configured analytics platform in the background. The event is fired only once per visitor per experiment — returning visitors who already have the `ky_` cookie do not trigger a second event.
 
-> **Astro demo:** See [`netlify/edge-functions/koryla.ts#L115-L132`](https://github.com/andresclua/koryla/blob/main/astro-demo-internal/netlify/edge-functions/koryla.ts#L115-L132) for the `fireEvent` function that dispatches events without blocking the response.
+> **Astro demo:** See [`netlify/edge-functions/koryla.ts#L115-L132`](https://github.com/andresclua/koryla-astro-demo-example/blob/main/netlify/edge-functions/koryla.ts#L115-L132) for the `fireEvent` function that dispatches events without blocking the response.
 
 ## Supported platforms
 

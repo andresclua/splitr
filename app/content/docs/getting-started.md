@@ -46,7 +46,7 @@ Pick the path that matches your stack. You only need one.
 
 The fastest path. Add one file and two lines to `netlify.toml` — no npm install required.
 
-> **Astro demo:** See the full working example in [`netlify/edge-functions/koryla.ts`](https://github.com/andresclua/koryla/blob/main/astro-demo-internal/netlify/edge-functions/koryla.ts) and [`netlify.toml`](https://github.com/andresclua/koryla/blob/main/astro-demo-internal/netlify.toml).
+> **Astro demo:** See the full working example in [`netlify/edge-functions/koryla.ts`](https://github.com/andresclua/koryla-astro-demo-example/blob/main/netlify/edge-functions/koryla.ts) and [`netlify.toml`](https://github.com/andresclua/koryla-astro-demo-example/blob/main/netlify.toml).
 
 **1. Create the edge function**
 

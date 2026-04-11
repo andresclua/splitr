@@ -1,0 +1,29 @@
+name: Sync next-demo-internal → next-demo-example
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'next-demo-internal/**'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push subtree to koryla-next-demo-example
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote add next-demo https://x-access-token:${GH_PAT}@github.com/andresclua/koryla-next-demo-example.git
+          git subtree split --prefix=next-demo-internal -b next-demo-sync
+          git push next-demo next-demo-sync:main --force
+          git branch -D next-demo-sync

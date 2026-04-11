@@ -14,11 +14,15 @@ Two packages work together — pick what you need:
 | `@koryla/next` | Full-page routing (`/` → `/variant-b`) via Next.js middleware |
 | `@koryla/react` | Component-level testing within a single page |
 
+The [live demo](https://next-demo.koryla.com) uses the middleware approach — three experiments running on `/headline`, `/hero`, and `/pricing`.
+
 ---
 
 ## @koryla/next — Full-page middleware
 
 The simplest path. No changes to your pages — the middleware intercepts requests and rewrites the URL before Next.js renders anything.
+
+> **Next.js demo:** [`middleware.ts`](https://github.com/andresclua/koryla-next-demo-example/blob/main/middleware.ts) — the complete middleware setup used in the demo, intercepting `/headline`, `/hero`, and `/pricing`.
 
 ### Install
 
@@ -27,6 +31,8 @@ npm install @koryla/next
 ```
 
 ### middleware.ts
+
+> **Next.js demo:** [`app/headline/page.tsx`](https://github.com/andresclua/koryla-next-demo-example/blob/main/app/headline/page.tsx) and [`app/headline-b/page.tsx`](https://github.com/andresclua/koryla-next-demo-example/blob/main/app/headline-b/page.tsx) — control and variant pages for a text-change experiment.
 
 ```ts
 import { korylaMiddleware } from '@koryla/next'
