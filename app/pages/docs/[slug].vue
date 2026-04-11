@@ -47,29 +47,50 @@ watch(page, (p) => {
       <span class="text-gray-700 font-medium">{{ page!.title }}</span>
     </div>
 
-    <!-- SDK framework switcher — shown only on SDK section pages -->
-    <div v-if="page!.section === 'SDK'" class="flex flex-wrap gap-2 mb-8">
-      <NuxtLink
-        v-for="fw in [
-          { slug: 'sdk',           label: 'Overview'     },
-          { slug: 'sdk-react',     label: 'React / Next.js' },
-          { slug: 'sdk-vue',       label: 'Vue / Nuxt'   },
-          { slug: 'sdk-astro',     label: 'Astro'        },
-          { slug: 'sdk-wordpress', label: 'WordPress'    },
-        ]"
-        :key="fw.slug"
-        :to="`/docs/${fw.slug}`"
-        class="px-3.5 py-1.5 rounded-full text-sm font-medium border transition-colors"
-        :class="fw.slug === page!.slug
-          ? 'bg-[#C96A3F] text-white border-[#C96A3F]'
-          : 'bg-white text-gray-600 border-gray-200 hover:border-[#F0C9B0] hover:text-[#C96A3F]'"
-      >
-        {{ fw.label }}
-      </NuxtLink>
+    <!-- SDK pages: vertical framework nav + content side by side -->
+    <div v-if="page!.section === 'SDK'" class="flex gap-8 items-start">
+
+      <!-- Left: vertical framework nav -->
+      <nav class="flex flex-col gap-1 w-40 shrink-0 pt-1">
+        <NuxtLink
+          v-for="fw in [
+            { slug: 'sdk',           label: 'Overview'        },
+            { slug: 'sdk-react',     label: 'React / Next.js' },
+            { slug: 'sdk-vue',       label: 'Vue / Nuxt'      },
+            { slug: 'sdk-astro',     label: 'Astro'           },
+            { slug: 'sdk-wordpress', label: 'WordPress'       },
+          ]"
+          :key="fw.slug"
+          :to="`/docs/${fw.slug}`"
+          class="px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+          :class="fw.slug === page!.slug
+            ? 'bg-[#FEF0E8] text-[#C96A3F] font-semibold'
+            : 'text-gray-500 hover:text-[#C96A3F] hover:bg-[#FEF0E8]/50'"
+        >
+          {{ fw.label }}
+        </NuxtLink>
+      </nav>
+
+      <!-- Right: prose content -->
+      <div class="prose prose-gray max-w-none min-w-0 flex-1
+        prose-headings:font-semibold prose-headings:tracking-tight prose-headings:scroll-mt-24
+        prose-h1:text-3xl prose-h1:font-bold prose-h1:mb-2
+        prose-h2:text-xl prose-h2:mt-10 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-gray-100
+        prose-h3:text-base prose-h3:mt-6 prose-h3:mb-2
+        prose-a:no-underline hover:prose-a:underline
+        prose-code:bg-[#F0C9B0]/40 prose-code:text-[#A8522D] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:text-sm prose-code:font-normal prose-code:before:content-none prose-code:after:content-none
+        [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:before:content-none [&_pre_code]:after:content-none
+        prose-pre:bg-gray-50 prose-pre:rounded-xl prose-pre:border prose-pre:border-gray-200 [&_pre]:!p-5
+        prose-table:text-sm prose-th:font-semibold prose-th:bg-gray-50 prose-td:align-top
+        prose-blockquote:not-italic prose-blockquote:rounded-r-lg
+        prose-li:my-0.5
+        [&_a]:text-[#C96A3F] [&_blockquote]:border-[#C96A3F] [&_blockquote]:bg-[#FEF0E8]/60">
+        <ContentRenderer :value="page!" />
+      </div>
     </div>
 
-    <!-- Content -->
-    <div class="prose prose-gray max-w-none
+    <!-- Non-SDK pages: content only -->
+    <div v-else class="prose prose-gray max-w-none
       prose-headings:font-semibold prose-headings:tracking-tight prose-headings:scroll-mt-24
       prose-h1:text-3xl prose-h1:font-bold prose-h1:mb-2
       prose-h2:text-xl prose-h2:mt-10 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-gray-100
