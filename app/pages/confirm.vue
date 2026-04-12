@@ -6,59 +6,50 @@ const user = useSupabaseUser()
 const route = useRoute()
 const error = ref('')
 
-watch(user, (u) => {
-  console.log('[confirm] user watcher:', u?.email ?? 'null')
-  if (u) navigateTo('/dashboard', { replace: true })
-}, { immediate: true })
-
 onMounted(async () => {
-  console.log('[confirm] mounted, URL:', window.location.href)
-  console.log('[confirm] query:', JSON.stringify(route.query))
-  console.log('[confirm] hash:', window.location.hash)
+  // Already logged in — go straight to dashboard
+  if (user.value) {
+    window.location.replace('/dashboard')
+    return
+  }
 
   const errorParam = route.query.error as string | undefined
   if (errorParam) {
     error.value = route.query.error_description as string || errorParam
-    console.log('[confirm] error param:', error.value)
     return
   }
 
   const token_hash = route.query.token_hash as string | undefined
   const type = (route.query.type as string | undefined) ?? 'signup'
   if (token_hash) {
-    console.log('[confirm] verifying OTP token_hash...')
     const { error: err } = await supabase.auth.verifyOtp({ token_hash, type: type as any })
-    if (err) { error.value = err.message; console.log('[confirm] OTP error:', err.message); return }
-    await navigateTo('/dashboard', { replace: true })
+    if (err) { error.value = err.message; return }
+    window.location.replace('/dashboard')
     return
   }
 
   const code = route.query.code as string | undefined
   if (code) {
-    console.log('[confirm] exchanging code...')
     const { data, error: err } = await supabase.auth.exchangeCodeForSession(code)
-    console.log('[confirm] exchange result:', data?.session?.user?.email, err?.message)
     if (err) { error.value = err.message; return }
-    await navigateTo('/dashboard', { replace: true })
+    // Hard navigation so auth middleware sees the session from cookie on reload
+    window.location.replace('/dashboard')
     return
   }
 
-  // Implicit flow: tokens are in the URL hash (Google OAuth)
+  // Implicit flow: tokens in URL hash
   const hash = window.location.hash.substring(1)
   const hashParams = new URLSearchParams(hash)
   const accessToken = hashParams.get('access_token')
   const refreshToken = hashParams.get('refresh_token')
 
   if (accessToken && refreshToken) {
-    console.log('[confirm] found hash tokens, calling setSession...')
     const { error: err } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
-    console.log('[confirm] setSession error:', err?.message ?? 'none')
     if (err) { error.value = err.message; return }
-    await navigateTo('/dashboard', { replace: true })
+    window.location.replace('/dashboard')
     return
   }
 
-  console.log('[confirm] no params found at all')
   error.value = 'No se pudo establecer la sesión. Intenta de nuevo.'
 })
 </script>
