@@ -652,7 +652,7 @@ const ss = computed(() => sdkSnippets[activeSdk.value as SdkPlatform])
 
       <div class="px-6 py-5 space-y-4">
         <!-- Selectors -->
-        <div class="grid grid-cols-2 gap-3">
+        <div v-if="experiments?.length" class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-medium text-gray-500 mb-1.5">Experiment</label>
             <select
@@ -705,7 +705,20 @@ const ss = computed(() => sdkSnippets[activeSdk.value as SdkPlatform])
           </p>
         </div>
 
-        <!-- Empty state -->
+        <!-- Empty state: no experiments yet -->
+        <div v-else-if="!experiments?.length" class="flex items-center justify-between px-4 py-3 bg-[#FEF0E8] rounded-xl border border-[#F0C9B0]">
+          <div class="flex items-center gap-2.5">
+            <svg class="w-4 h-4 text-[#C96A3F] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p class="text-xs text-[#7a4030]">No experiments yet — create one first to generate your snippet.</p>
+          </div>
+          <NuxtLink :to="`/dashboard/${slug}`" class="text-xs font-semibold text-[#C96A3F] hover:text-[#A8522D] whitespace-nowrap ml-3">
+            Create experiment →
+          </NuxtLink>
+        </div>
+
+        <!-- Empty state: experiment not selected -->
         <div v-else class="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-xl border border-dashed border-gray-200">
           <svg class="w-4 h-4 text-gray-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />

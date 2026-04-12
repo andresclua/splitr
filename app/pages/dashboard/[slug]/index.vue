@@ -153,6 +153,11 @@ const filteredExperiments = computed(() => {
 const hasActiveFilters = computed(() => search.value || filterStatus.value !== 'all' || filterType.value !== 'all')
 
 const clearFilters = () => { search.value = ''; filterStatus.value = 'all'; filterType.value = 'all' }
+
+// ── Plan limits ───────────────────────────────────────────
+const EXPERIMENT_LIMITS: Record<string, number> = { free: 3, starter: 3, growth: Infinity }
+const experimentLimit = computed(() => EXPERIMENT_LIMITS[currentWorkspace.value?.plan ?? 'free'] ?? 3)
+const atExperimentLimit = computed(() => isFinite(experimentLimit.value) && (experiments.value?.length ?? 0) >= experimentLimit.value)
 </script>
 
 <template>
@@ -167,16 +172,29 @@ const clearFilters = () => { search.value = ''; filterStatus.value = 'all'; filt
           <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 capitalize">{{ currentWorkspace?.plan }}</span>
         </p>
       </div>
-      <button
-        v-if="!currentWorkspace?.is_demo"
-        class="inline-flex items-center gap-2 bg-[#C96A3F] text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-[#A8522D] transition-colors"
-        @click="openPanel"
-      >
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-        </svg>
-        New experiment
-      </button>
+      <div v-if="!currentWorkspace?.is_demo" class="relative group">
+        <button
+          :disabled="atExperimentLimit"
+          class="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          :class="atExperimentLimit ? 'bg-[#C96A3F] text-white' : 'bg-[#C96A3F] text-white hover:bg-[#A8522D]'"
+          @click="!atExperimentLimit && openPanel()"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          New experiment
+        </button>
+        <div v-if="atExperimentLimit" class="pointer-events-none absolute bottom-full right-0 mb-2 hidden group-hover:block z-50">
+          <div class="bg-gray-900 text-white text-xs rounded-lg px-3 py-2 w-56 text-center leading-snug shadow-lg">
+            <span class="capitalize">{{ currentWorkspace?.plan }}</span> plan allows up to {{ experimentLimit }} experiment{{ experimentLimit === 1 ? '' : 's' }}.
+            <NuxtLink
+              :to="`/dashboard/${slug}/billing`"
+              class="pointer-events-auto underline text-[#F4A87C] hover:text-white ml-0.5"
+            >Upgrade to Growth →</NuxtLink>
+          </div>
+          <div class="w-2 h-2 bg-gray-900 rotate-45 ml-auto mr-4 -mt-1" />
+        </div>
+      </div>
       <span v-else class="text-xs text-gray-400 bg-gray-100 px-3 py-2 rounded-lg">Read-only demo</span>
     </div>
 
@@ -480,16 +498,16 @@ const clearFilters = () => { search.value = ''; filterStatus.value = 'all'; filt
                         class="text-[11px] text-gray-400 hover:text-red-500 transition-colors"
                         @click="removeVariant(i)">Remove</button>
                     </div>
-                    <div class="grid grid-cols-3 gap-2">
-                      <div class="col-span-2">
-                        <input
-                          v-model="v.target_url" type="url"
-                          :placeholder="v.is_control ? 'Leave empty — uses Base URL' : 'https://acme.com/pricing-b'"
-                          :disabled="v.is_control"
-                          :class="['w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#C96A3F] placeholder:text-gray-300', v.is_control ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : '']"
-                        />
-                      </div>
-                      <div class="flex items-center gap-1.5">
+                    <div class="flex gap-2">
+                      <!-- URL field: Edge only -->
+                      <input
+                        v-if="form.type === 'edge'"
+                        v-model="v.target_url" type="url"
+                        :placeholder="v.is_control ? 'Leave empty — uses Base URL' : 'https://acme.com/pricing-b'"
+                        :disabled="v.is_control"
+                        :class="['flex-1 border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#C96A3F] placeholder:text-gray-300', v.is_control ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : '']"
+                      />
+                      <div class="flex items-center gap-1.5" :class="form.type === 'edge' ? 'w-24 shrink-0' : 'flex-1'">
                         <input v-model.number="v.traffic_weight" type="number" min="1" max="99"
                           class="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs text-center focus:outline-none focus:ring-2 focus:ring-[#C96A3F]" />
                         <span class="text-xs text-gray-400 shrink-0">%</span>

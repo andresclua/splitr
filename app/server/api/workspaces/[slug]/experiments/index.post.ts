@@ -30,11 +30,28 @@ export default defineEventHandler(async (event) => {
   const totalWeight = variants.reduce((sum, v) => sum + (v.traffic_weight ?? 0), 0)
   if (totalWeight !== 100) throw createError({ statusCode: 400, message: 'Variant weights must sum to 100' })
 
+  const EXPERIMENT_LIMITS: Record<string, number> = { free: 3, starter: 3, growth: Infinity }
+
   const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
 
   const { data: ws } = await supabase
-    .from('workspaces').select('id').eq('slug', slug).single()
+    .from('workspaces').select('id, plan').eq('slug', slug).single()
   if (!ws) throw createError({ statusCode: 404, message: 'Workspace not found' })
+
+  // Enforce experiment limit
+  const expLimit = EXPERIMENT_LIMITS[ws.plan] ?? 3
+  if (isFinite(expLimit)) {
+    const { count } = await supabase
+      .from('experiments')
+      .select('id', { count: 'exact', head: true })
+      .eq('workspace_id', ws.id)
+    if ((count ?? 0) >= expLimit) {
+      throw createError({
+        statusCode: 403,
+        message: `Your ${ws.plan} plan allows up to ${expLimit} experiment${expLimit === 1 ? '' : 's'}. Upgrade to Growth for more.`,
+      })
+    }
+  }
 
   const { data: member } = await supabase
     .from('workspace_members').select('role')
@@ -54,7 +71,7 @@ export default defineEventHandler(async (event) => {
       experiment_id: experiment.id,
       name: v.name.trim(),
       description: v.description?.trim() || null,
-      target_url: v.target_url.trim(),
+      target_url: v.target_url?.trim() || null,
       traffic_weight: v.traffic_weight,
       is_control: v.is_control ?? false,
     })))
