@@ -6,10 +6,20 @@ const user = useSupabaseUser()
 const route = useRoute()
 const error = ref('')
 
+// Wait for Supabase to update the reactive user state before navigating
+const waitForUser = () =>
+  new Promise<void>((resolve) => {
+    if (user.value) { resolve(); return }
+    const unwatch = watch(user, (u) => {
+      if (u) { unwatch(); resolve() }
+    })
+    setTimeout(() => { unwatch(); resolve() }, 3000)
+  })
+
 onMounted(async () => {
   // Already logged in — go straight to dashboard
   if (user.value) {
-    window.location.replace('/dashboard')
+    await navigateTo('/dashboard', { replace: true })
     return
   }
 
@@ -24,7 +34,8 @@ onMounted(async () => {
   if (token_hash) {
     const { error: err } = await supabase.auth.verifyOtp({ token_hash, type: type as any })
     if (err) { error.value = err.message; return }
-    window.location.replace('/dashboard')
+    await waitForUser()
+    await navigateTo('/dashboard', { replace: true })
     return
   }
 
@@ -32,8 +43,8 @@ onMounted(async () => {
   if (code) {
     const { data, error: err } = await supabase.auth.exchangeCodeForSession(code)
     if (err) { error.value = err.message; return }
-    // Hard navigation so auth middleware sees the session from cookie on reload
-    window.location.replace('/dashboard')
+    await waitForUser()
+    await navigateTo('/dashboard', { replace: true })
     return
   }
 
@@ -46,7 +57,8 @@ onMounted(async () => {
   if (accessToken && refreshToken) {
     const { error: err } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
     if (err) { error.value = err.message; return }
-    window.location.replace('/dashboard')
+    await waitForUser()
+    await navigateTo('/dashboard', { replace: true })
     return
   }
 
