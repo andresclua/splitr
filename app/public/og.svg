@@ -1,0 +1,51 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#0F2235"/>
+
+  <!-- Subtle grid -->
+  <defs>
+    <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+      <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#ffffff" stroke-width="0.3" opacity="0.06"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+
+  <!-- Orange accent top bar -->
+  <rect x="0" y="0" width="1200" height="4" fill="#C96A3F"/>
+
+  <!-- Orange glow circle (decorative) -->
+  <circle cx="980" cy="120" r="280" fill="#C96A3F" opacity="0.06"/>
+  <circle cx="980" cy="120" r="180" fill="#C96A3F" opacity="0.06"/>
+
+  <!-- Logo mark — rounded square -->
+  <rect x="80" y="80" width="72" height="72" rx="16" fill="#C96A3F"/>
+  <text x="116" y="134" font-family="system-ui, -apple-system, sans-serif" font-size="38" font-weight="800" fill="white" text-anchor="middle">K</text>
+
+  <!-- Wordmark -->
+  <text x="80" y="240" font-family="system-ui, -apple-system, sans-serif" font-size="96" font-weight="800" fill="white" letter-spacing="-3">Koryla</text>
+
+  <!-- Tagline -->
+  <text x="80" y="320" font-family="system-ui, -apple-system, sans-serif" font-size="36" font-weight="400" fill="#94A3B8" letter-spacing="-0.5">A/B tests that run before the page loads.</text>
+
+  <!-- Divider -->
+  <rect x="80" y="370" width="120" height="3" rx="2" fill="#C96A3F"/>
+
+  <!-- Feature pills -->
+  <!-- Zero flicker -->
+  <rect x="80" y="410" width="220" height="48" rx="24" fill="#1A3550"/>
+  <text x="192" y="441" font-family="system-ui, -apple-system, sans-serif" font-size="20" fill="#94A3B8" text-anchor="middle">⚡ Zero flicker</text>
+
+  <!-- SDK -->
+  <rect x="316" y="410" width="260" height="48" rx="24" fill="#1A3550"/>
+  <text x="446" y="441" font-family="system-ui, -apple-system, sans-serif" font-size="20" fill="#94A3B8" text-anchor="middle">🧩 React · Vue · Astro</text>
+
+  <!-- Any stack -->
+  <rect x="592" y="410" width="210" height="48" rx="24" fill="#1A3550"/>
+  <text x="697" y="441" font-family="system-ui, -apple-system, sans-serif" font-size="20" fill="#94A3B8" text-anchor="middle">🔌 Any stack</text>
+
+  <!-- URL bottom right -->
+  <text x="1120" y="562" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="600" fill="#C96A3F" text-anchor="end" opacity="0.8">koryla.com</text>
+
+  <!-- Bottom border accent -->
+  <rect x="0" y="626" width="1200" height="4" fill="#C96A3F" opacity="0.4"/>
+</svg>
