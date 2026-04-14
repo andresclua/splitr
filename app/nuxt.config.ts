@@ -12,6 +12,12 @@ export default defineNuxtConfig({
 
   app: {
     head: {
+      htmlAttrs: { lang: 'en' },
+      meta: [
+        { name: 'twitter:card', content: 'summary_large_image' },
+        { name: 'twitter:site', content: '@korylaapp' },
+        { property: 'og:site_name', content: 'Koryla' },
+      ],
       script: [
         {
           src: 'https://www.googletagmanager.com/gtag/js?id=G-5X1YJG3CYK',

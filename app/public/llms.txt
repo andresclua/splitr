@@ -28,9 +28,9 @@ Koryla also provides component-level A/B testing via framework SDKs:
 
 ## Pricing
 
-- **Free**: Up to 3 active experiments, 10k impressions/month
-- **Starter**: Unlimited experiments, 100k impressions/month, analytics destinations
-- **Growth**: Unlimited impressions, priority support, custom integrations
+- **Free** ($0): 1 workspace, up to 3 experiments, Edge + SDK testing
+- **Starter** ($29/mo): 3 workspaces, unlimited experiments, all analytics integrations, email support
+- **Growth** ($79/mo): Unlimited workspaces, unlimited experiments, priority support, custom webhooks
 
 ## Documentation
 

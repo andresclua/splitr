@@ -1,6 +1,15 @@
 <script setup lang="ts">
 definePageMeta({ layout: false })
-useSeoMeta({ title: 'Blog — Koryla', description: 'Articles about A/B testing, experimentation and product growth.' })
+useSeoMeta({
+  title: 'Blog — Koryla',
+  description: 'Articles about A/B testing, experimentation and product growth.',
+  ogTitle: 'Blog — Koryla',
+  ogDescription: 'Articles about A/B testing, experimentation and product growth.',
+  ogUrl: 'https://koryla.com/blog',
+  ogType: 'website',
+  twitterTitle: 'Blog — Koryla',
+  twitterDescription: 'Articles about A/B testing, experimentation and product growth.',
+})
 
 const { data: posts } = await useAsyncData('blog', () =>
   queryCollection('blog').order('date', 'DESC').all()

@@ -1,6 +1,15 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'docs' })
-useSeoMeta({ title: 'Docs — Koryla', description: 'Documentation for Koryla — edge-based A/B testing.' })
+useSeoMeta({
+  title: 'Docs — Koryla',
+  description: 'Documentation for Koryla — edge-based A/B testing without flicker or JavaScript.',
+  ogTitle: 'Docs — Koryla',
+  ogDescription: 'Documentation for Koryla — edge-based A/B testing without flicker or JavaScript.',
+  ogUrl: 'https://koryla.com/docs',
+  ogType: 'website',
+  twitterTitle: 'Docs — Koryla',
+  twitterDescription: 'Documentation for Koryla — edge-based A/B testing without flicker or JavaScript.',
+})
 
 const { data: pages } = await useAsyncData('docs-index', () =>
   queryCollection('docs').order('order', 'ASC').all()
