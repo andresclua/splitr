@@ -2,12 +2,36 @@
 definePageMeta({ layout: 'default' })
 useSeoMeta({ robots: 'noindex, nofollow' })
 
-const loginWithGoogle = () => {
-  const config = useRuntimeConfig()
-  const supabaseUrl = (config.public as any).supabase?.url
-  const redirectTo = encodeURIComponent(`${window.location.origin}/confirm`)
-  window.location.href = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${redirectTo}`
+const supabase = useSupabaseClient()
+let authSubscription: ReturnType<typeof supabase.auth.onAuthStateChange>['data']['subscription'] | null = null
+
+const loginWithGoogle = async () => {
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${window.location.origin}/confirm`,
+      skipBrowserRedirect: true,
+    },
+  })
+  if (error || !data.url) return
+
+  const w = 500, h = 600
+  const left = Math.round(screen.width / 2 - w / 2)
+  const top = Math.round(screen.height / 2 - h / 2)
+  const popup = window.open(data.url, 'google-auth', `width=${w},height=${h},left=${left},top=${top},scrollbars=yes`)
+
+  // When the popup sets the session, onAuthStateChange fires in the parent too
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+      subscription.unsubscribe()
+      popup?.close()
+      navigateTo('/dashboard')
+    }
+  })
+  authSubscription = subscription
 }
+
+onUnmounted(() => authSubscription?.unsubscribe())
 </script>
 
 <template>

@@ -6,6 +6,15 @@ const user = useSupabaseUser()
 const route = useRoute()
 const error = ref('')
 
+// If opened as a popup, close self — parent's onAuthStateChange will navigate
+const finishAuth = async () => {
+  if (window.opener) {
+    window.close()
+  } else {
+    await navigateTo('/dashboard', { replace: true })
+  }
+}
+
 // Wait for Supabase to update the reactive user state before navigating
 const waitForUser = () =>
   new Promise<void>((resolve) => {
@@ -19,7 +28,7 @@ const waitForUser = () =>
 onMounted(async () => {
   // Already logged in — go straight to dashboard
   if (user.value) {
-    await navigateTo('/dashboard', { replace: true })
+    await finishAuth()
     return
   }
 
@@ -35,7 +44,7 @@ onMounted(async () => {
     const { error: err } = await supabase.auth.verifyOtp({ token_hash, type: type as any })
     if (err) { error.value = err.message; return }
     await waitForUser()
-    await navigateTo('/dashboard', { replace: true })
+    await finishAuth()
     return
   }
 
@@ -44,7 +53,7 @@ onMounted(async () => {
     const { data, error: err } = await supabase.auth.exchangeCodeForSession(code)
     if (err) { error.value = err.message; return }
     await waitForUser()
-    await navigateTo('/dashboard', { replace: true })
+    await finishAuth()
     return
   }
 
@@ -58,7 +67,7 @@ onMounted(async () => {
     const { error: err } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
     if (err) { error.value = err.message; return }
     await waitForUser()
-    await navigateTo('/dashboard', { replace: true })
+    await finishAuth()
     return
   }
 
