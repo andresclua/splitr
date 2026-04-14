@@ -1,5 +1,3 @@
-const FROM = 'Koryla <no-reply@koryla.com>'
-
 const HEADER = `
   <table width="100%" cellpadding="0" cellspacing="0" border="0">
     <tr>
@@ -30,13 +28,16 @@ async function send(payload: {
     return
   }
 
+  const fromEmail = (config.resendFromEmail as string | undefined) || 'hello@koryla.com'
+  const from = `Koryla <${fromEmail}>`
+
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ from: FROM, ...payload }),
+    body: JSON.stringify({ from, ...payload }),
   })
 
   if (!res.ok) {
