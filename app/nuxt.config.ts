@@ -17,8 +17,8 @@ export default defineNuxtConfig({
         { name: 'twitter:card', content: 'summary_large_image' },
         { name: 'twitter:site', content: '@korylaapp' },
         { property: 'og:site_name', content: 'Koryla' },
-        { property: 'og:image', content: 'https://koryla.com/og.svg' },
-        { name: 'twitter:image', content: 'https://koryla.com/og.svg' },
+        { property: 'og:image', content: 'https://koryla.com/og.png' },
+        { name: 'twitter:image', content: 'https://koryla.com/og.png' },
       ],
       script: [
         {
