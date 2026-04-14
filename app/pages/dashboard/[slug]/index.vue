@@ -39,8 +39,12 @@ const form = reactive({
 const totalWeight = computed(() => form.variants.reduce((s, v) => s + v.traffic_weight, 0))
 
 const addVariant = () => {
-  const remaining = 100 - totalWeight.value
-  form.variants.push({ name: `Variant ${String.fromCharCode(65 + form.variants.length)}`, description: '', target_url: '', traffic_weight: Math.max(0, remaining), is_control: false })
+  const count = form.variants.length + 1
+  const weight = Math.floor(100 / count)
+  const remainder = 100 - weight * count
+  form.variants.push({ name: `Variant ${String.fromCharCode(65 + form.variants.length)}`, description: '', target_url: '', traffic_weight: weight, is_control: false })
+  // Redistribute evenly
+  form.variants.forEach((v, i) => { v.traffic_weight = weight + (i === 0 ? remainder : 0) })
 }
 
 const removeVariant = (i: number) => {
@@ -112,12 +116,14 @@ const deleteExperiment = async (exp: Experiment) => {
 }
 
 // ── Helpers ───────────────────────────────────────────────
-const statusConfig: Record<string, { label: string; class: string }> = {
-  draft:     { label: 'Draft',     class: 'bg-gray-100 text-gray-600' },
-  active:    { label: 'Active',    class: 'bg-green-100 text-green-700' },
-  paused:    { label: 'Paused',    class: 'bg-amber-100 text-amber-700' },
-  completed: { label: 'Completed', class: 'bg-[#FEF0E8] text-[#C96A3F]' },
+const statusConfig: Record<string, { label: string; class: string; pulse: boolean; dot: string }> = {
+  draft:     { label: 'Draft',     class: 'bg-gray-100 text-gray-600',              pulse: false, dot: 'bg-gray-300' },
+  active:    { label: 'Active',    class: 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20', pulse: true,  dot: 'bg-green-500' },
+  paused:    { label: 'Paused',    class: 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20', pulse: false, dot: 'bg-amber-400' },
+  completed: { label: 'Completed', class: 'bg-[#FEF0E8] text-[#C96A3F] ring-1 ring-inset ring-[#C96A3F]/20', pulse: false, dot: 'bg-[#C96A3F]' },
 }
+
+const variantColors = ['bg-gray-300', 'bg-[#C96A3F]', 'bg-[#0F2235]', 'bg-emerald-500']
 
 const formatDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 const conversionRate = (exp: Experiment) => exp.total_impressions ? ((exp.total_conversions / exp.total_impressions) * 100).toFixed(1) + '%' : '—'
@@ -266,6 +272,13 @@ const atExperimentLimit = computed(() => isFinite(experimentLimit.value) && (exp
         <div class="px-6 pt-5 pb-4 flex items-start gap-4">
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 flex-wrap">
+              <!-- Pulse dot -->
+              <span v-if="statusConfig[exp.status]?.pulse" class="relative flex h-2 w-2 shrink-0">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-60" />
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+              </span>
+              <span v-else :class="['w-2 h-2 rounded-full shrink-0', statusConfig[exp.status]?.dot]" />
+
               <NuxtLink :to="`/dashboard/${slug}/experiments/${exp.id}`" class="text-sm font-semibold text-gray-900 hover:text-[#C96A3F] transition-colors">
                 {{ exp.name }}
               </NuxtLink>
@@ -305,15 +318,19 @@ const atExperimentLimit = computed(() => isFinite(experimentLimit.value) && (exp
               </p>
             </div>
             <div>
-              <p class="text-sm font-semibold text-gray-900 tabular-nums">{{ conversionRate(exp) }}</p>
+              <p :class="['text-sm font-bold tabular-nums', exp.total_impressions && exp.total_conversions ? 'text-green-600' : 'text-gray-900']">
+                {{ conversionRate(exp) }}
+              </p>
               <p class="text-[11px] text-gray-400 flex items-center justify-center gap-1 mt-0.5">
                 Conv. rate
                 <KTooltip text="% of visitors who reached the conversion URL after seeing a variant" />
               </p>
             </div>
             <div>
-              <p class="text-sm font-semibold text-gray-900 tabular-nums">{{ exp.variants.length }}</p>
-              <p class="text-[11px] text-gray-400 mt-0.5">Variants</p>
+              <p class="text-sm font-semibold text-gray-400 tabular-nums">
+                {{ exp.started_at ? formatDate(exp.started_at) : exp.status === 'draft' ? 'Not started' : formatDate(exp.created_at) }}
+              </p>
+              <p class="text-[11px] text-gray-400 mt-0.5">{{ exp.started_at ? 'Started' : 'Created' }}</p>
             </div>
           </div>
 
@@ -354,14 +371,14 @@ const atExperimentLimit = computed(() => isFinite(experimentLimit.value) && (exp
         <div class="px-6 pb-5">
           <div class="flex h-1 rounded-full overflow-hidden gap-px mb-2.5">
             <div
-              v-for="v in exp.variants" :key="v.id"
+              v-for="(v, i) in exp.variants" :key="v.id"
               :style="{ width: v.traffic_weight + '%' }"
-              :class="v.is_control ? 'bg-gray-300' : 'bg-[#C96A3F]'"
+              :class="variantColors[i] ?? 'bg-gray-400'"
             />
           </div>
           <div class="flex items-start gap-5 flex-wrap">
-            <div v-for="v in exp.variants" :key="v.id" class="flex items-start gap-1.5">
-              <div :class="['w-2 h-2 rounded-full shrink-0 mt-[3px]', v.is_control ? 'bg-gray-300' : 'bg-[#C96A3F]']" />
+            <div v-for="(v, i) in exp.variants" :key="v.id" class="flex items-start gap-1.5">
+              <div :class="['w-2 h-2 rounded-full shrink-0 mt-[3px]', variantColors[i] ?? 'bg-gray-400']" />
               <div>
                 <span class="text-xs text-gray-700 font-medium">{{ v.name }}</span>
                 <span class="text-xs text-gray-400 ml-1">{{ v.traffic_weight }}%</span>
