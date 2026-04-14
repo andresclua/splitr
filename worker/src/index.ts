@@ -16,6 +16,7 @@ interface Experiment {
   id: string
   name: string
   base_url: string
+  conversion_url: string | null
   variants: Variant[]
   destinations: AnalyticsDestination[]
 }
@@ -54,6 +55,26 @@ function parseCookies(header: string | null): Record<string, string> {
   )
 }
 
+async function postEvent(env: Env, payload: {
+  experiment_id: string
+  variant_id: string
+  session_id: string
+  event_type: 'impression' | 'conversion'
+}) {
+  try {
+    await fetch(`${env.KORYLA_API_URL}/api/worker/event`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${env.KORYLA_API_KEY}`,
+      },
+      body: JSON.stringify(payload),
+    })
+  } catch {
+    // fire-and-forget — don't break the site
+  }
+}
+
 async function getConfig(env: Env): Promise<Experiment[]> {
   // Serve from KV cache when available (60-second TTL set on write)
   const cached = await env.KORYLA_CONFIG.get('experiments', 'json')
@@ -87,6 +108,25 @@ export default {
 
     const experiments = await getConfig(env)
 
+    // Check if this URL is a conversion URL for any experiment the visitor is in
+    for (const exp of experiments) {
+      if (!exp.conversion_url) continue
+      const convPathname = new URL(exp.conversion_url).pathname
+      if (url.pathname === convPathname) {
+        const variantId = cookies[getCookieName(exp.id)]
+        if (variantId) {
+          ctx.waitUntil(
+            postEvent(env, {
+              experiment_id: exp.id,
+              variant_id: variantId,
+              session_id: variantId,
+              event_type: 'conversion',
+            })
+          )
+        }
+      }
+    }
+
     const experiment = experiments.find(e => url.pathname.startsWith(new URL(e.base_url).pathname))
     if (!experiment) {
       return fetch(request)
@@ -117,16 +157,24 @@ export default {
         `${cookieName}=${variantId}; Path=/; Max-Age=2592000; SameSite=Lax`
       )
 
-      // Fire-and-forget analytics — doesn't block response
+      // Store impression in Supabase + forward to external analytics — fire-and-forget
       ctx.waitUntil(
-        routeAnalytics(experiment.destinations, {
-          experimentId: experiment.id,
-          experimentName: experiment.name,
-          variantId: variant.id,
-          variantName: variant.id,
-          sessionId: variantId,
-          timestamp: new Date().toISOString(),
-        })
+        Promise.all([
+          postEvent(env, {
+            experiment_id: experiment.id,
+            variant_id: variant.id,
+            session_id: variantId,
+            event_type: 'impression',
+          }),
+          routeAnalytics(experiment.destinations, {
+            experimentId: experiment.id,
+            experimentName: experiment.name,
+            variantId: variant.id,
+            variantName: variant.id,
+            sessionId: variantId,
+            timestamp: new Date().toISOString(),
+          }),
+        ])
       )
     }
 
