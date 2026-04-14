@@ -3,7 +3,6 @@ definePageMeta({ layout: false })
 useSeoMeta({ robots: 'noindex, nofollow' })
 
 const supabase = useSupabaseClient()
-let authSubscription: ReturnType<typeof supabase.auth.onAuthStateChange>['data']['subscription'] | null = null
 
 const loginWithGoogle = async () => {
   const { data, error } = await supabase.auth.signInWithOAuth({
@@ -18,19 +17,9 @@ const loginWithGoogle = async () => {
   const w = 500, h = 600
   const left = Math.round(screen.width / 2 - w / 2)
   const top = Math.round(screen.height / 2 - h / 2)
-  const popup = window.open(data.url, 'google-auth', `width=${w},height=${h},left=${left},top=${top},scrollbars=yes`)
-
-  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_IN' && session) {
-      subscription.unsubscribe()
-      popup?.close()
-      navigateTo('/dashboard')
-    }
-  })
-  authSubscription = subscription
+  window.open(data.url, 'google-auth', `width=${w},height=${h},left=${left},top=${top},scrollbars=yes`)
+  // Navigation is handled by confirm.vue via window.opener.location.href
 }
-
-onUnmounted(() => authSubscription?.unsubscribe())
 </script>
 
 <template>

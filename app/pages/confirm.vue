@@ -6,9 +6,11 @@ const user = useSupabaseUser()
 const route = useRoute()
 const error = ref('')
 
-// If opened as a popup, close self — parent's onAuthStateChange will navigate
+// If opened as a popup, navigate the parent directly then close self.
+// More reliable than relying on onAuthStateChange timing in the parent.
 const finishAuth = async () => {
   if (window.opener) {
+    window.opener.location.href = '/dashboard'
     window.close()
   } else {
     await navigateTo('/dashboard', { replace: true })
