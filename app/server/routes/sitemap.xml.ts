@@ -35,7 +35,6 @@ export default defineEventHandler(async () => {
     'ab-testing-core-web-vitals',
     'ab-test-results-are-wrong',
     'ab-testing-astro-sites',
-    'real-cost-ab-testing-tools',
     'ab-testing-landing-pages',
     'server-side-vs-client-side-ab-testing',
     'ab-testing-ecommerce',
