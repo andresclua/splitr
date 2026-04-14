@@ -191,8 +191,11 @@ const limitBar = (used: number, limit: number | null) => {
                         {{ ws.active_experiments }} live
                       </span>
                     </div>
-                    <div v-if="limitBar(ws.experiment_count, ws.experiment_limit) as bar" class="mt-1.5 w-16 h-1 bg-gray-100 rounded-full overflow-hidden">
-                      <div :class="['h-full rounded-full', bar.color]" :style="{ width: bar.pct + '%' }" />
+                    <div v-if="ws.experiment_limit" class="mt-1.5 w-16 h-1 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        :class="['h-full rounded-full', limitBar(ws.experiment_count, ws.experiment_limit)?.color]"
+                        :style="{ width: (limitBar(ws.experiment_count, ws.experiment_limit)?.pct ?? 0) + '%' }"
+                      />
                     </div>
                   </td>
 
