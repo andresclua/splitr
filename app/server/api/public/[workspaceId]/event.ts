@@ -8,6 +8,7 @@ export default defineEventHandler(async (event) => {
     'Access-Control-Allow-Headers': 'Content-Type',
   })
   if (getMethod(event) === 'OPTIONS') return null
+  if (getMethod(event) !== 'POST') throw createError({ statusCode: 405, message: 'Method Not Allowed' })
 
   const workspaceId = getRouterParam(event, 'workspaceId')
   if (!workspaceId) throw createError({ statusCode: 400, message: 'Missing workspaceId' })
