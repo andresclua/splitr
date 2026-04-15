@@ -576,6 +576,22 @@ await track({ experiment_id, variant_id, session_id, event_type: 'conversion' })
 // ky_session=f3a1c82d-9b4e-4d71-b2f7-0e3a7c5d9f12`,
 }
 
+// ── Impression tracking snippet ───────────────────────────
+const impressionSnippet = computed(() => `<script>
+(function(){
+  var w='${workspaceId}',a='${appUrl}';
+  function sid(){try{return crypto.randomUUID()}catch(e){return Math.random().toString(36).slice(2)+Date.now().toString(36)}}
+  var c=document.cookie.split(';').reduce(function(o,p){var s=p.trim().split('=');if(s[0])o[decodeURIComponent(s[0])]=decodeURIComponent(s[1]||'');return o},{});
+  var s=c['ky_session'];
+  if(!s){s=sid();document.cookie='ky_session='+s+';path=/;max-age=31536000;samesite=lax'}
+  Object.keys(c).filter(function(k){return k.indexOf('ky_')===0&&k!=='ky_session'}).forEach(function(k){
+    var v=c[k],e=k.slice(3);
+    window.dispatchEvent(new CustomEvent('koryla:impression',{detail:{experiment_id:e,variant_id:v,session_id:s}}));
+    fetch(a+'/api/public/'+w+'/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({experiment_id:e,variant_id:v,session_id:s,event_type:'impression'})}).catch(function(){});
+  });
+})();
+<\/script>`)
+
 type EdgePlatform = keyof typeof edgeSnippets
 type SdkPlatform = keyof typeof sdkSnippets
 
@@ -876,6 +892,33 @@ const ss = computed(() => sdkSnippets[activeSdk.value as SdkPlatform])
             @click="copy(`d-${step.key}`, (devsSnippets as any)[step.key])">
             {{ copied === `d-${step.key}` ? '✓ Copied' : 'Copy' }}
           </button>
+        </div>
+      </div>
+      <!-- Impression tracking snippet -->
+      <div v-if="mode === 'edge'" class="bg-white border border-gray-200 rounded-2xl overflow-hidden mt-4">
+        <div class="px-5 py-4 border-b border-gray-100">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="text-sm font-semibold text-gray-800">Impression tracking snippet</span>
+            <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">Recommended</span>
+          </div>
+          <p class="text-xs text-gray-500 leading-relaxed mt-1">
+            Edge experiments assign variants on the server — so the browser receives the right page from the first byte, with zero flicker. But the server doesn't know if the user actually saw the page.
+            <br/><br/>
+            Paste this snippet in your <code class="bg-gray-100 px-1 rounded">&lt;head&gt;</code>. It does three things:
+          </p>
+          <ul class="mt-2 space-y-1">
+            <li class="flex items-start gap-2 text-xs text-gray-500"><span class="text-gray-400 shrink-0 mt-0.5">1.</span> Reads the <code class="bg-gray-100 px-1 rounded">ky_*</code> cookies left by the edge function when it assigned the variant</li>
+            <li class="flex items-start gap-2 text-xs text-gray-500"><span class="text-gray-400 shrink-0 mt-0.5">2.</span> Notifies Koryla — so the dashboard shows real impression counts per variant</li>
+            <li class="flex items-start gap-2 text-xs text-gray-500"><span class="text-gray-400 shrink-0 mt-0.5">3.</span> Fires a <code class="bg-gray-100 px-1 rounded">koryla:impression</code> browser event so you can forward data to GA4, PostHog or any analytics tool already on your site</li>
+          </ul>
+          <p class="text-xs text-gray-400 mt-2">Without it, experiments still work — visitors see the correct variant — but the dashboard won't record impressions.</p>
+        </div>
+        <div class="relative group">
+          <pre class="px-5 py-4 text-xs leading-relaxed text-gray-800 font-mono overflow-x-auto bg-gray-50 whitespace-pre">{{ impressionSnippet }}</pre>
+          <button
+            :class="['absolute top-3 right-3 text-[11px] font-semibold px-2.5 py-1 rounded-lg transition-all', copied === 'impression' ? 'bg-green-100 text-green-700' : 'bg-white border border-gray-200 text-gray-500 opacity-0 group-hover:opacity-100']"
+            @click="copy('impression', impressionSnippet)"
+          >{{ copied === 'impression' ? '✓ Copied' : 'Copy' }}</button>
         </div>
       </div>
     </div>
