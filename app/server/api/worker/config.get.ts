@@ -31,13 +31,21 @@ export default defineEventHandler(async (event) => {
     .eq('id', apiKey.id)
     .then()
 
-  // Fetch active experiments with variants
-  const { data: experiments, error: expError } = await supabase
+  // Fetch active experiments with variants — optionally filter by type
+  const typeFilter = getQuery(event).type as string | undefined
+  const validTypes = ['edge', 'component']
+
+  let query = supabase
     .from('experiments')
-    .select('id, name, base_url, conversion_url, variants(id, name, traffic_weight, target_url, is_control)')
+    .select('id, name, base_url, conversion_url, type, variants(id, name, traffic_weight, target_url, is_control)')
     .eq('workspace_id', apiKey.workspace_id)
     .eq('status', 'active')
-    .eq('type', 'edge')
+
+  if (typeFilter && validTypes.includes(typeFilter)) {
+    query = query.eq('type', typeFilter)
+  }
+
+  const { data: experiments, error: expError } = await query
 
   if (expError) throw createError({ statusCode: 500, message: expError.message })
 
