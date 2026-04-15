@@ -1,6 +1,14 @@
 import { createClient } from '@supabase/supabase-js'
 
 export default defineEventHandler(async (event) => {
+  // CORS — allow any origin (public endpoint)
+  setResponseHeaders(event, {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  })
+  if (getMethod(event) === 'OPTIONS') return null
+
   const workspaceId = getRouterParam(event, 'workspaceId')
   if (!workspaceId) throw createError({ statusCode: 400, message: 'Missing workspaceId' })
 
