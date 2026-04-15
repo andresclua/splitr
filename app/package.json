@@ -16,6 +16,7 @@
   "dependencies": {
     "@nuxt/content": "^3.1.0",
     "@nuxtjs/supabase": "^1.4.6",
+    "@shikijs/engine-javascript": "^4.0.2",
     "@supabase/supabase-js": "^2.47.0",
     "@tailwindcss/typography": "^0.5.19",
     "better-sqlite3": "^12.8.0",
