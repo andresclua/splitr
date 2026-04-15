@@ -23,18 +23,27 @@ const waitForUser = () =>
   })
 
 onMounted(async () => {
-  // Already logged in — go straight to dashboard
-  if (user.value) {
-    await finishAuth()
-    return
-  }
-
   const errorParam = route.query.error as string | undefined
   if (errorParam) {
     error.value = route.query.error_description as string || errorParam
     return
   }
 
+  // Already logged in — go straight to dashboard
+  if (user.value) {
+    await finishAuth()
+    return
+  }
+
+  // The Supabase client auto-detects tokens from the URL hash on init and
+  // fires onAuthStateChange. Wait for that before doing anything manual.
+  await waitForUser()
+  if (user.value) {
+    await finishAuth()
+    return
+  }
+
+  // Manual fallback: email OTP (token_hash in query)
   const token_hash = route.query.token_hash as string | undefined
   const type = (route.query.type as string | undefined) ?? 'signup'
   if (token_hash) {
@@ -45,16 +54,17 @@ onMounted(async () => {
     return
   }
 
+  // Manual fallback: PKCE (code in query)
   const code = route.query.code as string | undefined
   if (code) {
-    const { data, error: err } = await supabase.auth.exchangeCodeForSession(code)
+    const { error: err } = await supabase.auth.exchangeCodeForSession(code)
     if (err) { error.value = err.message; return }
     await waitForUser()
     await finishAuth()
     return
   }
 
-  // Implicit flow: tokens in URL hash
+  // Manual fallback: implicit flow tokens still in hash
   const hash = window.location.hash.substring(1)
   const hashParams = new URLSearchParams(hash)
   const accessToken = hashParams.get('access_token')
