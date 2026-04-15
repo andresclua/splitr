@@ -6,6 +6,7 @@ await fetchWorkspaces()
 if (!currentWorkspace.value) await navigateTo('/dashboard', { replace: true })
 
 const slug = currentWorkspace.value!.slug
+const workspaceId = currentWorkspace.value!.id
 
 // ── Data ──────────────────────────────────────────────────
 interface Variant { id: string; name: string; traffic_weight: number; is_control: boolean }
@@ -18,7 +19,7 @@ const { data: keys } = await useFetch<ApiKey[]>(`/api/workspaces/${slug}/keys`)
 const appUrl = import.meta.client ? window.location.origin : 'https://app.koryla.com'
 
 // ── Mode toggle ───────────────────────────────────────────
-const mode = ref<'edge' | 'sdk' | 'devs'>('edge')
+const mode = ref<'edge' | 'sdk' | 'devs' | 'snippet'>('edge')
 
 // ── Copy helper ───────────────────────────────────────────
 const copied = ref<string | null>(null)
@@ -575,6 +576,22 @@ await track({ experiment_id, variant_id, session_id, event_type: 'conversion' })
 // ky_session=f3a1c82d-9b4e-4d71-b2f7-0e3a7c5d9f12`,
 }
 
+// ── Snippet ───────────────────────────────────────────────
+const snippetCode = computed(() => `<script>
+(function(){
+  var w='${workspaceId}',a='${appUrl}';
+  function sid(){try{return crypto.randomUUID()}catch(e){return Math.random().toString(36).slice(2)+Date.now().toString(36)}}
+  var c=document.cookie.split(';').reduce(function(o,p){var s=p.trim().split('=');if(s[0])o[decodeURIComponent(s[0])]=decodeURIComponent(s[1]||'');return o},{});
+  var s=c['ky_session'];
+  if(!s){s=sid();document.cookie='ky_session='+s+';path=/;max-age=31536000;samesite=lax'}
+  Object.keys(c).filter(function(k){return k.indexOf('ky_')===0&&k!=='ky_session'}).forEach(function(k){
+    var v=c[k],e=k.slice(3);
+    window.dispatchEvent(new CustomEvent('koryla:impression',{detail:{experiment_id:e,variant_id:v,session_id:s}}));
+    fetch(a+'/api/public/'+w+'/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({experiment_id:e,variant_id:v,session_id:s,event_type:'impression'})}).catch(function(){});
+  });
+})();
+<\/script>`)
+
 type EdgePlatform = keyof typeof edgeSnippets
 type SdkPlatform = keyof typeof sdkSnippets
 
@@ -767,6 +784,18 @@ const ss = computed(() => sdkSnippets[activeSdk.value as SdkPlatform])
         </div>
         <p class="text-xs leading-relaxed" :class="mode === 'devs' ? 'text-gray-400' : 'text-gray-400'">Raw API protocol. SvelteKit, Angular, Laravel — any framework, no SDK needed.</p>
       </button>
+      <button
+        :class="['flex-1 rounded-2xl border-2 p-4 text-left transition-all', mode === 'snippet' ? 'border-emerald-600 bg-emerald-50' : 'border-gray-200 bg-white hover:border-gray-300']"
+        @click="mode = 'snippet'"
+      >
+        <div class="flex items-center gap-2 mb-1">
+          <svg class="w-4 h-4 shrink-0" :class="mode === 'snippet' ? 'text-emerald-600' : 'text-gray-400'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="text-sm font-semibold" :class="mode === 'snippet' ? 'text-emerald-700' : 'text-gray-700'">Analytics</span>
+        </div>
+        <p class="text-xs leading-relaxed" :class="mode === 'snippet' ? 'text-emerald-600/80' : 'text-gray-400'">Forward experiment data to GA4, PostHog or any analytics tool.</p>
+      </button>
     </div>
 
     <!-- ── EDGE ───────────────────────────────────────────── -->
@@ -874,6 +903,83 @@ const ss = computed(() => sdkSnippets[activeSdk.value as SdkPlatform])
             @click="copy(`d-${step.key}`, (devsSnippets as any)[step.key])">
             {{ copied === `d-${step.key}` ? '✓ Copied' : 'Copy' }}
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ANALYTICS SNIPPET ────────────────────────────── -->
+    <div v-if="mode === 'snippet'" class="space-y-4">
+      <div class="bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4">
+        <p class="text-sm font-semibold text-emerald-900 mb-1">One snippet. All your analytics tools.</p>
+        <p class="text-xs text-emerald-700 leading-relaxed">
+          Paste this snippet in your site's <code class="bg-white/60 px-1 rounded">&lt;head&gt;</code>. It reads the Koryla cookies set by your edge or SDK experiments, fires impression events to Koryla, and dispatches a <code class="bg-white/60 px-1 rounded">koryla:impression</code> browser event so you can forward data to GA4, PostHog, or any other tool.
+        </p>
+      </div>
+
+      <!-- Step 1: snippet -->
+      <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+        <div class="flex items-center gap-3 px-5 py-3.5 border-b border-gray-100">
+          <div class="w-5 h-5 rounded-full bg-gray-900 text-white text-[10px] font-bold flex items-center justify-center shrink-0">1</div>
+          <p class="text-sm font-semibold text-gray-800">Add the snippet to your <code class="font-mono text-xs bg-gray-100 px-1 rounded">&lt;head&gt;</code></p>
+        </div>
+        <div class="relative group">
+          <pre class="px-5 py-4 text-xs leading-relaxed text-gray-800 font-mono overflow-x-auto bg-gray-50 whitespace-pre">{{ snippetCode }}</pre>
+          <button
+            :class="['absolute top-3 right-3 text-[11px] font-semibold px-2.5 py-1 rounded-lg transition-all', copied === 'snippet' ? 'bg-green-100 text-green-700' : 'bg-white border border-gray-200 text-gray-500 opacity-0 group-hover:opacity-100']"
+            @click="copy('snippet', snippetCode)"
+          >{{ copied === 'snippet' ? '✓ Copied' : 'Copy' }}</button>
+        </div>
+      </div>
+
+      <!-- Step 2: listen to the event -->
+      <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+        <div class="flex items-center gap-3 px-5 py-3.5 border-b border-gray-100">
+          <div class="w-5 h-5 rounded-full bg-gray-900 text-white text-[10px] font-bold flex items-center justify-center shrink-0">2</div>
+          <p class="text-sm font-semibold text-gray-800">Forward to your analytics tool <span class="text-xs font-normal text-gray-400 ml-1">(optional)</span></p>
+        </div>
+        <p class="px-5 py-3.5 text-xs text-gray-500 leading-relaxed border-b border-gray-100 bg-gray-50/50">
+          The snippet dispatches a <code class="bg-gray-100 px-1 rounded">koryla:impression</code> event on the window. Listen to it and forward the data to whichever analytics tool you already have installed.
+        </p>
+        <div class="relative group">
+          <pre class="px-5 py-4 text-xs leading-relaxed text-gray-800 font-mono overflow-x-auto bg-gray-50 whitespace-pre">{{ `// GA4
+window.addEventListener('koryla:impression', function(e) {
+  gtag('event', 'experiment_assigned', e.detail)
+})
+
+// PostHog
+window.addEventListener('koryla:impression', function(e) {
+  posthog.capture('experiment_assigned', e.detail)
+})
+
+// Mixpanel
+window.addEventListener('koryla:impression', function(e) {
+  mixpanel.track('experiment_assigned', e.detail)
+})
+
+// Segment
+window.addEventListener('koryla:impression', function(e) {
+  analytics.track('experiment_assigned', e.detail)
+})` }}</pre>
+          <button
+            :class="['absolute top-3 right-3 text-[11px] font-semibold px-2.5 py-1 rounded-lg transition-all', copied === 'listeners' ? 'bg-green-100 text-green-700' : 'bg-white border border-gray-200 text-gray-500 opacity-0 group-hover:opacity-100']"
+            @click="copy('listeners', `window.addEventListener('koryla:impression', function(e) {\n  gtag('event', 'experiment_assigned', e.detail)\n})`)"
+          >{{ copied === 'listeners' ? '✓ Copied' : 'Copy' }}</button>
+        </div>
+      </div>
+
+      <!-- Event payload -->
+      <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+        <div class="flex items-center gap-3 px-5 py-3.5 border-b border-gray-100">
+          <div class="w-5 h-5 rounded-full bg-gray-900 text-white text-[10px] font-bold flex items-center justify-center shrink-0">3</div>
+          <p class="text-sm font-semibold text-gray-800">Event payload</p>
+        </div>
+        <div class="relative group">
+          <pre class="px-5 py-4 text-xs leading-relaxed text-gray-800 font-mono overflow-x-auto bg-gray-50 whitespace-pre">{{ `// e.detail shape:
+{
+  experiment_id: "70a5c503-5968-4337-a34f-d40d23e38ad1",  // experiment UUID
+  variant_id:    "05934428-b240-4829-96b1-e617d74a7448",  // variant UUID
+  session_id:    "f3a1c82d9b4e"                           // stable per-visitor ID
+}` }}</pre>
         </div>
       </div>
     </div>
