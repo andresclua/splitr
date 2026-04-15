@@ -635,6 +635,60 @@ const devsSteps = [
 
 const es = computed(() => edgeSnippets[activeEdge.value as EdgePlatform])
 const ss = computed(() => sdkSnippets[activeSdk.value as SdkPlatform])
+
+// ── Analytics destinations ────────────────────────────────
+interface Destination { id: string; provider: string; enabled: boolean; config: Record<string, string> }
+
+const { data: destinations, refresh: refreshDestinations } = await useFetch<Destination[]>(`/api/workspaces/${slug}/destinations`)
+
+const PROVIDERS = [
+  { id: 'ga4',      label: 'Google Analytics 4', fields: [{ key: 'measurement_id', label: 'Measurement ID', placeholder: 'G-XXXXXXXXXX' }, { key: 'api_secret', label: 'API Secret', placeholder: 'From GA4 → Admin → Data Streams → Measurement Protocol' }] },
+  { id: 'posthog',  label: 'PostHog',             fields: [{ key: 'api_key', label: 'Project API Key', placeholder: 'phc_...' }, { key: 'host', label: 'Host', placeholder: 'https://app.posthog.com' }] },
+  { id: 'mixpanel', label: 'Mixpanel',            fields: [{ key: 'token', label: 'Project Token', placeholder: 'Your Mixpanel project token' }, { key: 'api_secret', label: 'API Secret', placeholder: 'Your Mixpanel API secret' }] },
+  { id: 'segment',  label: 'Segment',             fields: [{ key: 'write_key', label: 'Write Key', placeholder: 'Your Segment source write key' }] },
+  { id: 'webhook',  label: 'Webhook',             fields: [{ key: 'url', label: 'URL', placeholder: 'https://your-endpoint.com/hook' }] },
+]
+
+const showDestinationForm = ref(false)
+const savingDestination = ref(false)
+const deletingId = ref<string | null>(null)
+const newProvider = ref('ga4')
+const newConfig = ref<Record<string, string>>({})
+
+const activeProviderFields = computed(() => PROVIDERS.find(p => p.id === newProvider.value)?.fields ?? [])
+
+watch(newProvider, () => { newConfig.value = {} })
+
+const providerLabel = (id: string) => PROVIDERS.find(p => p.id === id)?.label ?? id
+
+const saveDestination = async () => {
+  savingDestination.value = true
+  try {
+    await $fetch(`/api/workspaces/${slug}/destinations`, {
+      method: 'POST',
+      body: { provider: newProvider.value, config: newConfig.value },
+    })
+    await refreshDestinations()
+    showDestinationForm.value = false
+    newConfig.value = {}
+  } catch (e: any) {
+    alert(e?.data?.message ?? 'Failed to save destination')
+  } finally {
+    savingDestination.value = false
+  }
+}
+
+const deleteDestination = async (id: string) => {
+  deletingId.value = id
+  try {
+    await $fetch(`/api/workspaces/${slug}/destinations/${id}`, { method: 'DELETE' })
+    await refreshDestinations()
+  } catch (e: any) {
+    alert(e?.data?.message ?? 'Failed to delete')
+  } finally {
+    deletingId.value = null
+  }
+}
 </script>
 
 <template>
@@ -914,6 +968,67 @@ const ss = computed(() => sdkSnippets[activeSdk.value as SdkPlatform])
         <p class="text-xs text-emerald-700 leading-relaxed">
           Paste this snippet in your site's <code class="bg-white/60 px-1 rounded">&lt;head&gt;</code>. It reads the Koryla cookies set by your edge or SDK experiments, fires impression events to Koryla, and dispatches a <code class="bg-white/60 px-1 rounded">koryla:impression</code> browser event so you can forward data to GA4, PostHog, or any other tool.
         </p>
+      </div>
+
+      <!-- Analytics destinations -->
+      <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
+          <div>
+            <p class="text-sm font-semibold text-gray-800">Analytics destinations</p>
+            <p class="text-xs text-gray-400 mt-0.5">Koryla forwards experiment events to these tools server-side — your API secrets never reach the browser.</p>
+          </div>
+          <button
+            class="text-xs font-semibold px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors shrink-0 ml-4"
+            @click="showDestinationForm = !showDestinationForm"
+          >+ Add</button>
+        </div>
+
+        <!-- Add form -->
+        <div v-if="showDestinationForm" class="px-5 py-4 border-b border-gray-100 bg-gray-50 space-y-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1.5">Provider</label>
+            <select v-model="newProvider" class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
+              <option v-for="p in PROVIDERS" :key="p.id" :value="p.id">{{ p.label }}</option>
+            </select>
+          </div>
+          <div v-for="field in activeProviderFields" :key="field.key">
+            <label class="block text-xs font-medium text-gray-500 mb-1.5">{{ field.label }}</label>
+            <input
+              v-model="newConfig[field.key]"
+              :placeholder="field.placeholder"
+              class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono placeholder:font-sans placeholder:text-gray-400"
+            />
+          </div>
+          <div class="flex gap-2 pt-1">
+            <button
+              :disabled="savingDestination"
+              class="text-xs font-semibold px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+              @click="saveDestination"
+            >{{ savingDestination ? 'Saving…' : 'Save destination' }}</button>
+            <button class="text-xs font-medium px-4 py-2 text-gray-500 hover:text-gray-700" @click="showDestinationForm = false">Cancel</button>
+          </div>
+        </div>
+
+        <!-- Destinations list -->
+        <div v-if="destinations?.length" class="divide-y divide-gray-100">
+          <div v-for="dest in destinations" :key="dest.id" class="flex items-center justify-between px-5 py-3.5">
+            <div class="flex items-center gap-3">
+              <div class="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+              <div>
+                <p class="text-sm font-medium text-gray-800">{{ providerLabel(dest.provider) }}</p>
+                <p class="text-xs text-gray-400 font-mono">{{ Object.entries(dest.config).map(([k, v]) => `${k}: ${String(v).slice(0, 12)}…`).join(' · ') }}</p>
+              </div>
+            </div>
+            <button
+              :disabled="deletingId === dest.id"
+              class="text-xs text-red-400 hover:text-red-600 disabled:opacity-40 transition-colors"
+              @click="deleteDestination(dest.id)"
+            >{{ deletingId === dest.id ? '…' : 'Remove' }}</button>
+          </div>
+        </div>
+        <div v-else-if="!showDestinationForm" class="px-5 py-4 text-xs text-gray-400">
+          No destinations yet. Add one to start forwarding events.
+        </div>
       </div>
 
       <!-- Step 1: snippet -->
