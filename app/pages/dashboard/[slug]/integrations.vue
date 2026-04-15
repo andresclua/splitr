@@ -19,7 +19,7 @@ const { data: keys } = await useFetch<ApiKey[]>(`/api/workspaces/${slug}/keys`)
 const appUrl = import.meta.client ? window.location.origin : 'https://app.koryla.com'
 
 // ── Mode toggle ───────────────────────────────────────────
-const mode = ref<'edge' | 'sdk' | 'devs' | 'snippet'>('edge')
+const mode = ref<'edge' | 'sdk' | 'devs'>('edge')
 
 // ── Copy helper ───────────────────────────────────────────
 const copied = ref<string | null>(null)
@@ -576,22 +576,6 @@ await track({ experiment_id, variant_id, session_id, event_type: 'conversion' })
 // ky_session=f3a1c82d-9b4e-4d71-b2f7-0e3a7c5d9f12`,
 }
 
-// ── Snippet ───────────────────────────────────────────────
-const snippetCode = computed(() => `<script>
-(function(){
-  var w='${workspaceId}',a='${appUrl}';
-  function sid(){try{return crypto.randomUUID()}catch(e){return Math.random().toString(36).slice(2)+Date.now().toString(36)}}
-  var c=document.cookie.split(';').reduce(function(o,p){var s=p.trim().split('=');if(s[0])o[decodeURIComponent(s[0])]=decodeURIComponent(s[1]||'');return o},{});
-  var s=c['ky_session'];
-  if(!s){s=sid();document.cookie='ky_session='+s+';path=/;max-age=31536000;samesite=lax'}
-  Object.keys(c).filter(function(k){return k.indexOf('ky_')===0&&k!=='ky_session'}).forEach(function(k){
-    var v=c[k],e=k.slice(3);
-    window.dispatchEvent(new CustomEvent('koryla:impression',{detail:{experiment_id:e,variant_id:v,session_id:s}}));
-    fetch(a+'/api/public/'+w+'/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({experiment_id:e,variant_id:v,session_id:s,event_type:'impression'})}).catch(function(){});
-  });
-})();
-<\/script>`)
-
 type EdgePlatform = keyof typeof edgeSnippets
 type SdkPlatform = keyof typeof sdkSnippets
 
@@ -636,59 +620,6 @@ const devsSteps = [
 const es = computed(() => edgeSnippets[activeEdge.value as EdgePlatform])
 const ss = computed(() => sdkSnippets[activeSdk.value as SdkPlatform])
 
-// ── Analytics destinations ────────────────────────────────
-interface Destination { id: string; provider: string; enabled: boolean; config: Record<string, string> }
-
-const { data: destinations, refresh: refreshDestinations } = await useFetch<Destination[]>(`/api/workspaces/${slug}/destinations`)
-
-const PROVIDERS = [
-  { id: 'ga4',      label: 'Google Analytics 4', fields: [{ key: 'measurement_id', label: 'Measurement ID', placeholder: 'G-XXXXXXXXXX' }, { key: 'api_secret', label: 'API Secret', placeholder: 'From GA4 → Admin → Data Streams → Measurement Protocol' }] },
-  { id: 'posthog',  label: 'PostHog',             fields: [{ key: 'api_key', label: 'Project API Key', placeholder: 'phc_...' }, { key: 'host', label: 'Host', placeholder: 'https://app.posthog.com' }] },
-  { id: 'mixpanel', label: 'Mixpanel',            fields: [{ key: 'token', label: 'Project Token', placeholder: 'Your Mixpanel project token' }, { key: 'api_secret', label: 'API Secret', placeholder: 'Your Mixpanel API secret' }] },
-  { id: 'segment',  label: 'Segment',             fields: [{ key: 'write_key', label: 'Write Key', placeholder: 'Your Segment source write key' }] },
-  { id: 'webhook',  label: 'Webhook',             fields: [{ key: 'url', label: 'URL', placeholder: 'https://your-endpoint.com/hook' }] },
-]
-
-const showDestinationForm = ref(false)
-const savingDestination = ref(false)
-const deletingId = ref<string | null>(null)
-const newProvider = ref('ga4')
-const newConfig = ref<Record<string, string>>({})
-
-const activeProviderFields = computed(() => PROVIDERS.find(p => p.id === newProvider.value)?.fields ?? [])
-
-watch(newProvider, () => { newConfig.value = {} })
-
-const providerLabel = (id: string) => PROVIDERS.find(p => p.id === id)?.label ?? id
-
-const saveDestination = async () => {
-  savingDestination.value = true
-  try {
-    await $fetch(`/api/workspaces/${slug}/destinations`, {
-      method: 'POST',
-      body: { provider: newProvider.value, config: newConfig.value },
-    })
-    await refreshDestinations()
-    showDestinationForm.value = false
-    newConfig.value = {}
-  } catch (e: any) {
-    alert(e?.data?.message ?? 'Failed to save destination')
-  } finally {
-    savingDestination.value = false
-  }
-}
-
-const deleteDestination = async (id: string) => {
-  deletingId.value = id
-  try {
-    await $fetch(`/api/workspaces/${slug}/destinations/${id}`, { method: 'DELETE' })
-    await refreshDestinations()
-  } catch (e: any) {
-    alert(e?.data?.message ?? 'Failed to delete')
-  } finally {
-    deletingId.value = null
-  }
-}
 </script>
 
 <template>
@@ -838,18 +769,6 @@ const deleteDestination = async (id: string) => {
         </div>
         <p class="text-xs leading-relaxed" :class="mode === 'devs' ? 'text-gray-400' : 'text-gray-400'">Raw API protocol. SvelteKit, Angular, Laravel — any framework, no SDK needed.</p>
       </button>
-      <button
-        :class="['flex-1 rounded-2xl border-2 p-4 text-left transition-all', mode === 'snippet' ? 'border-emerald-600 bg-emerald-50' : 'border-gray-200 bg-white hover:border-gray-300']"
-        @click="mode = 'snippet'"
-      >
-        <div class="flex items-center gap-2 mb-1">
-          <svg class="w-4 h-4 shrink-0" :class="mode === 'snippet' ? 'text-emerald-600' : 'text-gray-400'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span class="text-sm font-semibold" :class="mode === 'snippet' ? 'text-emerald-700' : 'text-gray-700'">Analytics</span>
-        </div>
-        <p class="text-xs leading-relaxed" :class="mode === 'snippet' ? 'text-emerald-600/80' : 'text-gray-400'">Forward experiment data to GA4, PostHog or any analytics tool.</p>
-      </button>
     </div>
 
     <!-- ── EDGE ───────────────────────────────────────────── -->
@@ -957,144 +876,6 @@ const deleteDestination = async (id: string) => {
             @click="copy(`d-${step.key}`, (devsSnippets as any)[step.key])">
             {{ copied === `d-${step.key}` ? '✓ Copied' : 'Copy' }}
           </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── ANALYTICS SNIPPET ────────────────────────────── -->
-    <div v-if="mode === 'snippet'" class="space-y-4">
-      <div class="bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4">
-        <p class="text-sm font-semibold text-emerald-900 mb-1">One snippet. All your analytics tools.</p>
-        <p class="text-xs text-emerald-700 leading-relaxed">
-          Paste this snippet in your site's <code class="bg-white/60 px-1 rounded">&lt;head&gt;</code>. It reads the Koryla cookies set by your edge or SDK experiments, fires impression events to Koryla, and dispatches a <code class="bg-white/60 px-1 rounded">koryla:impression</code> browser event so you can forward data to GA4, PostHog, or any other tool.
-        </p>
-      </div>
-
-      <!-- Analytics destinations -->
-      <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-        <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
-          <div>
-            <p class="text-sm font-semibold text-gray-800">Analytics destinations</p>
-            <p class="text-xs text-gray-400 mt-0.5">Koryla forwards experiment events to these tools server-side — your API secrets never reach the browser.</p>
-          </div>
-          <button
-            class="text-xs font-semibold px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors shrink-0 ml-4"
-            @click="showDestinationForm = !showDestinationForm"
-          >+ Add</button>
-        </div>
-
-        <!-- Add form -->
-        <div v-if="showDestinationForm" class="px-5 py-4 border-b border-gray-100 bg-gray-50 space-y-3">
-          <div>
-            <label class="block text-xs font-medium text-gray-500 mb-1.5">Provider</label>
-            <select v-model="newProvider" class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
-              <option v-for="p in PROVIDERS" :key="p.id" :value="p.id">{{ p.label }}</option>
-            </select>
-          </div>
-          <div v-for="field in activeProviderFields" :key="field.key">
-            <label class="block text-xs font-medium text-gray-500 mb-1.5">{{ field.label }}</label>
-            <input
-              v-model="newConfig[field.key]"
-              :placeholder="field.placeholder"
-              class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono placeholder:font-sans placeholder:text-gray-400"
-            />
-          </div>
-          <div class="flex gap-2 pt-1">
-            <button
-              :disabled="savingDestination"
-              class="text-xs font-semibold px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-colors"
-              @click="saveDestination"
-            >{{ savingDestination ? 'Saving…' : 'Save destination' }}</button>
-            <button class="text-xs font-medium px-4 py-2 text-gray-500 hover:text-gray-700" @click="showDestinationForm = false">Cancel</button>
-          </div>
-        </div>
-
-        <!-- Destinations list -->
-        <div v-if="destinations?.length" class="divide-y divide-gray-100">
-          <div v-for="dest in destinations" :key="dest.id" class="flex items-center justify-between px-5 py-3.5">
-            <div class="flex items-center gap-3">
-              <div class="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
-              <div>
-                <p class="text-sm font-medium text-gray-800">{{ providerLabel(dest.provider) }}</p>
-                <p class="text-xs text-gray-400 font-mono">{{ Object.entries(dest.config).map(([k, v]) => `${k}: ${String(v).slice(0, 12)}…`).join(' · ') }}</p>
-              </div>
-            </div>
-            <button
-              :disabled="deletingId === dest.id"
-              class="text-xs text-red-400 hover:text-red-600 disabled:opacity-40 transition-colors"
-              @click="deleteDestination(dest.id)"
-            >{{ deletingId === dest.id ? '…' : 'Remove' }}</button>
-          </div>
-        </div>
-        <div v-else-if="!showDestinationForm" class="px-5 py-4 text-xs text-gray-400">
-          No destinations yet. Add one to start forwarding events.
-        </div>
-      </div>
-
-      <!-- Step 1: snippet -->
-      <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-        <div class="flex items-center gap-3 px-5 py-3.5 border-b border-gray-100">
-          <div class="w-5 h-5 rounded-full bg-gray-900 text-white text-[10px] font-bold flex items-center justify-center shrink-0">1</div>
-          <p class="text-sm font-semibold text-gray-800">Add the snippet to your <code class="font-mono text-xs bg-gray-100 px-1 rounded">&lt;head&gt;</code></p>
-        </div>
-        <div class="relative group">
-          <pre class="px-5 py-4 text-xs leading-relaxed text-gray-800 font-mono overflow-x-auto bg-gray-50 whitespace-pre">{{ snippetCode }}</pre>
-          <button
-            :class="['absolute top-3 right-3 text-[11px] font-semibold px-2.5 py-1 rounded-lg transition-all', copied === 'snippet' ? 'bg-green-100 text-green-700' : 'bg-white border border-gray-200 text-gray-500 opacity-0 group-hover:opacity-100']"
-            @click="copy('snippet', snippetCode)"
-          >{{ copied === 'snippet' ? '✓ Copied' : 'Copy' }}</button>
-        </div>
-      </div>
-
-      <!-- Step 2: listen to the event -->
-      <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-        <div class="flex items-center gap-3 px-5 py-3.5 border-b border-gray-100">
-          <div class="w-5 h-5 rounded-full bg-gray-900 text-white text-[10px] font-bold flex items-center justify-center shrink-0">2</div>
-          <p class="text-sm font-semibold text-gray-800">Forward to your analytics tool <span class="text-xs font-normal text-gray-400 ml-1">(optional)</span></p>
-        </div>
-        <p class="px-5 py-3.5 text-xs text-gray-500 leading-relaxed border-b border-gray-100 bg-gray-50/50">
-          The snippet dispatches a <code class="bg-gray-100 px-1 rounded">koryla:impression</code> event on the window. Listen to it and forward the data to whichever analytics tool you already have installed.
-        </p>
-        <div class="relative group">
-          <pre class="px-5 py-4 text-xs leading-relaxed text-gray-800 font-mono overflow-x-auto bg-gray-50 whitespace-pre">{{ `// GA4
-window.addEventListener('koryla:impression', function(e) {
-  gtag('event', 'experiment_assigned', e.detail)
-})
-
-// PostHog
-window.addEventListener('koryla:impression', function(e) {
-  posthog.capture('experiment_assigned', e.detail)
-})
-
-// Mixpanel
-window.addEventListener('koryla:impression', function(e) {
-  mixpanel.track('experiment_assigned', e.detail)
-})
-
-// Segment
-window.addEventListener('koryla:impression', function(e) {
-  analytics.track('experiment_assigned', e.detail)
-})` }}</pre>
-          <button
-            :class="['absolute top-3 right-3 text-[11px] font-semibold px-2.5 py-1 rounded-lg transition-all', copied === 'listeners' ? 'bg-green-100 text-green-700' : 'bg-white border border-gray-200 text-gray-500 opacity-0 group-hover:opacity-100']"
-            @click="copy('listeners', `window.addEventListener('koryla:impression', function(e) {\n  gtag('event', 'experiment_assigned', e.detail)\n})`)"
-          >{{ copied === 'listeners' ? '✓ Copied' : 'Copy' }}</button>
-        </div>
-      </div>
-
-      <!-- Event payload -->
-      <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-        <div class="flex items-center gap-3 px-5 py-3.5 border-b border-gray-100">
-          <div class="w-5 h-5 rounded-full bg-gray-900 text-white text-[10px] font-bold flex items-center justify-center shrink-0">3</div>
-          <p class="text-sm font-semibold text-gray-800">Event payload</p>
-        </div>
-        <div class="relative group">
-          <pre class="px-5 py-4 text-xs leading-relaxed text-gray-800 font-mono overflow-x-auto bg-gray-50 whitespace-pre">{{ `// e.detail shape:
-{
-  experiment_id: "70a5c503-5968-4337-a34f-d40d23e38ad1",  // experiment UUID
-  variant_id:    "05934428-b240-4829-96b1-e617d74a7448",  // variant UUID
-  session_id:    "f3a1c82d9b4e"                           // stable per-visitor ID
-}` }}</pre>
         </div>
       </div>
     </div>

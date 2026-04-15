@@ -164,6 +164,73 @@ const deleteWorkspace = async () => {
   }
 }
 
+// ── Analytics destinations ────────────────────────────────
+interface Destination { id: string; provider: string; enabled: boolean; config: Record<string, string> }
+
+const { data: destinations, refresh: refreshDestinations } = await useFetch<Destination[]>(`/api/workspaces/${slug}/destinations`)
+
+const PROVIDERS = [
+  { id: 'ga4', label: 'Google Analytics 4', fields: [
+    { key: 'measurement_id', label: 'Measurement ID', placeholder: 'G-XXXXXXXXXX', hint: 'GA4 → Admin → Data Streams → select your stream → Measurement ID' },
+    { key: 'api_secret',     label: 'API Secret',     placeholder: 'xxxxxxxxxxxxxxxx', hint: 'GA4 → Admin → Data Streams → select your stream → Measurement Protocol → Create' },
+  ]},
+  { id: 'posthog', label: 'PostHog', fields: [
+    { key: 'api_key', label: 'Project API Key', placeholder: 'phc_...', hint: 'PostHog → Project Settings → Project API Key' },
+    { key: 'host',    label: 'Host',            placeholder: 'https://app.posthog.com', hint: 'Use https://eu.posthog.com if your project is in the EU region' },
+  ]},
+  { id: 'mixpanel', label: 'Mixpanel', fields: [
+    { key: 'token',      label: 'Project Token', placeholder: 'xxxxxxxxxxxxxxxx', hint: 'Mixpanel → Settings → Project Settings → Project Token' },
+    { key: 'api_secret', label: 'API Secret',    placeholder: 'xxxxxxxxxxxxxxxx', hint: 'Mixpanel → Settings → Project Settings → API Secret' },
+  ]},
+  { id: 'segment', label: 'Segment', fields: [
+    { key: 'write_key', label: 'Write Key', placeholder: 'xxxxxxxxxxxxxxxx', hint: 'Segment → Sources → select your source → API Keys → Write Key' },
+  ]},
+  { id: 'webhook', label: 'Webhook', fields: [
+    { key: 'url', label: 'URL', placeholder: 'https://your-endpoint.com/hook', hint: 'Koryla will POST JSON with experiment_id, variant_id and session_id' },
+  ]},
+]
+
+const showDestinationForm = ref(false)
+const savingDestination = ref(false)
+const deletingDestId = ref<string | null>(null)
+const newProvider = ref('ga4')
+const newConfig = ref<Record<string, string>>({})
+
+const activeProviderFields = computed(() => PROVIDERS.find(p => p.id === newProvider.value)?.fields ?? [])
+watch(newProvider, () => { newConfig.value = {} })
+const providerLabel = (id: string) => PROVIDERS.find(p => p.id === id)?.label ?? id
+
+const saveDestination = async () => {
+  savingDestination.value = true
+  try {
+    await $fetch(`/api/workspaces/${slug}/destinations`, {
+      method: 'POST',
+      body: { provider: newProvider.value, config: newConfig.value },
+    })
+    await refreshDestinations()
+    showDestinationForm.value = false
+    newConfig.value = {}
+    toast.success('Destination saved')
+  } catch (e: any) {
+    toast.error(e?.data?.message ?? 'Failed to save destination')
+  } finally {
+    savingDestination.value = false
+  }
+}
+
+const deleteDestination = async (id: string) => {
+  deletingDestId.value = id
+  try {
+    await $fetch(`/api/workspaces/${slug}/destinations/${id}`, { method: 'DELETE' })
+    await refreshDestinations()
+    toast.success('Destination removed')
+  } catch (e: any) {
+    toast.error(e?.data?.message ?? 'Failed to delete')
+  } finally {
+    deletingDestId.value = null
+  }
+}
+
 // ── Demo workspace ────────────────────────────────────────
 const showDemo = ref(true)
 onMounted(() => {
@@ -336,6 +403,70 @@ const toggleDemo = (val: boolean) => {
             <button class="text-xs text-[#C96A3F] font-medium shrink-0" @click="copyInvite">Copy</button>
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- Analytics destinations -->
+    <section class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h2 class="text-sm font-semibold text-gray-900">Analytics destinations</h2>
+            <p class="text-xs text-gray-500 mt-1 leading-relaxed max-w-md">Connect GA4, PostHog or any analytics tool to see your experiment results alongside the rest of your data — conversions, funnels, retention. Koryla sends events server-side, so your API secrets never reach the browser.</p>
+          </div>
+          <button
+            class="text-sm bg-gray-900 text-white px-3 py-1.5 rounded-lg hover:bg-gray-700 transition-colors shrink-0"
+            @click="showDestinationForm = !showDestinationForm"
+          >+ Add</button>
+        </div>
+      </div>
+
+      <!-- Add form -->
+      <div v-if="showDestinationForm" class="px-6 py-5 border-b border-gray-100 bg-gray-50 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Provider</label>
+          <select v-model="newProvider" class="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#C96A3F] bg-white">
+            <option v-for="p in PROVIDERS" :key="p.id" :value="p.id">{{ p.label }}</option>
+          </select>
+        </div>
+        <div v-for="field in activeProviderFields" :key="field.key">
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ field.label }}</label>
+          <input
+            v-model="newConfig[field.key]"
+            :placeholder="field.placeholder"
+            class="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#C96A3F] font-mono placeholder:font-sans placeholder:text-gray-400"
+          />
+          <p v-if="field.hint" class="text-xs text-gray-400 mt-1.5">{{ field.hint }}</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button
+            :disabled="savingDestination"
+            class="bg-[#C96A3F] text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-[#A8522D] disabled:opacity-40 transition-colors"
+            @click="saveDestination"
+          >{{ savingDestination ? 'Saving…' : 'Save destination' }}</button>
+          <button class="text-sm text-gray-500 hover:text-gray-700" @click="showDestinationForm = false">Cancel</button>
+        </div>
+      </div>
+
+      <!-- List -->
+      <div v-if="destinations?.length" class="divide-y divide-gray-100">
+        <div v-for="dest in destinations" :key="dest.id" class="px-6 py-3.5 flex items-center gap-3">
+          <div class="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center shrink-0">
+            <div class="w-2 h-2 rounded-full bg-emerald-400" />
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm text-gray-800">{{ providerLabel(dest.provider) }}</p>
+            <p class="text-xs text-gray-400 font-mono truncate">{{ Object.entries(dest.config).map(([k, v]) => `${k}: ${String(v).slice(0, 14)}…`).join(' · ') }}</p>
+          </div>
+          <button
+            :disabled="deletingDestId === dest.id"
+            class="text-xs text-red-400 hover:text-red-600 disabled:opacity-40 transition-colors"
+            @click="deleteDestination(dest.id)"
+          >{{ deletingDestId === dest.id ? '…' : 'Remove' }}</button>
+        </div>
+      </div>
+      <div v-else-if="!showDestinationForm" class="px-6 py-5 text-sm text-gray-400">
+        No analytics destinations yet.
       </div>
     </section>
 
