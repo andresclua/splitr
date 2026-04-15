@@ -101,9 +101,17 @@ async function getConfig(env: Env): Promise<Experiment[]> {
   return experiments
 }
 
+// Paths the worker must never intercept (auth callbacks, API routes, assets)
+const EXCLUDED_PREFIXES = ['/confirm', '/api/', '/_nuxt/', '/login', '/signup', '/verify-email']
+
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url)
+
+    if (EXCLUDED_PREFIXES.some(p => url.pathname.startsWith(p))) {
+      return fetch(request)
+    }
+
     const cookies = parseCookies(request.headers.get('cookie'))
 
     const experiments = await getConfig(env)
