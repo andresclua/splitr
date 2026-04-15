@@ -9,12 +9,7 @@ const error = ref('')
 // If opened as a popup, navigate the parent directly then close self.
 // More reliable than relying on onAuthStateChange timing in the parent.
 const finishAuth = async () => {
-  if (window.opener) {
-    window.opener.location.href = '/dashboard'
-    window.close()
-  } else {
-    await navigateTo('/dashboard', { replace: true })
-  }
+  await navigateTo('/dashboard', { replace: true })
 }
 
 // Wait for Supabase to update the reactive user state before navigating

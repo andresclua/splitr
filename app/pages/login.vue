@@ -5,23 +5,15 @@ useSeoMeta({ robots: 'noindex, nofollow' })
 const supabase = useSupabaseClient()
 
 const loginWithGoogle = async () => {
-  const { data, error } = await supabase.auth.signInWithOAuth({
+  await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
       redirectTo: `${window.location.origin}/confirm`,
-      skipBrowserRedirect: true,
       queryParams: {
         prompt: 'select_account',
       },
     },
   })
-  if (error || !data.url) return
-
-  const w = 500, h = 600
-  const left = Math.round(screen.width / 2 - w / 2)
-  const top = Math.round(screen.height / 2 - h / 2)
-  window.open(data.url, 'google-auth', `width=${w},height=${h},left=${left},top=${top},scrollbars=yes`)
-  // Navigation is handled by confirm.vue via window.opener.location.href
 }
 </script>
 
