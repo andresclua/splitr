@@ -143,7 +143,7 @@ export default async function Page() {
 // if (result) await koryla.reportConversion(result)`
 
   if (fw === 'vue') return `<!-- pages/your-page.vue -->
-<script setup lang="ts">
+\x3Cscript setup lang="ts">
 import { getKorylaVariant, KExperiment, KVariant } from '@koryla/vue'
 
 const headers = useRequestHeaders(['cookie'])
@@ -155,7 +155,7 @@ const result = await getKorylaVariant(
   { apiKey: config.korylaApiKey, apiUrl: config.korylaApiUrl },
   // korylaApiUrl: '${appUrl}'
 )
-<\/script>
+\x3C/script>
 
 <template>
   <KExperiment :variant-id="result?.variantId ?? ''">
@@ -431,7 +431,7 @@ runtimeConfig: {
   korylaApiUrl: '${appUrl}',
 }`,
     usage: `<!-- pages/index.vue -->
-<script setup lang="ts">
+\x3Cscript setup lang="ts">
 import { getKorylaVariant, KExperiment, KVariant } from '@koryla/vue'
 
 const headers = useRequestHeaders(['cookie'])
@@ -442,7 +442,7 @@ const result = await getKorylaVariant(
   headers.cookie ?? '',
   { apiKey: config.korylaApiKey, apiUrl: config.korylaApiUrl },
 )
-<\/script>
+\x3C/script>
 
 <template>
   <KExperiment :variant-id="result?.variantId ?? ''">
@@ -451,7 +451,7 @@ const result = await getKorylaVariant(
   </KExperiment>
 </template>`,
     conversion: `<!-- pages/thank-you.vue -->
-<script setup lang="ts">
+\x3Cscript setup lang="ts">
 import { getKorylaVariant, reportKorylaConversion } from '@koryla/vue'
 
 const headers = useRequestHeaders(['cookie'])
@@ -463,7 +463,7 @@ const result = await getKorylaVariant('YOUR_EXPERIMENT_ID', headers.cookie ?? ''
 if (result) await reportKorylaConversion(result, {
   apiKey: config.korylaApiKey, apiUrl: config.korylaApiUrl,
 })
-<\/script>`,
+\x3C/script>`,
   },
   astro: {
     install: `npm install @koryla/astro`,
