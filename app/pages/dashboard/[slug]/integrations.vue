@@ -143,11 +143,11 @@ export default async function Page() {
 // if (result) await koryla.reportConversion(result)`
 
   if (fw === 'vue') return `<!-- pages/your-page.vue -->
-\x3Cscript setup lang="ts">
+${'<'}script setup lang="ts">
 import { getKorylaVariant, KExperiment, KVariant } from '@koryla/vue'
 
-const headers = useRequestHeaders(['cookie'])
-const config = useRuntimeConfig()
+const headers = use${'R'}equestHeaders(['cookie'])
+const config = use${'R'}untimeConfig()
 
 const result = await getKorylaVariant(
   '${expId}',  // ${exp.name}
@@ -155,7 +155,7 @@ const result = await getKorylaVariant(
   { apiKey: config.korylaApiKey, apiUrl: config.korylaApiUrl },
   // korylaApiUrl: '${appUrl}'
 )
-\x3C/script>
+${'<'}/script>
 
 <template>
   <KExperiment :variant-id="result?.variantId ?? ''">
@@ -431,18 +431,18 @@ runtimeConfig: {
   korylaApiUrl: '${appUrl}',
 }`,
     usage: `<!-- pages/index.vue -->
-\x3Cscript setup lang="ts">
+${'<'}script setup lang="ts">
 import { getKorylaVariant, KExperiment, KVariant } from '@koryla/vue'
 
-const headers = useRequestHeaders(['cookie'])
-const config = useRuntimeConfig()
+const headers = use${'R'}equestHeaders(['cookie'])
+const config = use${'R'}untimeConfig()
 
 const result = await getKorylaVariant(
   'YOUR_EXPERIMENT_ID',
   headers.cookie ?? '',
   { apiKey: config.korylaApiKey, apiUrl: config.korylaApiUrl },
 )
-\x3C/script>
+${'<'}/script>
 
 <template>
   <KExperiment :variant-id="result?.variantId ?? ''">
@@ -451,11 +451,11 @@ const result = await getKorylaVariant(
   </KExperiment>
 </template>`,
     conversion: `<!-- pages/thank-you.vue -->
-\x3Cscript setup lang="ts">
+${'<'}script setup lang="ts">
 import { getKorylaVariant, reportKorylaConversion } from '@koryla/vue'
 
-const headers = useRequestHeaders(['cookie'])
-const config = useRuntimeConfig()
+const headers = use${'R'}equestHeaders(['cookie'])
+const config = use${'R'}untimeConfig()
 
 const result = await getKorylaVariant('YOUR_EXPERIMENT_ID', headers.cookie ?? '', {
   apiKey: config.korylaApiKey, apiUrl: config.korylaApiUrl,
@@ -463,7 +463,7 @@ const result = await getKorylaVariant('YOUR_EXPERIMENT_ID', headers.cookie ?? ''
 if (result) await reportKorylaConversion(result, {
   apiKey: config.korylaApiKey, apiUrl: config.korylaApiUrl,
 })
-\x3C/script>`,
+${'<'}/script>`,
   },
   astro: {
     install: `npm install @koryla/astro`,
@@ -577,7 +577,7 @@ await track({ experiment_id, variant_id, session_id, event_type: 'conversion' })
 }
 
 // ── Impression tracking snippet ───────────────────────────
-const impressionSnippet = computed(() => `<script>
+const impressionSnippet = computed(() => `${'<'}script>
 (function(){
   var w='${workspaceId}',a='${appUrl}';
   function sid(){try{return crypto.randomUUID()}catch(e){return Math.random().toString(36).slice(2)+Date.now().toString(36)}}
@@ -590,7 +590,7 @@ const impressionSnippet = computed(() => `<script>
     fetch(a+'/api/public/'+w+'/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({experiment_id:e,variant_id:v,session_id:s,event_type:'impression'})}).catch(function(){});
   });
 })();
-<\/script>`)
+${'<'}/script>`)
 
 type EdgePlatform = keyof typeof edgeSnippets
 type SdkPlatform = keyof typeof sdkSnippets
