@@ -10,6 +10,9 @@ const loginWithGoogle = async () => {
     options: {
       redirectTo: `${window.location.origin}/confirm`,
       skipBrowserRedirect: true,
+      queryParams: {
+        prompt: 'select_account',
+      },
     },
   })
   if (error || !data.url) return
