@@ -19,6 +19,7 @@ interface Rule {
 interface Variant {
   id: string; name: string; description?: string; traffic_weight: number
   target_url: string; is_control: boolean; impressions: number
+  conversion_count: number
   rules: Rule[]
 }
 interface Experiment {
@@ -76,9 +77,28 @@ const statusConfig: Record<string, { label: string; pulse: boolean; dot: string;
 const formatDate = (d: string | null) =>
   d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'
 
+const selectedNode = ref('')
+
+const variantConvRate = (v: Variant) =>
+  v.impressions ? (v.conversion_count / v.impressions) * 100 : 0
+
 const leadingId = computed(() => {
-  if (!experiment.value?.total_impressions) return null
-  return [...(experiment.value.variants ?? [])].sort((a, b) => b.impressions - a.impressions)[0]?.id
+  if (!experiment.value) return null
+  return [...(experiment.value.variants)].sort((a, b) => variantConvRate(b) - variantConvRate(a))[0]?.id ?? null
+})
+
+const overallConvRate = computed(() => {
+  const exp = experiment.value
+  if (!exp?.total_impressions) return '—'
+  return ((exp.total_conversions / exp.total_impressions) * 100).toFixed(2) + '%'
+})
+
+const bestLift = computed(() => {
+  const variants = experiment.value?.variants
+  if (!variants || variants.length < 2) return '—'
+  const sorted = [...variants].sort((a, b) => variantConvRate(b) - variantConvRate(a))
+  if (!sorted[0].impressions || !sorted[1].impressions) return '—'
+  return '+' + (variantConvRate(sorted[0]) - variantConvRate(sorted[1])).toFixed(1) + 'pp'
 })
 
 const variantColors = ['bg-gray-400', 'bg-[#C96A3F]', 'bg-[#0F2235]', 'bg-emerald-500']
