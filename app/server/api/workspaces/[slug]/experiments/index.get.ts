@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
   // Fetch impression + conversion counts for all experiments in one query
   const expIds = (experiments ?? []).map(e => e.id)
   let impressions: Record<string, Record<string, number>> = {}
-  let conversions: Record<string, number> = {}
+  let conversions: Record<string, { total: number; byVariant: Record<string, number> }> = {}
 
   if (expIds.length) {
     const { data: events } = await supabase
@@ -42,7 +42,12 @@ export default defineEventHandler(async (event) => {
         impressions[ev.experiment_id] ??= {}
         impressions[ev.experiment_id][ev.variant_id] = (impressions[ev.experiment_id][ev.variant_id] ?? 0) + 1
       } else {
-        conversions[ev.experiment_id] = (conversions[ev.experiment_id] ?? 0) + 1
+        conversions[ev.experiment_id] ??= { total: 0, byVariant: {} }
+        conversions[ev.experiment_id].total += 1
+        if (ev.variant_id) {
+          conversions[ev.experiment_id].byVariant[ev.variant_id] =
+            (conversions[ev.experiment_id].byVariant[ev.variant_id] ?? 0) + 1
+        }
       }
     }
   }
@@ -52,8 +57,9 @@ export default defineEventHandler(async (event) => {
     variants: (exp.variants ?? []).map((v: any) => ({
       ...v,
       impressions: impressions[exp.id]?.[v.id] ?? 0,
+      conversion_count: conversions[exp.id]?.byVariant[v.id] ?? 0,
     })),
     total_impressions: Object.values(impressions[exp.id] ?? {}).reduce((a, b) => a + b, 0),
-    total_conversions: conversions[exp.id] ?? 0,
+    total_conversions: conversions[exp.id]?.total ?? 0,
   }))
 })
