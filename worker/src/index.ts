@@ -24,6 +24,7 @@ interface Experiment {
   name: string
   base_url: string
   conversion_url: string | null
+  override_assignment: boolean
   variants: Variant[]
   destinations: AnalyticsDestination[]
 }
@@ -166,9 +167,16 @@ export default {
 
     const cookieName = getCookieName(experiment.id)
     let variantId = cookies[cookieName]
-
     let isNewAssignment = false
-    if (!variantId) {
+
+    const matchedVariant = findRuleMatch(experiment.variants, url.searchParams)
+
+    if (matchedVariant && (!variantId || experiment.override_assignment)) {
+      if (variantId !== matchedVariant.id) {
+        variantId = matchedVariant.id
+        isNewAssignment = true
+      }
+    } else if (!variantId) {
       variantId = assignVariant(experiment.variants)
       isNewAssignment = true
     }
