@@ -200,7 +200,186 @@ const createExperiment = async () => {
           🔀 Experiment
         </div>
 
-        <!-- nodes 2–4 added in Task 3 & 4 -->
+        <!-- ─── Node 2: Experiment ─── -->
+        <template v-if="confirmed.traffic">
+
+          <!-- CONFIRMED state -->
+          <div
+            v-if="confirmed.experiment"
+            class="w-full max-w-md relative border-2 border-[#C96A3F] bg-[#FEF0E8] rounded-2xl px-5 py-4 cursor-pointer hover:-translate-y-px transition-transform"
+            @click="reopenStep('experiment')"
+          >
+            <span class="absolute -top-2 -right-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold">✓</span>
+            <p class="text-sm font-semibold text-[#9a3412]">🔀 {{ expName }}</p>
+            <p class="text-xs text-[#9a3412] mt-0.5 opacity-70">{{ expType === 'edge' ? 'Edge · Worker / Middleware' : 'SDK · Component' }}</p>
+          </div>
+
+          <!-- ACTIVE state -->
+          <div
+            v-else
+            class="w-full max-w-md border-2 border-[#C96A3F] bg-white rounded-2xl px-5 py-5 shadow-sm"
+          >
+            <p class="text-sm font-semibold text-gray-900 mb-4">🔀 Experiment</p>
+
+            <label for="exp-name" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Experiment name</label>
+            <input
+              id="exp-name"
+              v-model="expName"
+              type="text"
+              placeholder="Homepage hero test"
+              class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#C96A3F] placeholder:text-gray-300"
+              @keydown.enter="confirmExperiment"
+            />
+
+            <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mt-4 mb-1.5">Type</label>
+            <div class="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                :class="['flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors text-left', expType === 'edge' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-500 hover:border-gray-300']"
+                @click="expType = 'edge'"
+              >
+                <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <div>
+                  <p>Edge</p>
+                  <p class="text-xs font-normal opacity-70">Worker / Middleware</p>
+                </div>
+              </button>
+              <button
+                type="button"
+                :class="['flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors text-left', expType === 'component' ? 'border-[#C96A3F] bg-[#FEF0E8] text-[#C96A3F]' : 'border-gray-200 text-gray-500 hover:border-gray-300']"
+                @click="expType = 'component'"
+              >
+                <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+                <div>
+                  <p>SDK</p>
+                  <p class="text-xs font-normal opacity-70">React / Vue / Astro</p>
+                </div>
+              </button>
+            </div>
+
+            <button
+              class="mt-4 bg-[#C96A3F] text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-[#A8522D] transition-colors disabled:opacity-40"
+              :disabled="!expName.trim()"
+              @click="confirmExperiment"
+            >Confirm →</button>
+          </div>
+
+          <!-- Connector -->
+          <template v-if="confirmed.experiment">
+            <div class="w-px h-6 bg-gray-200 my-1" />
+            <div class="w-0 h-0 border-l-[5px] border-r-[5px] border-t-[6px] border-l-transparent border-r-transparent border-t-gray-200 mb-1" />
+          </template>
+
+          <!-- Pending placeholder for node 3 -->
+          <div
+            v-if="!confirmed.experiment"
+            class="w-full max-w-md border-2 border-dashed border-gray-200 bg-gray-50 rounded-2xl px-5 py-4 text-center text-xs text-gray-400 mt-3"
+          >
+            🔀 Variants
+          </div>
+        </template>
+
+        <!-- ─── Node 3: Variants ─── -->
+        <template v-if="confirmed.experiment">
+
+          <!-- CONFIRMED state -->
+          <div
+            v-if="confirmed.variants"
+            class="w-full max-w-md relative border-2 border-green-500 bg-green-50 rounded-2xl px-5 py-4 cursor-pointer hover:-translate-y-px transition-transform"
+            @click="reopenStep('variants')"
+          >
+            <span class="absolute -top-2 -right-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold">✓</span>
+            <p class="text-sm font-semibold text-green-800">🔀 Variants</p>
+            <p class="text-xs text-green-700 mt-0.5">
+              {{ variants.map(v => `${v.is_control ? '⚪' : '🟠'} ${v.name} ${v.traffic_weight}%`).join(' · ') }}
+            </p>
+          </div>
+
+          <!-- ACTIVE state -->
+          <div
+            v-else
+            class="w-full max-w-md border-2 border-[#C96A3F] bg-white rounded-2xl px-5 py-5 shadow-sm"
+          >
+            <div class="flex items-center justify-between mb-4">
+              <p class="text-sm font-semibold text-gray-900">🔀 Variants</p>
+              <span :class="['text-xs font-semibold px-2 py-0.5 rounded-full', totalWeight === 100 ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-500']">
+                {{ totalWeight }}/100
+              </span>
+            </div>
+
+            <div class="space-y-3">
+              <div
+                v-for="(v, i) in variants"
+                :key="i"
+                :class="['border rounded-xl p-3.5', v.is_control ? 'border-gray-200 bg-gray-50' : 'border-[#C96A3F]/30']"
+              >
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-2">
+                    <div :class="['w-2 h-2 rounded-full shrink-0', v.is_control ? 'bg-gray-400' : 'bg-[#C96A3F]']" />
+                    <span class="text-xs font-semibold text-gray-700">{{ v.name }}</span>
+                    <span v-if="v.is_control" class="text-[10px] font-semibold text-gray-400 bg-gray-200 px-1.5 py-0.5 rounded">CONTROL</span>
+                  </div>
+                  <button
+                    v-if="!v.is_control && variants.length > 2"
+                    class="text-[11px] text-gray-400 hover:text-red-500 transition-colors"
+                    @click="removeVariant(i)"
+                  >Remove</button>
+                </div>
+                <div class="flex gap-2">
+                  <input
+                    :id="`variant-url-${i}`"
+                    v-model="v.target_url"
+                    type="url"
+                    :placeholder="v.is_control ? 'Uses base URL' : 'https://acme.com/pricing-b'"
+                    :disabled="v.is_control"
+                    :class="['flex-1 border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#C96A3F] placeholder:text-gray-300', v.is_control ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : '']"
+                  />
+                  <div class="flex items-center gap-1 w-20 shrink-0">
+                    <input
+                      :id="`variant-weight-${i}`"
+                      v-model.number="v.traffic_weight"
+                      type="number"
+                      min="1"
+                      max="99"
+                      class="w-full border border-gray-200 rounded-lg px-2 py-2 text-xs text-center focus:outline-none focus:ring-2 focus:ring-[#C96A3F]"
+                    />
+                    <span class="text-xs text-gray-400">%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button
+              class="mt-3 w-full text-xs text-gray-400 hover:text-[#C96A3F] font-medium border border-dashed border-gray-200 hover:border-[#C96A3F] rounded-xl py-2 transition-colors"
+              @click="addVariant"
+            >+ Add variant</button>
+
+            <button
+              class="mt-3 bg-[#C96A3F] text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-[#A8522D] transition-colors"
+              @click="confirmVariants"
+            >Confirm →</button>
+          </div>
+
+          <!-- Connector -->
+          <template v-if="confirmed.variants">
+            <div class="w-px h-6 bg-gray-200 my-1" />
+            <div class="w-0 h-0 border-l-[5px] border-r-[5px] border-t-[6px] border-l-transparent border-r-transparent border-t-gray-200 mb-1" />
+          </template>
+
+          <!-- Pending placeholder for node 4 -->
+          <div
+            v-if="!confirmed.variants"
+            class="w-full max-w-md border-2 border-dashed border-gray-200 bg-gray-50 rounded-2xl px-5 py-4 text-center text-xs text-gray-400 mt-3"
+          >
+            🎯 Conversion goal (optional)
+          </div>
+        </template>
+
+        <!-- nodes 3–4 placeholder ends; node 4 added in Task 4 -->
 
       </div>
 
