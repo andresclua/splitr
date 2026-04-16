@@ -136,7 +136,7 @@ Updates reactively as the user types or confirms steps. The traffic URL shows on
 {
   name: string
   base_url: string
-  type: 'edge' | 'client'
+  type: 'edge' | 'component'
   conversion_url?: string
   variants: Array<{
     name: string        // "Control", "Variant B", "Variant C", ...
