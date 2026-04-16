@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
 
   const { data: experiments, error } = await supabase
     .from('experiments')
-    .select('id, name, status, type, base_url, conversion_url, created_at, started_at, ended_at, variants(id, name, description, traffic_weight, target_url, is_control)')
+    .select('id, name, status, type, base_url, conversion_url, override_assignment, created_at, started_at, ended_at, variants(id, name, description, traffic_weight, target_url, is_control, rules)')
     .eq('workspace_id', ws.id)
     .order('created_at', { ascending: false })
 
