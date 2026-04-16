@@ -112,7 +112,7 @@ const createExperiment = async () => {
         conversion_url: conversionUrl.value.trim() || undefined,
         variants: variants.value.map(v => ({
           name: v.name,
-          target_url: v.is_control ? '' : v.target_url,
+          target_url: v.is_control ? '' : v.target_url, // API stores empty string as null for control
           traffic_weight: v.traffic_weight,
           is_control: v.is_control,
         })),
