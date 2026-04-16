@@ -12,12 +12,18 @@ const route = useRoute()
 const slug = route.params.slug as string
 const id = route.params.id as string
 
+interface Rule {
+  param: string
+  value: string
+}
 interface Variant {
   id: string; name: string; description?: string; traffic_weight: number
   target_url: string; is_control: boolean; impressions: number
+  rules: Rule[]
 }
 interface Experiment {
   id: string; name: string; status: string; base_url: string; conversion_url: string | null
+  override_assignment: boolean
   created_at: string; started_at: string | null; ended_at: string | null
   variants: Variant[]; total_impressions: number; total_conversions: number
 }
@@ -82,20 +88,39 @@ const variantColorDot = ['bg-gray-400', 'bg-[#C96A3F]', 'bg-[#0F2235]', 'bg-emer
 const showEdit = ref(false)
 const saving = ref(false)
 
+interface EditVariant {
+  id: string
+  name: string
+  description: string
+  rules: Rule[]
+}
+
 interface EditForm {
   name: string
   conversion_url: string
-  variantDescriptions: { id: string; name: string; description: string }[]
+  override_assignment: boolean
+  variantDescriptions: EditVariant[]
 }
 
-const editForm = ref<EditForm>({ name: '', conversion_url: '', variantDescriptions: [] })
+const editForm = ref<EditForm>({
+  name: '',
+  conversion_url: '',
+  override_assignment: false,
+  variantDescriptions: [],
+})
 
 const openEdit = () => {
   const exp = experiment.value!
   editForm.value = {
     name: exp.name,
     conversion_url: exp.conversion_url ?? '',
-    variantDescriptions: exp.variants.map(v => ({ id: v.id, name: v.name, description: v.description ?? '' })),
+    override_assignment: exp.override_assignment ?? false,
+    variantDescriptions: exp.variants.map(v => ({
+      id: v.id,
+      name: v.name,
+      description: v.description ?? '',
+      rules: v.rules ? [...v.rules.map(r => ({ ...r }))] : [],
+    })),
   }
   showEdit.value = true
 }
@@ -108,6 +133,7 @@ const saveEdit = async () => {
       body: {
         name: editForm.value.name,
         conversion_url: editForm.value.conversion_url || null,
+        override_assignment: editForm.value.override_assignment,
         variantDescriptions: editForm.value.variantDescriptions,
       },
     })
@@ -119,6 +145,16 @@ const saveEdit = async () => {
   } finally {
     saving.value = false
   }
+}
+
+const addRule = (variantId: string) => {
+  const v = editForm.value.variantDescriptions.find(v => v.id === variantId)
+  if (v) v.rules.push({ param: '', value: '' })
+}
+
+const removeRule = (variantId: string, index: number) => {
+  const v = editForm.value.variantDescriptions.find(v => v.id === variantId)
+  if (v) v.rules.splice(index, 1)
 }
 </script>
 
@@ -380,6 +416,20 @@ const saveEdit = async () => {
               </div>
 
               <div>
+                <label class="flex items-center gap-3 cursor-pointer select-none">
+                  <div class="relative">
+                    <input v-model="editForm.override_assignment" type="checkbox" class="sr-only peer" />
+                    <div class="w-9 h-5 bg-gray-200 peer-checked:bg-[#C96A3F] rounded-full transition-colors" />
+                    <div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4" />
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium text-gray-700">Rules override existing assignment</p>
+                    <p class="text-xs text-gray-400">When active, query param rules reassign visitors even if they already have a cookie.</p>
+                  </div>
+                </label>
+              </div>
+
+              <div>
                 <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">Variant descriptions</label>
                 <div class="space-y-3">
                   <div v-for="v in editForm.variantDescriptions" :key="v.id" class="border border-gray-200 rounded-xl p-4 space-y-2">
@@ -390,6 +440,32 @@ const saveEdit = async () => {
                     <input v-model="v.description" type="text"
                       placeholder="What's different in this variant? (optional)"
                       class="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#C96A3F] placeholder:text-gray-300" />
+                    <!-- Targeting rules -->
+                    <div class="pt-2 space-y-2">
+                      <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Targeting rules
+                        <span class="normal-case font-normal ml-1">(OR — any match routes here)</span>
+                      </p>
+                      <div v-for="(rule, i) in v.rules" :key="i" class="flex items-center gap-2">
+                        <input v-model="rule.param" type="text" placeholder="utm_source"
+                          class="flex-1 border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#C96A3F] placeholder:text-gray-300 font-mono" />
+                        <span class="text-xs text-gray-400">=</span>
+                        <input v-model="rule.value" type="text" placeholder="facebook"
+                          class="flex-1 border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#C96A3F] placeholder:text-gray-300 font-mono" />
+                        <button type="button" class="text-gray-300 hover:text-red-400 transition-colors shrink-0" @click="removeRule(v.id, i)">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                      <button type="button"
+                        class="text-xs text-[#C96A3F] hover:text-[#A8522D] font-medium transition-colors flex items-center gap-1"
+                        @click="addRule(v.id)">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add rule
+                      </button>
+                    </div>
                   </div>
                 </div>
                 <p v-if="experiment?.status === 'active'" class="text-xs text-amber-600 mt-3 flex items-center gap-1.5">
