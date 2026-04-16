@@ -389,7 +389,7 @@ const createExperiment = async () => {
             @click="activeStep = 'conversion'"
           >
             <p class="text-sm font-semibold text-gray-500">
-              🎯 {{ conversionUrl.trim() ? conversionUrl : 'No conversion goal' }}
+              🎯 {{ conversionUrl.trim() ? previewConvHost : 'No conversion goal' }}
             </p>
           </div>
 
@@ -412,11 +412,13 @@ const createExperiment = async () => {
 
             <div class="flex items-center gap-3 mt-4">
               <button
+                type="button"
                 class="bg-[#C96A3F] text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-[#A8522D] transition-colors disabled:opacity-40"
                 :disabled="saving"
                 @click="createExperiment"
               >{{ saving ? 'Creating…' : 'Create experiment' }}</button>
               <button
+                type="button"
                 class="text-xs text-gray-400 hover:text-gray-600 transition-colors"
                 :disabled="saving"
                 @click="conversionUrl = ''; createExperiment()"
