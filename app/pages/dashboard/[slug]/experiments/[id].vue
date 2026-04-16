@@ -179,7 +179,7 @@ const removeRule = (variantId: string, index: number) => {
 </script>
 
 <template>
-  <div v-if="experiment" class="flex flex-col min-h-full">
+  <div v-if="experiment" class="flex flex-col h-screen overflow-hidden">
 
     <!-- ── Header ── -->
     <div class="bg-white border-b border-gray-100 px-8 py-5 shrink-0">
@@ -254,146 +254,346 @@ const removeRule = (variantId: string, index: number) => {
       </div>
     </div>
 
-    <!-- ── Body ── -->
-    <div class="flex-1 p-8 space-y-5 max-w-4xl">
+    <!-- ── Split body ── -->
+    <div class="flex flex-1 min-h-0">
 
-      <!-- Stats -->
-      <div class="grid grid-cols-3 gap-4">
-        <div :class="['bg-white rounded-2xl border px-6 py-5 transition-colors', experiment.status === 'active' ? 'border-green-200 border-l-4 border-l-green-500' : 'border-gray-200']">
-          <p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
-            Total impressions
-            <KTooltip text="Times a visitor saw a variant — each visitor is counted once" />
-          </p>
-          <p class="text-3xl font-bold text-gray-900 tabular-nums">{{ experiment.total_impressions.toLocaleString() }}</p>
-          <p class="text-xs text-gray-400 mt-1.5">across {{ experiment.variants.length }} variants</p>
-        </div>
-        <div class="bg-white rounded-2xl border border-gray-200 px-6 py-5">
-          <p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Conversions</p>
-          <p class="text-3xl font-bold text-gray-900 tabular-nums">{{ experiment.total_conversions.toLocaleString() }}</p>
-          <p class="text-xs text-gray-400 mt-1.5 truncate font-mono">
-            {{ experiment.conversion_url ?? 'no conversion URL set' }}
-          </p>
-        </div>
-        <div class="bg-white rounded-2xl border border-gray-200 px-6 py-5">
-          <p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
-            Conv. rate
-            <KTooltip text="% of visitors who reached the conversion URL after seeing a variant" />
-          </p>
-          <p class="text-3xl font-bold text-gray-900 tabular-nums">
-            {{ experiment.total_impressions ? ((experiment.total_conversions / experiment.total_impressions) * 100).toFixed(2) + '%' : '—' }}
-          </p>
-          <p class="text-xs text-gray-400 mt-1.5 capitalize">{{ experiment.status === 'active' ? 'experiment live' : experiment.status }}</p>
-        </div>
-      </div>
+      <!-- LEFT: Flow panel -->
+      <div class="w-1/2 border-r border-gray-100 bg-white overflow-y-auto px-8 py-6 flex flex-col items-center">
+        <p class="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-5 self-start">Experiment flow</p>
 
-      <!-- Variants -->
-      <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-
-        <!-- Section header -->
-        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h2 class="text-sm font-semibold text-gray-900">Variants</h2>
-          <span class="text-xs text-gray-400">{{ experiment.variants.length }} variants</span>
+        <!-- Traffic node -->
+        <div
+          :class="['w-full max-w-sm border rounded-2xl px-4 py-3.5 cursor-pointer transition-all duration-150 relative border-green-400 bg-green-50 hover:-translate-y-px hover:shadow-md', selectedNode === 'traffic' ? 'ring-2 ring-[#C96A3F]' : '']"
+          @click="selectedNode = 'traffic'"
+        >
+          <span class="absolute top-2 right-3 text-[9px] text-gray-300">click for details</span>
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">🌐</span>
+            <div>
+              <p class="text-[13px] font-bold text-gray-900">Incoming traffic</p>
+              <p class="text-xs text-gray-500 mt-0.5 font-mono truncate">{{ experiment.base_url }} · {{ experiment.total_impressions.toLocaleString() }} visits</p>
+            </div>
+          </div>
         </div>
 
-        <!-- Split bar -->
-        <div class="px-6 pt-4 pb-1">
-          <div class="flex h-1.5 rounded-full overflow-hidden gap-px">
+        <!-- Arrow -->
+        <div class="flex flex-col items-center py-1 w-full max-w-sm">
+          <div class="w-0.5 h-5 bg-gray-200"></div>
+          <div class="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-transparent border-t-gray-200"></div>
+        </div>
+
+        <!-- Experiment node -->
+        <div
+          :class="['w-full max-w-sm border rounded-2xl px-4 py-3.5 cursor-pointer transition-all duration-150 relative border-[#C96A3F] bg-[#FEF0E8] hover:-translate-y-px hover:shadow-md', selectedNode === 'experiment' ? 'ring-2 ring-[#C96A3F]' : '']"
+          @click="selectedNode = 'experiment'"
+        >
+          <span class="absolute top-2 right-3 text-[9px] text-gray-300">click for details</span>
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">🔀</span>
+            <div>
+              <p class="text-[13px] font-bold text-gray-900">{{ experiment.name }}</p>
+              <p class="text-xs text-gray-500 mt-0.5">Random split · {{ experiment.variants.map(v => v.traffic_weight + '%').join(' / ') }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Branch stem -->
+        <div class="flex flex-col items-center w-full max-w-sm">
+          <div class="w-0.5 h-3 bg-gray-200"></div>
+          <div class="w-3/5 h-px bg-gray-200"></div>
+        </div>
+
+        <!-- Variant columns -->
+        <div class="flex gap-3 w-full max-w-sm">
+          <div v-for="(v, i) in experiment.variants" :key="v.id" class="flex-1 flex flex-col items-center">
+            <div class="flex flex-col items-center">
+              <div class="w-0.5 h-2.5 bg-gray-200"></div>
+              <div class="w-0 h-0 border-l-[5px] border-r-[5px] border-t-[7px] border-transparent border-t-gray-200"></div>
+            </div>
             <div
-              v-for="(v, i) in experiment.variants" :key="v.id"
-              :class="variantColors[i] ?? 'bg-gray-400'"
-              :style="{ width: v.traffic_weight + '%' }"
-            />
+              :class="['mt-1 w-full border rounded-xl px-3 py-3 text-center cursor-pointer transition-all duration-150 relative hover:-translate-y-px hover:shadow-md hover:border-[#C96A3F]', selectedNode === 'variant-' + v.id ? 'border-[#C96A3F] ring-2 ring-[#C96A3F]' : 'border-gray-200']"
+              @click="selectedNode = 'variant-' + v.id"
+            >
+              <span class="absolute top-1.5 right-2 text-[8px] text-gray-300">click</span>
+              <div :class="['w-3 h-3 rounded-full mx-auto mb-1.5', variantColorDot[i] ?? 'bg-gray-400']"></div>
+              <p class="text-[11px] font-bold text-gray-700 truncate">{{ v.name }}</p>
+              <p :class="['text-[13px] font-bold mt-1', leadingConvId === v.id ? 'text-green-600' : 'text-gray-700']">
+                {{ v.impressions ? variantConvRate(v).toFixed(1) + '%' : '—' }}
+                <span v-if="leadingConvId === v.id" class="text-[10px]">▲</span>
+              </p>
+              <p class="text-[10px] text-gray-400">conv. rate</p>
+            </div>
           </div>
         </div>
 
-        <!-- Variant rows -->
-        <div class="divide-y divide-gray-100 mt-2">
-          <div v-for="(v, i) in experiment.variants" :key="v.id" class="px-6 py-4">
-            <div class="grid grid-cols-[auto_1fr_auto] items-center gap-6">
+        <!-- Merge back -->
+        <div class="flex justify-around w-full max-w-sm px-5 pt-1">
+          <div v-for="v in experiment.variants" :key="v.id + '-merge'" class="w-0.5 h-3 bg-gray-200"></div>
+        </div>
+        <div class="w-3/5 h-px bg-gray-200"></div>
+        <div class="flex flex-col items-center w-full max-w-sm">
+          <div class="w-0.5 h-3 bg-gray-200"></div>
+          <div class="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-transparent border-t-gray-200"></div>
+        </div>
 
-            <!-- Name + URL -->
-            <div class="flex items-center gap-3 w-52">
-              <div :class="['w-2.5 h-2.5 rounded-full shrink-0', variantColorDot[i] ?? 'bg-gray-400']" />
-              <div class="min-w-0">
-                <div class="flex items-center gap-1.5">
-                  <span class="text-sm font-semibold text-gray-800 truncate">{{ v.name }}</span>
-                  <span v-if="v.is_control" class="text-[10px] font-semibold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded shrink-0">CTL</span>
-                  <span v-if="leadingId === v.id && experiment.total_impressions > 0"
-                    class="text-[10px] font-semibold text-green-700 bg-green-50 px-1.5 py-0.5 rounded ring-1 ring-green-200 shrink-0">▲ Leading</span>
-                </div>
-                <p class="text-xs text-gray-400 font-mono truncate mt-0.5">{{ v.target_url }}</p>
+        <!-- Conversion node -->
+        <div
+          :class="['w-full max-w-sm border rounded-2xl px-4 py-3.5 cursor-pointer transition-all duration-150 relative border-blue-400 bg-blue-50 hover:-translate-y-px hover:shadow-md', selectedNode === 'conversion' ? 'ring-2 ring-[#C96A3F]' : '']"
+          @click="selectedNode = 'conversion'"
+        >
+          <span class="absolute top-2 right-3 text-[9px] text-gray-300">click for details</span>
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">🎯</span>
+            <div>
+              <p class="text-[13px] font-bold text-gray-900">Conversion goal</p>
+              <p class="text-xs text-gray-500 mt-0.5">{{ experiment.total_conversions.toLocaleString() }} conversions · {{ overallConvRate }} avg</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: Data panel -->
+      <div class="w-1/2 overflow-y-auto px-6 py-5 bg-gray-50">
+
+        <!-- Placeholder -->
+        <div v-if="!selectedNode" class="flex flex-col items-center justify-center min-h-64 gap-3 mt-12">
+          <span class="text-4xl">👈</span>
+          <p class="text-xs text-gray-300">Click a node to see its data</p>
+        </div>
+
+        <!-- ── Traffic ── -->
+        <template v-else-if="selectedNode === 'traffic'">
+          <p class="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-3">Traffic node</p>
+          <div class="grid grid-cols-3 gap-2.5 mb-4">
+            <div class="bg-white border border-gray-200 rounded-xl p-3.5 text-center">
+              <p class="text-xl font-extrabold text-gray-900 tabular-nums">{{ experiment.total_impressions.toLocaleString() }}</p>
+              <p class="text-[10px] uppercase tracking-wide text-gray-400 mt-1">Total visits</p>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-xl p-3.5 text-center">
+              <p class="text-xl font-extrabold text-gray-900">{{ experiment.variants.length }}</p>
+              <p class="text-[10px] uppercase tracking-wide text-gray-400 mt-1">Variants</p>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-xl p-3.5 text-center">
+              <p class="text-xl font-extrabold text-gray-900">60s</p>
+              <p class="text-[10px] uppercase tracking-wide text-gray-400 mt-1">Config TTL</p>
+            </div>
+          </div>
+          <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
+              <span class="text-2xl">🌐</span>
+              <div>
+                <p class="text-sm font-bold text-gray-900">Incoming traffic</p>
+                <p class="text-xs text-gray-400 mt-0.5">Entry point of the experiment</p>
               </div>
             </div>
+            <div class="px-5 py-1">
+              <div class="flex justify-between items-center py-2.5 border-b border-gray-50">
+                <span class="text-xs text-gray-400">Monitored URL</span>
+                <span class="font-mono text-[11px] bg-gray-100 px-2 py-0.5 rounded text-gray-700">{{ experiment.base_url }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2.5 border-b border-gray-50">
+                <span class="text-xs text-gray-400">Worker status</span>
+                <span :class="['text-[10px] font-semibold px-2 py-0.5 rounded-full', statusConfig[experiment.status]?.badge]">{{ statusConfig[experiment.status]?.label }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2.5">
+                <span class="text-xs text-gray-400">Config cache</span>
+                <span class="text-xs font-semibold text-gray-700">KV · 60s TTL</span>
+              </div>
+            </div>
+          </div>
+        </template>
 
-            <!-- Traffic bar -->
-            <div class="flex items-center gap-3">
-              <div class="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+        <!-- ── Experiment ── -->
+        <template v-else-if="selectedNode === 'experiment'">
+          <p class="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-3">Experiment node</p>
+          <div class="grid grid-cols-3 gap-2.5 mb-4">
+            <div class="bg-white border border-gray-200 rounded-xl p-3.5 text-center">
+              <p class="text-xl font-extrabold text-gray-900 tabular-nums">{{ experiment.total_impressions.toLocaleString() }}</p>
+              <p class="text-[10px] uppercase tracking-wide text-gray-400 mt-1">Impressions</p>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-xl p-3.5 text-center">
+              <p class="text-xl font-extrabold text-gray-900 tabular-nums">{{ experiment.total_conversions.toLocaleString() }}</p>
+              <p class="text-[10px] uppercase tracking-wide text-gray-400 mt-1">Conversions</p>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-xl p-3.5 text-center">
+              <p class="text-xl font-extrabold text-gray-900">{{ overallConvRate }}</p>
+              <p class="text-[10px] uppercase tracking-wide text-gray-400 mt-1">Avg rate</p>
+            </div>
+          </div>
+          <div class="bg-white border border-gray-200 rounded-2xl p-5 mb-4">
+            <p class="text-xs font-bold text-gray-700 mb-4">Traffic distribution</p>
+            <div v-for="(v, i) in experiment.variants" :key="v.id" class="flex items-center gap-3 mb-2.5 last:mb-0">
+              <span class="text-[11px] text-gray-500 w-20 text-right shrink-0 truncate">{{ v.name }}</span>
+              <div class="flex-1 h-6 bg-gray-100 rounded-lg overflow-hidden">
                 <div
-                  :class="['h-full rounded-full', variantColors[i] ?? 'bg-gray-400']"
+                  :class="['h-full rounded-lg flex items-center px-2.5 transition-all', variantColors[i] ?? 'bg-gray-400']"
                   :style="{ width: v.traffic_weight + '%' }"
-                />
+                >
+                  <span class="text-[11px] font-bold text-white">{{ v.traffic_weight }}%</span>
+                </div>
               </div>
-              <span class="text-xs font-semibold text-gray-500 w-8 text-right tabular-nums">{{ v.traffic_weight }}%</span>
+              <span class="text-[11px] text-gray-400 w-16 text-right shrink-0 tabular-nums">{{ v.impressions.toLocaleString() }} visits</span>
             </div>
-
-            <!-- Stats -->
-            <div class="flex items-center gap-8">
-              <div class="text-right w-20">
-                <p class="text-sm font-bold text-gray-900 tabular-nums">{{ v.impressions.toLocaleString() }}</p>
-                <p class="text-xs text-gray-400 mt-0.5">impressions</p>
-              </div>
-              <div class="text-right w-14">
-                <p class="text-sm font-bold tabular-nums"
-                  :class="leadingId === v.id && experiment.total_impressions > 0 ? 'text-green-600' : 'text-gray-900'">
-                  {{ experiment.total_impressions ? ((v.impressions / experiment.total_impressions) * 100).toFixed(1) + '%' : '—' }}
-                </p>
-                <p class="text-xs text-gray-400 mt-0.5">share</p>
-              </div>
-            </div>
-
-            </div>
-
-            <!-- Full-width description -->
-            <div v-if="v.description" class="mt-2.5 ml-[1.375rem] flex items-start gap-2">
-              <KTooltip text="Description of what's visually different in this variant" position="bottom">
-                <span class="text-[10px] font-bold uppercase tracking-wide text-[#C96A3F] bg-[#FEF0E8] px-1.5 py-0.5 rounded shrink-0 cursor-default">Visual changes</span>
-              </KTooltip>
-              <p class="text-xs text-gray-500 leading-relaxed">{{ v.description }}</p>
-            </div>
-
           </div>
-        </div>
+          <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
+              <span class="text-2xl">🔀</span>
+              <div>
+                <p class="text-sm font-bold text-gray-900">{{ experiment.name }}</p>
+                <p class="text-xs text-gray-400 mt-0.5">Active experiment</p>
+              </div>
+            </div>
+            <div class="px-5 py-1">
+              <div class="flex justify-between items-center py-2.5 border-b border-gray-50">
+                <span class="text-xs text-gray-400">Split</span>
+                <span class="text-xs font-semibold text-gray-700">{{ experiment.variants.map(v => v.traffic_weight + '%').join(' / ') }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2.5 border-b border-gray-50">
+                <span class="text-xs text-gray-400">Started</span>
+                <span class="text-xs font-semibold text-gray-700">{{ formatDate(experiment.started_at) }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2.5">
+                <span class="text-xs text-gray-400">UTM override</span>
+                <span :class="['text-[10px] font-semibold px-2 py-0.5 rounded-full', experiment.override_assignment ? 'bg-[#FEF0E8] text-[#C96A3F]' : 'bg-gray-100 text-gray-500']">
+                  {{ experiment.override_assignment ? 'On' : 'Off' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- ── Variant (dynamic per v.id) ── -->
+        <template v-else-if="selectedNode.startsWith('variant-')">
+          <template v-for="v in experiment.variants" :key="v.id">
+            <template v-if="selectedNode === 'variant-' + v.id">
+              <p class="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-3">{{ v.is_control ? 'Control variant' : 'Variant' }}</p>
+              <div class="grid grid-cols-3 gap-2.5 mb-4">
+                <div class="bg-white border border-gray-200 rounded-xl p-3.5 text-center">
+                  <p class="text-xl font-extrabold text-gray-900 tabular-nums">{{ v.impressions.toLocaleString() }}</p>
+                  <p class="text-[10px] uppercase tracking-wide text-gray-400 mt-1">Visits</p>
+                </div>
+                <div class="bg-white border border-gray-200 rounded-xl p-3.5 text-center">
+                  <p :class="['text-xl font-extrabold tabular-nums', leadingConvId === v.id ? 'text-green-600' : 'text-gray-900']">
+                    {{ v.impressions ? variantConvRate(v).toFixed(1) + '%' : '—' }}
+                  </p>
+                  <p class="text-[10px] uppercase tracking-wide text-gray-400 mt-1">Conv. rate</p>
+                </div>
+                <div class="bg-white border border-gray-200 rounded-xl p-3.5 text-center">
+                  <p class="text-xl font-extrabold text-gray-900 tabular-nums">{{ v.conversion_count }}</p>
+                  <p class="text-[10px] uppercase tracking-wide text-gray-400 mt-1">Conversions</p>
+                </div>
+              </div>
+              <div class="bg-white border border-gray-200 rounded-2xl p-5 mb-4">
+                <p class="text-xs font-bold text-gray-700 mb-4">Conversion rate vs others</p>
+                <div v-for="(ov, i) in experiment.variants" :key="ov.id" class="flex items-center gap-3 mb-2.5 last:mb-0">
+                  <span class="text-[11px] text-gray-500 w-20 text-right shrink-0 truncate">{{ ov.name }}</span>
+                  <div class="flex-1 h-6 bg-gray-100 rounded-lg overflow-hidden">
+                    <div
+                      :class="['h-full rounded-lg flex items-center px-2.5 transition-all', variantColors[i] ?? 'bg-gray-400']"
+                      :style="{ width: (experiment.variants.reduce((max, x) => Math.max(max, variantConvRate(x)), 0.001) > 0 ? (variantConvRate(ov) / experiment.variants.reduce((max, x) => Math.max(max, variantConvRate(x)), 0.001)) * 100 : 0) + '%' }"
+                    >
+                      <span class="text-[11px] font-bold text-white">{{ ov.impressions ? variantConvRate(ov).toFixed(1) + '%' : '—' }}</span>
+                    </div>
+                  </div>
+                  <span class="text-[11px] text-gray-400 w-14 text-right shrink-0 tabular-nums">{{ ov.conversion_count }} conv.</span>
+                </div>
+              </div>
+              <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+                <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
+                  <span class="text-2xl">{{ v.is_control ? '⚪' : '🟠' }}</span>
+                  <div>
+                    <p class="text-sm font-bold text-gray-900">{{ v.name }}</p>
+                    <p class="text-xs text-gray-400 mt-0.5">{{ v.is_control ? 'Original variant' : 'Test variant' }}{{ leadingConvId === v.id ? ' · Leading' : '' }}</p>
+                  </div>
+                </div>
+                <div class="px-5 py-1">
+                  <div v-if="v.description" class="flex justify-between items-start py-2.5 border-b border-gray-50 gap-4">
+                    <span class="text-xs text-gray-400 shrink-0">Description</span>
+                    <span class="text-xs text-gray-700 text-right">{{ v.description }}</span>
+                  </div>
+                  <div class="flex justify-between items-center py-2.5 border-b border-gray-50">
+                    <span class="text-xs text-gray-400">Target URL</span>
+                    <span class="font-mono text-[11px] bg-gray-100 px-2 py-0.5 rounded text-gray-700 truncate max-w-[200px]">{{ v.target_url }}</span>
+                  </div>
+                  <div class="flex justify-between items-center py-2.5 border-b border-gray-50">
+                    <span class="text-xs text-gray-400">Traffic share</span>
+                    <span class="text-xs font-semibold text-gray-700">{{ v.traffic_weight }}%</span>
+                  </div>
+                  <div v-if="v.rules?.length" class="py-2.5">
+                    <span class="text-xs text-gray-400 block mb-1.5">UTM rules</span>
+                    <div v-for="(rule, ri) in v.rules" :key="ri" class="font-mono text-[11px] bg-gray-100 px-2 py-0.5 rounded text-gray-700 inline-block mr-1 mb-1">{{ rule.param }}={{ rule.value }}</div>
+                  </div>
+                  <div v-else class="flex justify-between items-center py-2.5">
+                    <span class="text-xs text-gray-400">UTM rules</span>
+                    <span class="text-xs text-gray-400">None</span>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </template>
+        </template>
+
+        <!-- ── Conversion ── -->
+        <template v-else-if="selectedNode === 'conversion'">
+          <p class="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-3">Conversion goal</p>
+          <div class="grid grid-cols-3 gap-2.5 mb-4">
+            <div class="bg-white border border-gray-200 rounded-xl p-3.5 text-center">
+              <p class="text-xl font-extrabold text-gray-900 tabular-nums">{{ experiment.total_conversions.toLocaleString() }}</p>
+              <p class="text-[10px] uppercase tracking-wide text-gray-400 mt-1">Total</p>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-xl p-3.5 text-center">
+              <p class="text-xl font-extrabold text-gray-900">{{ overallConvRate }}</p>
+              <p class="text-[10px] uppercase tracking-wide text-gray-400 mt-1">Avg rate</p>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-xl p-3.5 text-center">
+              <p class="text-xl font-extrabold text-gray-900">{{ bestLift }}</p>
+              <p class="text-[10px] uppercase tracking-wide text-gray-400 mt-1">Best lift</p>
+            </div>
+          </div>
+          <div class="bg-white border border-gray-200 rounded-2xl p-5 mb-4">
+            <p class="text-xs font-bold text-gray-700 mb-4">Conversions by variant</p>
+            <div v-for="(v, i) in experiment.variants" :key="v.id" class="flex items-center gap-3 mb-2.5 last:mb-0">
+              <span class="text-[11px] text-gray-500 w-20 text-right shrink-0 truncate">{{ v.name }}</span>
+              <div class="flex-1 h-6 bg-gray-100 rounded-lg overflow-hidden">
+                <div
+                  :class="['h-full rounded-lg flex items-center px-2.5 transition-all', variantColors[i] ?? 'bg-gray-400']"
+                  :style="{ width: (experiment.variants.reduce((max, x) => Math.max(max, variantConvRate(x)), 0.001) > 0 ? (variantConvRate(v) / experiment.variants.reduce((max, x) => Math.max(max, variantConvRate(x)), 0.001)) * 100 : 0) + '%' }"
+                >
+                  <span class="text-[11px] font-bold text-white">{{ v.conversion_count }}</span>
+                </div>
+              </div>
+              <span class="text-[11px] text-gray-400 w-12 text-right shrink-0 tabular-nums">{{ v.impressions ? variantConvRate(v).toFixed(1) + '%' : '—' }}</span>
+            </div>
+          </div>
+          <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
+              <span class="text-2xl">🎯</span>
+              <div>
+                <p class="text-sm font-bold text-gray-900">Conversion goal</p>
+                <p class="text-xs text-gray-400 mt-0.5">Experiment objective</p>
+              </div>
+            </div>
+            <div class="px-5 py-1">
+              <div class="flex justify-between items-center py-2.5 border-b border-gray-50">
+                <span class="text-xs text-gray-400">Conversion URL</span>
+                <span class="font-mono text-[11px] bg-gray-100 px-2 py-0.5 rounded text-gray-700 truncate max-w-[200px]">{{ experiment.conversion_url ?? 'not set' }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2.5 border-b border-gray-50">
+                <span class="text-xs text-gray-400">Best variant</span>
+                <span class="text-xs font-semibold text-[#C96A3F]">{{ experiment.variants.find(v => v.id === leadingConvId)?.name ?? '—' }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2.5">
+                <span class="text-xs text-gray-400">Tracking</span>
+                <span :class="['text-[10px] font-semibold px-2 py-0.5 rounded-full', experiment.conversion_url ? 'bg-green-50 text-green-700 ring-1 ring-green-200' : 'bg-gray-100 text-gray-400']">
+                  {{ experiment.conversion_url ? 'Active' : 'No URL set' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </template>
+
       </div>
-
-      <!-- Details -->
-      <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-100">
-          <h2 class="text-sm font-semibold text-gray-900">Details</h2>
-        </div>
-        <dl>
-          <div class="flex items-center justify-between px-6 py-3.5 border-b border-gray-50 last:border-0">
-            <dt class="text-sm text-gray-500">Base URL</dt>
-            <dd class="text-sm text-gray-800 font-mono">{{ experiment.base_url }}</dd>
-          </div>
-          <div v-if="experiment.conversion_url" class="flex items-center justify-between px-6 py-3.5 border-b border-gray-50 last:border-0">
-            <dt class="text-sm text-gray-500">Conversion URL</dt>
-            <dd class="text-sm text-gray-800 font-mono">{{ experiment.conversion_url }}</dd>
-          </div>
-          <div class="flex items-center justify-between px-6 py-3.5 border-b border-gray-50 last:border-0">
-            <dt class="text-sm text-gray-500">Created</dt>
-            <dd class="text-sm text-gray-700">{{ formatDate(experiment.created_at) }}</dd>
-          </div>
-          <div class="flex items-center justify-between px-6 py-3.5 border-b border-gray-50 last:border-0">
-            <dt class="text-sm text-gray-500">Started</dt>
-            <dd class="text-sm text-gray-700">{{ formatDate(experiment.started_at) }}</dd>
-          </div>
-          <div v-if="experiment.ended_at" class="flex items-center justify-between px-6 py-3.5">
-            <dt class="text-sm text-gray-500">Completed</dt>
-            <dd class="text-sm text-gray-700">{{ formatDate(experiment.ended_at) }}</dd>
-          </div>
-        </dl>
-      </div>
-
     </div>
   </div>
 
