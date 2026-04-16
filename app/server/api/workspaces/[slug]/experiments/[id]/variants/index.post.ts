@@ -37,6 +37,9 @@ export default defineEventHandler(async (event) => {
   if (!Number.isInteger(trafficWeight) || trafficWeight < 1 || trafficWeight > 98)
     throw createError({ statusCode: 400, message: 'traffic_weight must be an integer between 1 and 98' })
 
+  if (body.existing_weights !== undefined && !Array.isArray(body.existing_weights)) {
+    throw createError({ statusCode: 400, message: 'existing_weights must be an array' })
+  }
   const existingWeights: Array<{ id: string; traffic_weight: number }> = body.existing_weights ?? []
 
   const total = trafficWeight + existingWeights.reduce((s, v) => s + Number(v.traffic_weight), 0)
@@ -64,11 +67,14 @@ export default defineEventHandler(async (event) => {
 
   // Update existing variant weights
   for (const entry of existingWeights) {
-    await supabase
+    const { error: updateError } = await supabase
       .from('variants')
       .update({ traffic_weight: Number(entry.traffic_weight) })
       .eq('id', entry.id)
       .eq('experiment_id', id)
+    if (updateError) {
+      throw createError({ statusCode: 500, message: `Weight update failed for variant ${entry.id}: ${updateError.message}` })
+    }
   }
 
   return {
