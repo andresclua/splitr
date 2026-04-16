@@ -25,6 +25,7 @@ export default defineEventHandler(async (event) => {
   if (body.name) updates.name = body.name.trim()
   if (body.base_url) updates.base_url = body.base_url.trim()
   if ('conversion_url' in body) updates.conversion_url = body.conversion_url?.trim() || null
+  if ('override_assignment' in body) updates.override_assignment = Boolean(body.override_assignment)
 
   if (body.status) {
     updates.status = body.status
@@ -45,9 +46,17 @@ export default defineEventHandler(async (event) => {
 
   // Update variant descriptions if provided
   if (Array.isArray(body.variantDescriptions)) {
-    for (const v of body.variantDescriptions as { id: string; description: string }[]) {
+    for (const v of body.variantDescriptions as { id: string; description: string; rules?: { param: string; value: string }[] }[]) {
+      const variantUpdate: Record<string, unknown> = {
+        description: v.description?.trim() || null,
+      }
+      if (Array.isArray(v.rules)) {
+        variantUpdate.rules = v.rules
+          .filter(r => r.param?.trim() && r.value?.trim())
+          .map(r => ({ param: r.param.trim(), value: r.value.trim() }))
+      }
       await supabase.from('variants')
-        .update({ description: v.description?.trim() || null })
+        .update(variantUpdate)
         .eq('id', v.id)
         .eq('experiment_id', id)
     }
