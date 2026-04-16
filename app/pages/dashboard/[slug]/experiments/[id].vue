@@ -101,8 +101,11 @@ const bestLift = computed(() => {
   return '+' + (variantConvRate(sorted[0]) - variantConvRate(sorted[1])).toFixed(1) + 'pp'
 })
 
+const maxConvRate = computed(() =>
+  Math.max(...(experiment.value?.variants.map(variantConvRate) ?? [0]))
+)
+
 const variantColors = ['bg-gray-400', 'bg-[#C96A3F]', 'bg-[#0F2235]', 'bg-emerald-500']
-const variantColorDot = ['bg-gray-400', 'bg-[#C96A3F]', 'bg-[#0F2235]', 'bg-emerald-500']
 
 // ── Edit panel ────────────────────────────────────────────
 const showEdit = ref(false)
@@ -315,7 +318,7 @@ const removeRule = (variantId: string, index: number) => {
               @click="selectedNode = 'variant-' + v.id"
             >
               <span class="absolute top-1.5 right-2 text-[8px] text-gray-300">click</span>
-              <div :class="['w-3 h-3 rounded-full mx-auto mb-1.5', variantColorDot[i] ?? 'bg-gray-400']"></div>
+              <div :class="['w-3 h-3 rounded-full mx-auto mb-1.5', variantColors[i] ?? 'bg-gray-400']"></div>
               <p class="text-[11px] font-bold text-gray-700 truncate">{{ v.name }}</p>
               <p :class="['text-[13px] font-bold mt-1', leadingConvId === v.id ? 'text-green-600' : 'text-gray-700']">
                 {{ v.impressions ? variantConvRate(v).toFixed(1) + '%' : '—' }}
@@ -441,7 +444,7 @@ const removeRule = (variantId: string, index: number) => {
               <span class="text-2xl">🔀</span>
               <div>
                 <p class="text-sm font-bold text-gray-900">{{ experiment.name }}</p>
-                <p class="text-xs text-gray-400 mt-0.5">Active experiment</p>
+                <p class="text-xs text-gray-400 mt-0.5">{{ statusConfig[experiment.status]?.label ?? experiment.status }} experiment</p>
               </div>
             </div>
             <div class="px-5 py-1">
@@ -491,7 +494,7 @@ const removeRule = (variantId: string, index: number) => {
                   <div class="flex-1 h-6 bg-gray-100 rounded-lg overflow-hidden">
                     <div
                       :class="['h-full rounded-lg flex items-center px-2.5 transition-all', variantColors[i] ?? 'bg-gray-400']"
-                      :style="{ width: (experiment.variants.reduce((max, x) => Math.max(max, variantConvRate(x)), 0.001) > 0 ? (variantConvRate(ov) / experiment.variants.reduce((max, x) => Math.max(max, variantConvRate(x)), 0.001)) * 100 : 0) + '%' }"
+                      :style="{ width: maxConvRate > 0 ? (variantConvRate(ov) / maxConvRate * 100) + '%' : '0%' }"
                     >
                       <span class="text-[11px] font-bold text-white">{{ ov.impressions ? variantConvRate(ov).toFixed(1) + '%' : '—' }}</span>
                     </div>
@@ -558,7 +561,7 @@ const removeRule = (variantId: string, index: number) => {
               <div class="flex-1 h-6 bg-gray-100 rounded-lg overflow-hidden">
                 <div
                   :class="['h-full rounded-lg flex items-center px-2.5 transition-all', variantColors[i] ?? 'bg-gray-400']"
-                  :style="{ width: (experiment.variants.reduce((max, x) => Math.max(max, variantConvRate(x)), 0.001) > 0 ? (variantConvRate(v) / experiment.variants.reduce((max, x) => Math.max(max, variantConvRate(x)), 0.001)) * 100 : 0) + '%' }"
+                  :style="{ width: maxConvRate > 0 ? (variantConvRate(v) / maxConvRate * 100) + '%' : '0%' }"
                 >
                   <span class="text-[11px] font-bold text-white">{{ v.conversion_count }}</span>
                 </div>
