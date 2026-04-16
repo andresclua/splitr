@@ -191,7 +191,7 @@ const atExperimentLimit = computed(() => isFinite(experimentLimit.value) && (exp
       </div>
       <h3 class="text-sm font-semibold text-gray-900 mb-1">No experiments yet</h3>
       <p class="text-sm text-gray-500 max-w-xs mx-auto mb-4">Create your first experiment to start splitting traffic between variants.</p>
-      <NuxtLink :to="`/dashboard/${slug}/experiments/new`" class="text-sm font-medium text-[#C96A3F] hover:text-[#A8522D]">Create experiment →</NuxtLink>
+      <NuxtLink v-if="!atExperimentLimit" :to="`/dashboard/${slug}/experiments/new`" class="text-sm font-medium text-[#C96A3F] hover:text-[#A8522D]">Create experiment →</NuxtLink>
     </div>
 
     <!-- No results -->
