@@ -23,7 +23,7 @@ interface Variant {
   rules: Rule[]
 }
 interface Experiment {
-  id: string; name: string; status: string; base_url: string; conversion_url: string | null
+  id: string; name: string; status: string; type: string; base_url: string; conversion_url: string | null
   override_assignment: boolean
   created_at: string; started_at: string | null; ended_at: string | null
   variants: Variant[]; total_impressions: number; total_conversions: number
@@ -188,7 +188,7 @@ const addingVariant = ref(false)
 
 const nextVariantLetter = computed(() => {
   const count = experiment.value?.variants.filter(v => !v.is_control).length ?? 0
-  return ['B', 'C', 'D', 'E', 'F', 'G', 'H'][count] ?? String(count + 1)
+  return ['B', 'C', 'D', 'E', 'F', 'G', 'H'][count] ?? String.fromCharCode(65 + count + 1)
 })
 
 const initAddVariantForm = () => {
@@ -212,7 +212,7 @@ const newVariantTotalWeight = computed(() =>
   newVariantWeights.value.reduce((s, v) => s + v.weight, 0)
 )
 
-watch(() => selectedNode.value, (val) => {
+watch(selectedNode, (val) => {
   if (val === 'add-variant') initAddVariantForm()
 })
 
