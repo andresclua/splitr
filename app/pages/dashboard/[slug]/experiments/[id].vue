@@ -82,7 +82,7 @@ const selectedNode = ref('')
 const variantConvRate = (v: Variant) =>
   v.impressions ? (v.conversion_count / v.impressions) * 100 : 0
 
-const leadingId = computed(() => {
+const leadingConvId = computed(() => {
   if (!experiment.value) return null
   return [...(experiment.value.variants)].sort((a, b) => variantConvRate(b) - variantConvRate(a))[0]?.id ?? null
 })
