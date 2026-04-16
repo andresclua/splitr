@@ -179,6 +179,72 @@ const removeRule = (variantId: string, index: number) => {
   const v = editForm.value.variantDescriptions.find(v => v.id === variantId)
   if (v) v.rules.splice(index, 1)
 }
+
+// ── Add variant form ──────────────────────────────────────
+const newVariantName = ref('')
+const newVariantUrl = ref('')
+const newVariantWeights = ref<Array<{ id: string; name: string; weight: number; isNew?: boolean }>>([])
+const addingVariant = ref(false)
+
+const nextVariantLetter = computed(() => {
+  const count = experiment.value?.variants.filter(v => !v.is_control).length ?? 0
+  return ['B', 'C', 'D', 'E', 'F', 'G', 'H'][count] ?? String(count + 1)
+})
+
+const initAddVariantForm = () => {
+  const variants = experiment.value?.variants ?? []
+  const total = variants.length + 1
+  const weight = Math.floor(100 / total)
+  const remainder = 100 - weight * total
+  newVariantName.value = `Variant ${nextVariantLetter.value}`
+  newVariantUrl.value = ''
+  newVariantWeights.value = [
+    ...variants.map((v, i) => ({
+      id: v.id,
+      name: v.name,
+      weight: weight + (i === 0 ? remainder : 0),
+    })),
+    { id: '__new__', name: newVariantName.value, weight, isNew: true },
+  ]
+}
+
+const newVariantTotalWeight = computed(() =>
+  newVariantWeights.value.reduce((s, v) => s + v.weight, 0)
+)
+
+watch(() => selectedNode.value, (val) => {
+  if (val === 'add-variant') initAddVariantForm()
+})
+
+watch(newVariantName, (val) => {
+  const newRow = newVariantWeights.value.find(v => v.isNew)
+  if (newRow) newRow.name = val
+})
+
+const saveNewVariant = async () => {
+  if (newVariantTotalWeight.value !== 100) return toast.error('Weights must sum to 100')
+  addingVariant.value = true
+  try {
+    await $fetch(`/api/workspaces/${slug}/experiments/${id}/variants`, {
+      method: 'POST',
+      body: {
+        name: newVariantName.value,
+        target_url: newVariantUrl.value.trim() || undefined,
+        traffic_weight: newVariantWeights.value.find(v => v.isNew)!.weight,
+        existing_weights: newVariantWeights.value
+          .filter(v => !v.isNew)
+          .map(v => ({ id: v.id, traffic_weight: v.weight })),
+      },
+    })
+    await refresh()
+    selectedNode.value = ''
+    toast.success('Variant added')
+  } catch (e: any) {
+    toast.error(e?.data?.message ?? 'Failed to add variant')
+  } finally {
+    addingVariant.value = false
+  }
+}
 </script>
 
 <template>
