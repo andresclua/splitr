@@ -379,13 +379,117 @@ const createExperiment = async () => {
           </div>
         </template>
 
-        <!-- nodes 3–4 placeholder ends; node 4 added in Task 4 -->
+        <!-- ─── Node 4: Conversion Goal ─── -->
+        <template v-if="confirmed.variants">
+
+          <!-- CONFIRMED / SKIPPED state (skipped = no URL, but step done) -->
+          <div
+            v-if="activeStep !== 'conversion'"
+            class="w-full max-w-md border-2 border-dashed border-gray-300 bg-gray-50 rounded-2xl px-5 py-4 cursor-pointer hover:-translate-y-px transition-transform"
+            @click="activeStep = 'conversion'"
+          >
+            <p class="text-sm font-semibold text-gray-500">
+              🎯 {{ conversionUrl.trim() ? conversionUrl : 'No conversion goal' }}
+            </p>
+          </div>
+
+          <!-- ACTIVE state -->
+          <div
+            v-else
+            class="w-full max-w-md border-2 border-gray-300 bg-white rounded-2xl px-5 py-5 shadow-sm"
+          >
+            <p class="text-sm font-semibold text-gray-900 mb-1">🎯 Conversion goal</p>
+            <p class="text-xs text-gray-400 mb-4">Optional — the URL that counts as a successful conversion.</p>
+
+            <label for="conversion-url" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Conversion URL</label>
+            <input
+              id="conversion-url"
+              v-model="conversionUrl"
+              type="url"
+              placeholder="https://acme.com/thank-you"
+              class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#C96A3F] placeholder:text-gray-300"
+            />
+
+            <div class="flex items-center gap-3 mt-4">
+              <button
+                class="bg-[#C96A3F] text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-[#A8522D] transition-colors disabled:opacity-40"
+                :disabled="saving"
+                @click="createExperiment"
+              >{{ saving ? 'Creating…' : 'Create experiment' }}</button>
+              <button
+                class="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                :disabled="saving"
+                @click="conversionUrl = ''; createExperiment()"
+              >Skip & create</button>
+            </div>
+          </div>
+        </template>
+
+        <!-- "Create experiment" shortcut — shown below node 3 once variants confirmed,
+             so the user can create without filling a conversion goal -->
+        <div v-if="confirmed.variants && activeStep !== 'conversion'" class="mt-6">
+          <button
+            class="bg-[#C96A3F] text-white text-sm font-semibold px-6 py-2.5 rounded-xl hover:bg-[#A8522D] transition-colors disabled:opacity-40"
+            :disabled="saving"
+            @click="createExperiment"
+          >{{ saving ? 'Creating…' : 'Create experiment' }}</button>
+        </div>
 
       </div>
 
       <!-- ── Preview column (45%) ── -->
       <div class="w-[45%] border-l border-gray-100 bg-gray-50 overflow-y-auto px-8 py-8">
-        <!-- preview added in Task 4 -->
+        <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-6">Flow preview</p>
+
+        <!-- Traffic pill -->
+        <div :class="['text-xs font-semibold px-3 py-1.5 rounded-full text-center', confirmed.traffic ? 'bg-green-100 text-green-700' : 'border border-dashed border-gray-300 text-gray-400']">
+          🌐 {{ confirmed.traffic ? previewHost : 'Traffic' }}
+        </div>
+
+        <!-- Arrow -->
+        <div class="flex flex-col items-center my-1.5">
+          <div class="w-px h-4 bg-gray-200" />
+          <div class="w-0 h-0 border-l-[4px] border-r-[4px] border-t-[5px] border-l-transparent border-r-transparent border-t-gray-200" />
+        </div>
+
+        <!-- Experiment pill -->
+        <div :class="['text-xs font-semibold px-3 py-1.5 rounded-full text-center', confirmed.experiment ? 'bg-[#FEF0E8] text-[#C96A3F]' : 'border border-dashed border-gray-300 text-gray-400']">
+          🔀 {{ confirmed.experiment ? expName : 'Experiment' }}
+        </div>
+
+        <!-- Arrow -->
+        <div class="flex flex-col items-center my-1.5">
+          <div class="w-px h-4 bg-gray-200" />
+          <div class="w-0 h-0 border-l-[4px] border-r-[4px] border-t-[5px] border-l-transparent border-r-transparent border-t-gray-200" />
+        </div>
+
+        <!-- Variant pills (side by side once confirmed, single pill otherwise) -->
+        <div v-if="confirmed.variants" class="flex flex-wrap gap-1.5 justify-center">
+          <div
+            v-for="(v, i) in variants"
+            :key="i"
+            :class="['text-xs font-semibold px-2.5 py-1 rounded-full', v.is_control ? 'bg-gray-100 text-gray-600' : 'bg-[#FEF0E8] text-[#C96A3F]']"
+          >
+            {{ v.is_control ? '⚪' : '🟠' }} {{ v.name }} {{ v.traffic_weight }}%
+          </div>
+        </div>
+        <div
+          v-else
+          class="text-xs font-semibold px-3 py-1.5 rounded-full border border-dashed border-gray-300 text-gray-400 text-center"
+        >
+          ⚪🟠 Variants
+        </div>
+
+        <!-- Arrow -->
+        <div class="flex flex-col items-center my-1.5">
+          <div class="w-px h-4 bg-gray-200" />
+          <div class="w-0 h-0 border-l-[4px] border-r-[4px] border-t-[5px] border-l-transparent border-r-transparent border-t-gray-200" />
+        </div>
+
+        <!-- Conversion pill -->
+        <div :class="['text-xs font-semibold px-3 py-1.5 rounded-full text-center', conversionUrl.trim() ? 'bg-blue-50 text-blue-600' : 'border border-dashed border-gray-300 text-gray-400']">
+          🎯 {{ conversionUrl.trim() ? previewConvHost : 'Goal?' }}
+        </div>
       </div>
 
     </div>
