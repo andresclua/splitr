@@ -6,10 +6,17 @@ export interface Env {
   KORYLA_API_KEY: string  // sk_live_... (set via wrangler secret put KORYLA_API_KEY)
 }
 
+export interface Rule {
+  param: string
+  value: string
+}
+
 interface Variant {
   id: string
+  name: string
   traffic_weight: number
   target_url: string
+  rules: Rule[]
 }
 
 interface Experiment {
@@ -39,6 +46,19 @@ export function assignVariant(variants: Pick<Variant, 'id' | 'traffic_weight'>[]
     if (rand <= 0) return variant.id
   }
   return variants[variants.length - 1].id
+}
+
+export function findRuleMatch(
+  variants: Pick<Variant, 'id' | 'rules'>[],
+  searchParams: URLSearchParams
+): typeof variants[number] | null {
+  for (const variant of variants) {
+    if (!variant.rules?.length) continue
+    for (const rule of variant.rules) {
+      if (searchParams.get(rule.param) === rule.value) return variant
+    }
+  }
+  return null
 }
 
 const COOKIE_PREFIX = 'ky_'
@@ -101,6 +121,10 @@ async function getConfig(env: Env): Promise<Experiment[]> {
   return experiments
 }
 
+function getPathname(urlOrPath: string): string {
+  try { return new URL(urlOrPath).pathname } catch { return urlOrPath }
+}
+
 // Paths the worker must never intercept (auth callbacks, API routes, assets)
 const EXCLUDED_PREFIXES = ['/confirm', '/api/', '/_nuxt/', '/login', '/signup', '/verify-email']
 
@@ -119,7 +143,7 @@ export default {
     // Check if this URL is a conversion URL for any experiment the visitor is in
     for (const exp of experiments) {
       if (!exp.conversion_url) continue
-      const convPathname = new URL(exp.conversion_url).pathname
+      const convPathname = getPathname(exp.conversion_url)
       if (url.pathname === convPathname) {
         const variantId = cookies[getCookieName(exp.id)]
         if (variantId) {
@@ -135,7 +159,7 @@ export default {
       }
     }
 
-    const experiment = experiments.find(e => url.pathname.startsWith(new URL(e.base_url).pathname))
+    const experiment = experiments.find(e => url.pathname.startsWith(getPathname(e.base_url)))
     if (!experiment) {
       return fetch(request)
     }
@@ -154,7 +178,7 @@ export default {
 
     // Rewrite request to variant URL — no redirect, no DOM flicker
     const targetUrl = new URL(request.url)
-    targetUrl.pathname = new URL(variant.target_url).pathname
+    targetUrl.pathname = getPathname(variant.target_url)
 
     const response = await fetch(new Request(targetUrl.toString(), request))
     const newResponse = new Response(response.body, response)
@@ -178,7 +202,7 @@ export default {
             experimentId: experiment.id,
             experimentName: experiment.name,
             variantId: variant.id,
-            variantName: variant.id,
+            variantName: variant.name,
             sessionId: variantId,
             timestamp: new Date().toISOString(),
           }),
