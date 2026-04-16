@@ -170,8 +170,9 @@ const createExperiment = async () => {
           class="w-full max-w-md border-2 border-[#C96A3F] bg-white rounded-2xl px-5 py-5 shadow-sm"
         >
           <p class="text-sm font-semibold text-gray-900 mb-4">🌐 Traffic</p>
-          <label class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Base URL</label>
+          <label for="base-url" class="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Base URL</label>
           <input
+            id="base-url"
             v-model="baseUrl"
             type="url"
             placeholder="https://acme.com/pricing"
