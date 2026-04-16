@@ -20,14 +20,17 @@ const expName = ref('')
 const expType = ref<'edge' | 'component'>('edge')
 
 interface VariantDraft {
+  id: number
   name: string
   target_url: string
   traffic_weight: number
   is_control: boolean
 }
+let _variantIdCounter = 0
+const nextVariantId = () => ++_variantIdCounter
 const variants = ref<VariantDraft[]>([
-  { name: 'Control',   target_url: '', traffic_weight: 50, is_control: true  },
-  { name: 'Variant B', target_url: '', traffic_weight: 50, is_control: false },
+  { id: nextVariantId(), name: 'Control',   target_url: '', traffic_weight: 50, is_control: true  },
+  { id: nextVariantId(), name: 'Variant B', target_url: '', traffic_weight: 50, is_control: false },
 ])
 const conversionUrl = ref('')
 
@@ -59,7 +62,7 @@ const rebalance = () => {
 const addVariant = () => {
   const usedNames = new Set(variants.value.map(v => v.name))
   const letter = VARIANT_LETTERS.find(l => !usedNames.has(`Variant ${l}`)) ?? String(variants.value.length)
-  variants.value.push({ name: `Variant ${letter}`, target_url: '', traffic_weight: 0, is_control: false })
+  variants.value.push({ id: nextVariantId(), name: `Variant ${letter}`, target_url: '', traffic_weight: 0, is_control: false })
   rebalance()
 }
 
@@ -85,6 +88,7 @@ const confirmExperiment = () => {
 const confirmVariants = () => {
   const nonCtl = variants.value.filter(v => !v.is_control)
   if (nonCtl.some(v => !v.target_url.trim())) return toast.error('All variant URLs are required')
+  if (variants.value.some(v => v.traffic_weight < 1)) return toast.error('Each variant must have at least 1% traffic')
   if (totalWeight.value !== 100) return toast.error('Weights must sum to 100')
   confirmed.variants = true
   activeStep.value = 'conversion'
@@ -100,7 +104,7 @@ const reopenStep = (step: Step) => {
 // ── Create ────────────────────────────────────────────────
 const saving = ref(false)
 
-const createExperiment = async () => {
+const createExperiment = async (skipConversion = false) => {
   saving.value = true
   try {
     const data = await $fetch<{ id: string }>(`/api/workspaces/${slug}/experiments`, {
@@ -109,7 +113,7 @@ const createExperiment = async () => {
         name: expName.value,
         type: expType.value,
         base_url: baseUrl.value,
-        conversion_url: conversionUrl.value.trim() || undefined,
+        conversion_url: skipConversion ? undefined : conversionUrl.value.trim() || undefined,
         variants: variants.value.map(v => ({
           name: v.name,
           target_url: v.is_control ? '' : v.target_url, // API stores empty string as null for control
@@ -314,7 +318,7 @@ const createExperiment = async () => {
             <div class="space-y-3">
               <div
                 v-for="(v, i) in variants"
-                :key="i"
+                :key="v.id"
                 :class="['border rounded-xl p-3.5', v.is_control ? 'border-gray-200 bg-gray-50' : 'border-[#C96A3F]/30']"
               >
                 <div class="flex items-center justify-between mb-2">
@@ -421,7 +425,7 @@ const createExperiment = async () => {
                 type="button"
                 class="text-xs text-gray-400 hover:text-gray-600 transition-colors"
                 :disabled="saving"
-                @click="conversionUrl = ''; createExperiment()"
+                @click="createExperiment(true)"
               >Skip & create</button>
             </div>
           </div>
@@ -469,7 +473,7 @@ const createExperiment = async () => {
         <div v-if="confirmed.variants" class="flex flex-wrap gap-1.5 justify-center">
           <div
             v-for="(v, i) in variants"
-            :key="i"
+            :key="v.id"
             :class="['text-xs font-semibold px-2.5 py-1 rounded-full', v.is_control ? 'bg-gray-100 text-gray-600' : 'bg-[#FEF0E8] text-[#C96A3F]']"
           >
             {{ v.is_control ? '⚪' : '🟠' }} {{ v.name }} {{ v.traffic_weight }}%
