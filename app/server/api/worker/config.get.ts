@@ -37,7 +37,7 @@ export default defineEventHandler(async (event) => {
 
   let query = supabase
     .from('experiments')
-    .select('id, name, base_url, conversion_url, type, variants(id, name, traffic_weight, target_url, is_control)')
+    .select('id, name, base_url, conversion_url, override_assignment, type, variants(id, name, traffic_weight, target_url, is_control, rules)')
     .eq('workspace_id', apiKey.workspace_id)
     .eq('status', 'active')
 
@@ -62,7 +62,11 @@ export default defineEventHandler(async (event) => {
     name: exp.name,
     base_url: exp.base_url,
     conversion_url: exp.conversion_url ?? null,
-    variants: exp.variants ?? [],
+    override_assignment: exp.override_assignment ?? false,
+    variants: (exp.variants ?? []).map(v => ({
+      ...v,
+      rules: v.rules ?? [],
+    })),
     destinations: destinations ?? [],
   }))
 })
