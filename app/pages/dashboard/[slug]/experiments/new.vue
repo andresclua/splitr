@@ -57,7 +57,8 @@ const rebalance = () => {
 }
 
 const addVariant = () => {
-  const letter = VARIANT_LETTERS[variants.value.length - 1] ?? String(variants.value.length)
+  const usedNames = new Set(variants.value.map(v => v.name))
+  const letter = VARIANT_LETTERS.find(l => !usedNames.has(`Variant ${l}`)) ?? String(variants.value.length)
   variants.value.push({ name: `Variant ${letter}`, target_url: '', traffic_weight: 0, is_control: false })
   rebalance()
 }
@@ -72,7 +73,6 @@ const removeVariant = (i: number) => {
 const confirmTraffic = () => {
   if (!baseUrl.value.trim()) return
   confirmed.traffic = true
-  variants.value[0].target_url = baseUrl.value
   activeStep.value = 'experiment'
 }
 
