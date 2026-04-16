@@ -84,7 +84,7 @@ const variantConvRate = (v: Variant) =>
 
 const leadingConvId = computed(() => {
   if (!experiment.value) return null
-  return [...(experiment.value.variants)].sort((a, b) => variantConvRate(b) - variantConvRate(a))[0]?.id ?? null
+  return [...(experiment.value.variants ?? [])].sort((a, b) => variantConvRate(b) - variantConvRate(a))[0]?.id ?? null
 })
 
 const overallConvRate = computed(() => {
