@@ -395,6 +395,35 @@ const saveNewVariant = async () => {
           </div>
         </div>
 
+        <!-- Ghost variant node (add new variant) -->
+        <div
+          v-if="experiment.status !== 'completed'"
+          class="flex gap-3 w-full max-w-sm"
+        >
+          <!-- Spacer columns matching existing variants -->
+          <div v-for="v in experiment.variants" :key="v.id + '-ghost-spacer'" class="flex-1"></div>
+          <!-- Ghost node column -->
+          <div class="flex-1 flex flex-col items-center group">
+            <div class="flex flex-col items-center opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+              <div class="w-0.5 h-2.5 bg-gray-200"></div>
+              <div class="w-0 h-0 border-l-[5px] border-r-[5px] border-t-[7px] border-transparent border-t-gray-200"></div>
+            </div>
+            <div
+              :class="[
+                'mt-1 w-full border rounded-xl px-3 py-3 text-center cursor-pointer transition-all duration-150 border-dashed',
+                selectedNode === 'add-variant'
+                  ? 'border-[#C96A3F] ring-2 ring-[#C96A3F] bg-white opacity-100'
+                  : 'border-gray-300 bg-gray-50 opacity-0 group-hover:opacity-100'
+              ]"
+              @click="selectedNode = 'add-variant'"
+            >
+              <div class="w-3 h-3 rounded-full mx-auto mb-1.5 bg-gray-300"></div>
+              <p class="text-[11px] font-bold text-gray-400">+ Variant {{ nextVariantLetter }}</p>
+              <p class="text-[10px] text-gray-300 mt-0.5">Click to configure</p>
+            </div>
+          </div>
+        </div>
+
         <!-- Merge back -->
         <div class="flex justify-around w-full max-w-sm px-5 pt-1">
           <div v-for="v in experiment.variants" :key="v.id + '-merge'" class="w-0.5 h-3 bg-gray-200"></div>
