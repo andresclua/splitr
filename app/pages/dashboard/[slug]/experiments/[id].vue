@@ -662,10 +662,6 @@ const saveNewVariant = async () => {
             </div>
             <div class="px-5 py-1">
               <div class="flex justify-between items-center py-2.5 border-b border-gray-50">
-                <span class="text-xs text-gray-400">Split</span>
-                <span class="text-xs font-semibold text-gray-700">{{ experiment.variants.map(v => v.traffic_weight + '%').join(' / ') }}</span>
-              </div>
-              <div class="flex justify-between items-center py-2.5 border-b border-gray-50">
                 <span class="text-xs text-gray-400">Started</span>
                 <span class="text-xs font-semibold text-gray-700">{{ formatDate(experiment.started_at) }}</span>
               </div>
@@ -679,6 +675,30 @@ const saveNewVariant = async () => {
                   type="text"
                   class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C96A3F]"
                 />
+              </div>
+              <div>
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Traffic split</p>
+                <div class="space-y-2">
+                  <div v-for="(row, i) in editVariantWeights" :key="row.id" class="flex items-center gap-2">
+                    <span class="text-xs text-gray-600 flex-1 truncate">{{ row.name }}</span>
+                    <div class="flex items-center gap-1 shrink-0">
+                      <input
+                        v-model.number="row.weight"
+                        type="number"
+                        min="1"
+                        max="98"
+                        class="w-14 border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-right font-mono focus:outline-none focus:ring-2 focus:ring-[#C96A3F]"
+                      />
+                      <span class="text-xs text-gray-400">%</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex justify-end items-center gap-1.5 mt-2 pt-2 border-t border-gray-100">
+                  <span class="text-xs text-gray-400">Total:</span>
+                  <span :class="['text-xs font-bold px-2 py-0.5 rounded-full', weightsTotal === 100 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600']">
+                    {{ weightsTotal }}%
+                  </span>
+                </div>
               </div>
               <div>
                 <label class="flex items-center gap-3 cursor-pointer select-none">
@@ -695,8 +715,8 @@ const saveNewVariant = async () => {
               </div>
               <button
                 type="button"
-                :disabled="savingExperiment || !editExpName.trim()"
-                :class="['bg-[#C96A3F] text-white text-sm font-semibold px-4 py-1.5 rounded-lg transition-opacity', (savingExperiment || !editExpName.trim()) ? 'opacity-40 cursor-not-allowed' : 'hover:opacity-90']"
+                :disabled="savingExperiment || !editExpName.trim() || weightsTotal !== 100"
+                :class="['bg-[#C96A3F] text-white text-sm font-semibold px-4 py-1.5 rounded-lg transition-opacity', (savingExperiment || !editExpName.trim() || weightsTotal !== 100) ? 'opacity-40 cursor-not-allowed' : 'hover:opacity-90']"
                 @click="saveExperiment"
               >{{ savingExperiment ? 'Saving…' : 'Save' }}</button>
             </div>
