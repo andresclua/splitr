@@ -1058,7 +1058,13 @@ const saveNewVariant = async () => {
 
             <div class="space-y-3 mb-4">
               <div v-for="row in deleteRedistWeights" :key="row.id" class="flex items-center gap-3">
-                <span class="text-sm text-gray-700 flex-1 truncate">{{ row.name }}</span>
+                <span class="text-sm text-gray-700 w-24 shrink-0 truncate">{{ row.name }}</span>
+                <div class="flex-1 h-5 bg-gray-100 rounded-lg overflow-hidden">
+                  <div
+                    :class="['h-full rounded-lg transition-all', variantColors[experiment.variants.findIndex(v => v.id === row.id)] ?? 'bg-gray-400']"
+                    :style="{ width: Math.min(row.weight, 100) + '%' }"
+                  ></div>
+                </div>
                 <div class="flex items-center gap-1 shrink-0">
                   <input
                     v-model.number="row.weight"
