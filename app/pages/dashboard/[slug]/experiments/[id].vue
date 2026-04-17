@@ -680,26 +680,68 @@ const saveNewVariant = async () => {
                   </div>
                 </div>
                 <div class="px-5 py-1">
-                  <div v-if="v.description" class="flex justify-between items-start py-2.5 border-b border-gray-50 gap-4">
-                    <span class="text-xs text-gray-400 shrink-0">Description</span>
-                    <span class="text-xs text-gray-700 text-right">{{ v.description }}</span>
-                  </div>
                   <div class="flex justify-between items-center py-2.5 border-b border-gray-50">
                     <span class="text-xs text-gray-400">Target URL</span>
-                    <span class="font-mono text-[11px] bg-gray-100 px-2 py-0.5 rounded text-gray-700 truncate max-w-[200px]">{{ v.target_url }}</span>
+                    <span class="font-mono text-[11px] bg-gray-100 px-2 py-0.5 rounded text-gray-700 truncate max-w-[200px]">{{ v.target_url || '—' }}</span>
                   </div>
                   <div class="flex justify-between items-center py-2.5 border-b border-gray-50">
                     <span class="text-xs text-gray-400">Traffic share</span>
                     <span class="text-xs font-semibold text-gray-700">{{ v.traffic_weight }}%</span>
                   </div>
-                  <div v-if="v.rules?.length" class="py-2.5">
-                    <span class="text-xs text-gray-400 block mb-1.5">UTM rules</span>
-                    <div v-for="(rule, ri) in v.rules" :key="ri" class="font-mono text-[11px] bg-gray-100 px-2 py-0.5 rounded text-gray-700 inline-block mr-1 mb-1">{{ rule.param }}={{ rule.value }}</div>
+                </div>
+                <div class="px-5 pt-2 pb-4 border-t border-gray-100 space-y-3">
+                  <div>
+                    <label :for="'edit-desc-' + v.id" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Description</label>
+                    <input
+                      :id="'edit-desc-' + v.id"
+                      v-model="editVariantDescription"
+                      type="text"
+                      placeholder="What's different in this variant? (optional)"
+                      class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C96A3F] placeholder:text-gray-300"
+                    />
                   </div>
-                  <div v-else class="flex justify-between items-center py-2.5">
-                    <span class="text-xs text-gray-400">UTM rules</span>
-                    <span class="text-xs text-gray-400">None</span>
+                  <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                      UTM rules
+                      <span class="normal-case font-normal text-gray-400 ml-1">(OR — any match routes here)</span>
+                    </p>
+                    <div v-for="(rule, ri) in editVariantRules" :key="ri" class="flex items-center gap-2 mb-2">
+                      <input
+                        v-model="rule.param"
+                        type="text"
+                        placeholder="utm_source"
+                        class="flex-1 border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#C96A3F] placeholder:text-gray-300"
+                      />
+                      <span class="text-xs text-gray-400">=</span>
+                      <input
+                        v-model="rule.value"
+                        type="text"
+                        placeholder="facebook"
+                        class="flex-1 border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#C96A3F] placeholder:text-gray-300"
+                      />
+                      <button type="button" class="text-gray-300 hover:text-red-400 transition-colors shrink-0" @click="removeEditRule(ri)">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      class="text-xs text-[#C96A3F] hover:text-[#A8522D] font-medium transition-colors flex items-center gap-1"
+                      @click="addEditRule"
+                    >
+                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                      </svg>
+                      Add rule
+                    </button>
                   </div>
+                  <button
+                    type="button"
+                    :disabled="savingVariant"
+                    :class="['bg-[#C96A3F] text-white text-sm font-semibold px-4 py-1.5 rounded-lg transition-opacity', savingVariant ? 'opacity-40 cursor-not-allowed' : 'hover:opacity-90']"
+                    @click="saveVariant(v.id)"
+                  >{{ savingVariant ? 'Saving…' : 'Save' }}</button>
                 </div>
               </div>
             </template>
