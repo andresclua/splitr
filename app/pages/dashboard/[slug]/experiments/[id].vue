@@ -759,6 +759,15 @@ const saveNewVariant = async () => {
                 </div>
                 <div class="px-5 pt-2 pb-4 border-t border-gray-100 space-y-3">
                   <div>
+                    <label :for="'edit-name-' + v.id" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Name</label>
+                    <input
+                      :id="'edit-name-' + v.id"
+                      v-model="editVariantName"
+                      type="text"
+                      class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C96A3F]"
+                    />
+                  </div>
+                  <div>
                     <label :for="'edit-desc-' + v.id" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Description</label>
                     <input
                       :id="'edit-desc-' + v.id"
@@ -804,12 +813,21 @@ const saveNewVariant = async () => {
                       Add rule
                     </button>
                   </div>
-                  <button
-                    type="button"
-                    :disabled="savingVariant"
-                    :class="['bg-[#C96A3F] text-white text-sm font-semibold px-4 py-1.5 rounded-lg transition-opacity', savingVariant ? 'opacity-40 cursor-not-allowed' : 'hover:opacity-90']"
-                    @click="saveVariant(v.id)"
-                  >{{ savingVariant ? 'Saving…' : 'Save' }}</button>
+                  <div class="flex items-center gap-2">
+                    <button
+                      type="button"
+                      :disabled="savingVariant || !editVariantName.trim()"
+                      :class="['bg-[#C96A3F] text-white text-sm font-semibold px-4 py-1.5 rounded-lg transition-opacity', (savingVariant || !editVariantName.trim()) ? 'opacity-40 cursor-not-allowed' : 'hover:opacity-90']"
+                      @click="saveVariant(v.id)"
+                    >{{ savingVariant ? 'Saving…' : 'Save' }}</button>
+                    <button
+                      v-if="!v.is_control && experiment.variants.length > 2"
+                      type="button"
+                      :disabled="savingVariant"
+                      :class="['border border-red-200 text-red-600 text-sm font-medium px-4 py-1.5 rounded-lg transition-colors', savingVariant ? 'opacity-40 cursor-not-allowed' : 'hover:bg-red-50']"
+                      @click="openDeleteModal(v.id)"
+                    >Delete variant</button>
+                  </div>
                 </div>
               </div>
             </template>
