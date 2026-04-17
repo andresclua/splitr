@@ -180,6 +180,11 @@ const saveVariant = async (variantId: string) => {
       },
     })
     await refresh()
+    const saved = experiment.value?.variants.find(v => v.id === variantId)
+    if (saved) {
+      editVariantDescription.value = saved.description ?? ''
+      editVariantRules.value = saved.rules ? saved.rules.map(r => ({ ...r })) : []
+    }
     toast.success('Variant updated')
   } catch (e: any) {
     toast.error(e?.data?.message ?? 'Failed to save')
