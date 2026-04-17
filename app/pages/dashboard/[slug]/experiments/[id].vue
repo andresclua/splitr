@@ -1012,6 +1012,64 @@ const saveNewVariant = async () => {
 
       </div>
     </div>
+
+    <!-- ── Delete variant modal ── -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-opacity duration-150"
+        enter-from-class="opacity-0"
+        leave-active-class="transition-opacity duration-150"
+        leave-to-class="opacity-0"
+      >
+        <div v-if="showDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/30" @click.self="showDeleteModal = false">
+          <div class="max-w-sm w-full mx-4 bg-white rounded-2xl p-6 shadow-xl">
+            <h3 class="text-base font-bold text-gray-900 mb-1">
+              Delete {{ experiment?.variants.find(v => v.id === deletingVariantId)?.name }}?
+            </h3>
+            <p class="text-sm text-gray-500 mb-5">
+              Redistribute its {{ experiment?.variants.find(v => v.id === deletingVariantId)?.traffic_weight }}% traffic to remaining variants.
+            </p>
+
+            <div class="space-y-3 mb-4">
+              <div v-for="row in deleteRedistWeights" :key="row.id" class="flex items-center gap-3">
+                <span class="text-sm text-gray-700 flex-1 truncate">{{ row.name }}</span>
+                <div class="flex items-center gap-1 shrink-0">
+                  <input
+                    v-model.number="row.weight"
+                    type="number"
+                    min="1"
+                    max="98"
+                    class="w-16 border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-right font-mono focus:outline-none focus:ring-2 focus:ring-[#C96A3F]"
+                  />
+                  <span class="text-sm text-gray-400">%</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex justify-end items-center gap-1.5 mb-5 pb-4 border-b border-gray-100">
+              <span class="text-xs text-gray-400">Total:</span>
+              <span :class="['text-xs font-bold px-2 py-0.5 rounded-full', deleteRedistTotal === 100 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600']">
+                {{ deleteRedistTotal }}%
+              </span>
+            </div>
+
+            <div class="flex gap-2">
+              <button
+                type="button"
+                :disabled="savingDelete || deleteRedistTotal !== 100"
+                :class="['flex-1 bg-red-600 text-white text-sm font-semibold py-2 rounded-lg transition-opacity', (savingDelete || deleteRedistTotal !== 100) ? 'opacity-40 cursor-not-allowed' : 'hover:bg-red-700']"
+                @click="confirmDelete"
+              >{{ savingDelete ? 'Deleting…' : 'Delete & save' }}</button>
+              <button
+                type="button"
+                class="bg-gray-100 text-gray-700 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+                @click="showDeleteModal = false"
+              >Cancel</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 
 </template>
