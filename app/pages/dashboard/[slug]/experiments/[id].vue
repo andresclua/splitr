@@ -1061,7 +1061,7 @@ const saveNewVariant = async () => {
                 <span class="text-sm text-gray-700 w-24 shrink-0 truncate">{{ row.name }}</span>
                 <div class="flex-1 h-5 bg-gray-100 rounded-lg overflow-hidden">
                   <div
-                    :class="['h-full rounded-lg transition-all', variantColors[experiment.variants.findIndex(v => v.id === row.id)] ?? 'bg-gray-400']"
+                    :class="['h-full rounded-lg transition-all', variantColors[experiment?.variants.findIndex(v => v.id === row.id)] ?? 'bg-gray-400']"
                     :style="{ width: Math.min(row.weight, 100) + '%' }"
                   ></div>
                 </div>
