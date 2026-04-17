@@ -598,12 +598,36 @@ const saveNewVariant = async () => {
                 <span class="text-xs text-gray-400">Started</span>
                 <span class="text-xs font-semibold text-gray-700">{{ formatDate(experiment.started_at) }}</span>
               </div>
-              <div class="flex justify-between items-center py-2.5">
-                <span class="text-xs text-gray-400">UTM override</span>
-                <span :class="['text-[10px] font-semibold px-2 py-0.5 rounded-full', experiment.override_assignment ? 'bg-[#FEF0E8] text-[#C96A3F]' : 'bg-gray-100 text-gray-500']">
-                  {{ experiment.override_assignment ? 'On' : 'Off' }}
-                </span>
+            </div>
+            <div class="px-5 pt-2 pb-4 border-t border-gray-100 space-y-3">
+              <div>
+                <label for="edit-exp-name" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Experiment name</label>
+                <input
+                  id="edit-exp-name"
+                  v-model="editExpName"
+                  type="text"
+                  class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C96A3F]"
+                />
               </div>
+              <div>
+                <label class="flex items-center gap-3 cursor-pointer select-none">
+                  <div class="relative shrink-0">
+                    <input v-model="editOverrideAssignment" type="checkbox" class="sr-only peer" />
+                    <div class="w-9 h-5 bg-gray-200 peer-checked:bg-[#C96A3F] rounded-full transition-colors" />
+                    <div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4" />
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium text-gray-700">UTM override</p>
+                    <p class="text-xs text-gray-400">Reassign visitors via query param rules</p>
+                  </div>
+                </label>
+              </div>
+              <button
+                type="button"
+                :disabled="savingExperiment || !editExpName.trim()"
+                :class="['bg-[#C96A3F] text-white text-sm font-semibold px-4 py-1.5 rounded-lg transition-opacity', (savingExperiment || !editExpName.trim()) ? 'opacity-40 cursor-not-allowed' : 'hover:opacity-90']"
+                @click="saveExperiment"
+              >{{ savingExperiment ? 'Saving…' : 'Save' }}</button>
             </div>
           </div>
         </template>
