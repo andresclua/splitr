@@ -55,8 +55,11 @@ export default defineEventHandler(async (event) => {
   const remainingIds = new Set((remaining ?? []).map(v => v.id))
   const providedIds = new Set(newWeights.map(v => v.id))
 
-  if (remainingIds.size !== providedIds.size || ![...remainingIds].every(id => providedIds.has(id)))
-    throw createError({ statusCode: 400, message: 'new_weights must cover exactly the remaining variants' })
+  if (
+    remainingIds.size !== providedIds.size ||
+    ![...remainingIds].every(rid => providedIds.has(rid)) ||
+    ![...providedIds].every(pid => remainingIds.has(pid))
+  ) throw createError({ statusCode: 400, message: 'new_weights must cover exactly the remaining variants' })
 
   const total = newWeights.reduce((s, v) => s + Number(v.traffic_weight), 0)
   if (total !== 100) throw createError({ statusCode: 400, message: `Weights must sum to 100 (got ${total})` })
