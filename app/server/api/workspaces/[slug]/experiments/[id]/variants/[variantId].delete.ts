@@ -44,9 +44,9 @@ export default defineEventHandler(async (event) => {
   if ((count ?? 0) < 3) throw createError({ statusCode: 400, message: 'Cannot delete: experiment must keep at least 2 variants' })
 
   // Validate new_weights
-  const newWeights: Array<{ id: string; traffic_weight: number }> = body.new_weights ?? []
-  if (!Array.isArray(body.new_weights) || newWeights.length === 0)
+  if (!Array.isArray(body.new_weights) || body.new_weights.length === 0)
     throw createError({ statusCode: 400, message: 'new_weights is required' })
+  const newWeights: Array<{ id: string; traffic_weight: number }> = body.new_weights
 
   // Fetch remaining variant IDs (excluding the one being deleted)
   const { data: remaining } = await supabase
@@ -62,14 +62,12 @@ export default defineEventHandler(async (event) => {
   ) throw createError({ statusCode: 400, message: 'new_weights must cover exactly the remaining variants' })
 
   const total = newWeights.reduce((s, v) => s + Number(v.traffic_weight), 0)
-  if (total !== 100) throw createError({ statusCode: 400, message: `Weights must sum to 100 (got ${total})` })
+  if (Math.round(total) !== 100) throw createError({ statusCode: 400, message: `Weights must sum to 100 (got ${total})` })
 
-  // Delete variant
-  const { error: deleteError } = await supabase
-    .from('variants').delete().eq('id', variantId).eq('experiment_id', id)
-  if (deleteError) throw createError({ statusCode: 500, message: deleteError.message })
+  if (!newWeights.every(v => Number.isInteger(Number(v.traffic_weight)) && Number(v.traffic_weight) >= 1))
+    throw createError({ statusCode: 400, message: 'Each traffic_weight must be a positive integer' })
 
-  // Update remaining weights
+  // Update remaining weights first (reversible; delete is irreversible)
   for (const entry of newWeights) {
     const { error: updateError } = await supabase
       .from('variants')
@@ -77,6 +75,11 @@ export default defineEventHandler(async (event) => {
       .eq('id', entry.id).eq('experiment_id', id)
     if (updateError) throw createError({ statusCode: 500, message: `Weight update failed for ${entry.id}: ${updateError.message}` })
   }
+
+  // Delete variant only after weights are committed
+  const { error: deleteError } = await supabase
+    .from('variants').delete().eq('id', variantId).eq('experiment_id', id)
+  if (deleteError) throw createError({ statusCode: 500, message: deleteError.message })
 
   return { deleted: variantId }
 })
