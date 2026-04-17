@@ -62,5 +62,22 @@ export default defineEventHandler(async (event) => {
     }
   }
 
+  // Update variant traffic weights if provided
+  if (Array.isArray(body.variantWeights) && body.variantWeights.length > 0) {
+    const weights = body.variantWeights as Array<{ id: string; traffic_weight: number }>
+    const total = weights.reduce((s, v) => s + Number(v.traffic_weight), 0)
+    if (Math.round(total) !== 100) throw createError({ statusCode: 400, message: `Weights must sum to 100 (got ${total})` })
+    if (!weights.every(v => Number.isInteger(Number(v.traffic_weight)) && Number(v.traffic_weight) >= 1))
+      throw createError({ statusCode: 400, message: 'Each traffic_weight must be a positive integer' })
+    for (const entry of weights) {
+      const { error: weightError } = await supabase
+        .from('variants')
+        .update({ traffic_weight: Number(entry.traffic_weight) })
+        .eq('id', entry.id)
+        .eq('experiment_id', id)
+      if (weightError) throw createError({ statusCode: 500, message: `Weight update failed for ${entry.id}: ${weightError.message}` })
+    }
+  }
+
   return data
 })
