@@ -1,5 +1,5 @@
 <script setup lang="ts">
-definePageMeta({ layout: 'dashboard', middleware: 'auth' })
+definePageMeta({ layout: 'dashboard', middleware: 'auth', key: route => route.path })
 
 const { currentWorkspace, fetchWorkspaces } = useWorkspace()
 const toast = useToast()

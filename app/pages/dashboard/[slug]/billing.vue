@@ -2,7 +2,7 @@
 import { PLANS, STRIPE_PRICES } from '~/lib/plans'
 import type { PlanKey } from '~/lib/plans'
 
-definePageMeta({ layout: 'dashboard', ssr: false })
+definePageMeta({ layout: 'dashboard', ssr: false, key: route => route.path })
 
 const route = useRoute()
 const toast = useToast()
