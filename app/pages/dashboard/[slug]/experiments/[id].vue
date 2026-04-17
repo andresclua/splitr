@@ -511,7 +511,7 @@ const saveNewVariant = async () => {
           </div>
           <!-- Ghost node column -->
           <div v-if="experiment.status !== 'completed'" class="flex-1 flex flex-col items-center group">
-            <div :class="['flex flex-col items-center transition-opacity duration-150', selectedNode === 'add-variant' ? 'opacity-100' : 'opacity-0 group-hover:opacity-100']">
+            <div :class="['flex flex-col items-center transition-opacity duration-150', selectedNode === 'add-variant' ? 'opacity-100' : 'opacity-20 group-hover:opacity-60']">
               <div class="w-0.5 h-2.5 bg-gray-200"></div>
               <div class="w-0 h-0 border-l-[5px] border-r-[5px] border-t-[7px] border-transparent border-t-gray-200"></div>
             </div>
@@ -520,7 +520,7 @@ const saveNewVariant = async () => {
                 'mt-1 w-full border rounded-xl px-3 py-3 text-center cursor-pointer transition-all duration-150 border-dashed',
                 selectedNode === 'add-variant'
                   ? 'border-[#C96A3F] ring-2 ring-[#C96A3F] bg-white opacity-100'
-                  : 'border-gray-300 bg-gray-50 opacity-0 group-hover:opacity-100'
+                  : 'border-gray-300 bg-gray-50 opacity-20 group-hover:opacity-60'
               ]"
               @click="selectedNode = 'add-variant'"
             >
