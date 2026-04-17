@@ -118,9 +118,19 @@ const editOverrideAssignment = ref(false)
 const savingExperiment = ref(false)
 
 // Variant (shared, reset per variant on selectedNode change)
+const editVariantName = ref('')
 const editVariantDescription = ref('')
 const editVariantRules = ref<Rule[]>([])
 const savingVariant = ref(false)
+
+// Delete variant modal
+const showDeleteModal = ref(false)
+const deletingVariantId = ref('')
+const deleteRedistWeights = ref<Array<{ id: string; name: string; weight: number }>>([])
+const deleteRedistTotal = computed(() =>
+  deleteRedistWeights.value.reduce((s, v) => s + v.weight, 0)
+)
+const savingDelete = ref(false)
 
 // Conversion
 const editConversionUrl = ref('')
@@ -168,21 +178,21 @@ const saveExperiment = async () => {
 }
 
 const saveVariant = async (variantId: string) => {
+  if (!editVariantName.value.trim()) return
   savingVariant.value = true
   try {
-    await $fetch(`/api/workspaces/${slug}/experiments/${id}`, {
+    await $fetch(`/api/workspaces/${slug}/experiments/${id}/variants/${variantId}`, {
       method: 'PATCH',
       body: {
-        variantDescriptions: [{
-          id: variantId,
-          description: editVariantDescription.value,
-          rules: editVariantRules.value.filter(r => r.param.trim() && r.value.trim()),
-        }],
+        name: editVariantName.value.trim(),
+        description: editVariantDescription.value,
+        rules: editVariantRules.value.filter(r => r.param.trim() && r.value.trim()),
       },
     })
     await refresh()
     const saved = experiment.value?.variants.find(v => v.id === variantId)
     if (saved) {
+      editVariantName.value = saved.name
       editVariantDescription.value = saved.description ?? ''
       editVariantRules.value = saved.rules ? saved.rules.map(r => ({ ...r })) : []
     }
@@ -220,6 +230,40 @@ const saveConversion = async () => {
 
 const addEditRule = () => editVariantRules.value.push({ param: '', value: '' })
 const removeEditRule = (index: number) => editVariantRules.value.splice(index, 1)
+
+const openDeleteModal = (variantId: string) => {
+  const exp = experiment.value!
+  const remaining = exp.variants.filter(v => v.id !== variantId)
+  const freed = exp.variants.find(v => v.id === variantId)!.traffic_weight
+  const base = Math.floor(freed / remaining.length)
+  const rem = freed - base * remaining.length
+  deleteRedistWeights.value = remaining.map((v, i) => ({
+    id: v.id,
+    name: v.name,
+    weight: v.traffic_weight + base + (i === 0 ? rem : 0),
+  }))
+  deletingVariantId.value = variantId
+  showDeleteModal.value = true
+}
+
+const confirmDelete = async () => {
+  if (deleteRedistTotal.value !== 100) return
+  savingDelete.value = true
+  try {
+    await $fetch(`/api/workspaces/${slug}/experiments/${id}/variants/${deletingVariantId.value}`, {
+      method: 'DELETE',
+      body: { new_weights: deleteRedistWeights.value.map(v => ({ id: v.id, traffic_weight: v.weight })) },
+    })
+    await refresh()
+    selectedNode.value = 'experiment'
+    showDeleteModal.value = false
+    toast.success('Variant deleted')
+  } catch (e: any) {
+    toast.error(e?.data?.message ?? 'Failed to delete')
+  } finally {
+    savingDelete.value = false
+  }
+}
 
 // ── Add variant form ──────────────────────────────────────
 const newVariantName = ref('')
@@ -274,6 +318,7 @@ watch(selectedNode, (val) => {
   } else if (val.startsWith('variant-')) {
     const v = exp.variants.find(v => 'variant-' + v.id === val)
     if (v) {
+      editVariantName.value = v.name
       editVariantDescription.value = v.description ?? ''
       editVariantRules.value = v.rules ? v.rules.map(r => ({ ...r })) : []
     }
