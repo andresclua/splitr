@@ -183,7 +183,7 @@ const removeRule = (variantId: string, index: number) => {
 // ── Add variant form ──────────────────────────────────────
 const newVariantName = ref('')
 const newVariantUrl = ref('')
-const newVariantWeights = ref<Array<{ id: string; name: string; weight: number; isNew?: boolean }>>([])
+const newVariantWeights = ref<Array<{ id: string; name: string; weight: number; isNew?: boolean; isControl?: boolean }>>([])
 const addingVariant = ref(false)
 
 const nextVariantLetter = computed(() => {
@@ -203,6 +203,7 @@ const initAddVariantForm = () => {
       id: v.id,
       name: v.name,
       weight: weight + (i === 0 ? remainder : 0),
+      isControl: v.is_control,
     })),
     { id: '__new__', name: newVariantName.value, weight, isNew: true },
   ]
@@ -210,6 +211,13 @@ const initAddVariantForm = () => {
 
 const newVariantTotalWeight = computed(() =>
   newVariantWeights.value.reduce((s, v) => s + v.weight, 0)
+)
+
+const canAddVariant = computed(() =>
+  !addingVariant.value &&
+  newVariantTotalWeight.value === 100 &&
+  newVariantName.value.trim() !== '' &&
+  (experiment.value?.type !== 'edge' || newVariantUrl.value.trim() !== '')
 )
 
 watch(selectedNode, (val) => {
@@ -634,7 +642,7 @@ const saveNewVariant = async () => {
               id="new-variant-name"
               v-model="newVariantName"
               type="text"
-              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C96A3F]"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C96A3F]"
               :placeholder="`Variant ${nextVariantLetter}`"
             />
           </div>
@@ -646,7 +654,7 @@ const saveNewVariant = async () => {
               id="new-variant-url"
               v-model="newVariantUrl"
               type="url"
-              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-[#C96A3F]"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#C96A3F]"
               placeholder="https://acme.com/pricing-c"
             />
           </div>
@@ -663,7 +671,7 @@ const saveNewVariant = async () => {
                 class="flex items-center gap-2"
               >
                 <div class="flex items-center gap-1.5 flex-1 min-w-0">
-                  <span :class="['w-2.5 h-2.5 rounded-full shrink-0', row.isNew ? 'bg-[#C96A3F]' : 'bg-gray-400']"></span>
+                  <span :class="['w-2.5 h-2.5 rounded-full shrink-0', row.isNew ? 'bg-[#C96A3F]' : row.isControl ? 'bg-gray-400' : 'bg-[#C96A3F]']"></span>
                   <span :class="['text-xs truncate', row.isNew ? 'text-[#C96A3F] font-semibold' : 'text-gray-600']">
                     {{ row.name }}{{ row.isNew ? ' (new)' : '' }}
                   </span>
@@ -675,8 +683,8 @@ const saveNewVariant = async () => {
                     min="1"
                     max="98"
                     :class="[
-                      'w-14 border rounded px-2 py-1 text-xs text-right focus:outline-none',
-                      row.isNew ? 'border-[#C96A3F] text-[#C96A3F] font-semibold focus:border-[#C96A3F]' : 'border-gray-200 focus:border-[#C96A3F]'
+                      'w-14 border rounded px-2 py-1 text-xs text-right focus:outline-none focus:ring-2 focus:ring-[#C96A3F]',
+                      row.isNew ? 'border-[#C96A3F] text-[#C96A3F] font-semibold' : 'border-gray-200'
                     ]"
                   />
                   <span class="text-xs text-gray-400">%</span>
@@ -706,10 +714,10 @@ const saveNewVariant = async () => {
           <div class="flex gap-2">
             <button
               type="button"
-              :disabled="addingVariant || newVariantTotalWeight !== 100 || !newVariantName.trim() || (experiment.type === 'edge' && !newVariantUrl.trim())"
+              :disabled="!canAddVariant"
               :class="[
                 'flex-1 bg-[#C96A3F] text-white text-sm font-semibold py-2 rounded-lg transition-opacity',
-                (addingVariant || newVariantTotalWeight !== 100 || !newVariantName.trim() || (experiment.type === 'edge' && !newVariantUrl.trim())) ? 'opacity-40 cursor-not-allowed' : 'hover:opacity-90'
+                !canAddVariant ? 'opacity-40 cursor-not-allowed' : 'hover:opacity-90'
               ]"
               @click="saveNewVariant"
             >
