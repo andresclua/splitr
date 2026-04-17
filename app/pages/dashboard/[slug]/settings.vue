@@ -9,9 +9,7 @@ await fetchWorkspaces()
 const route = useRoute()
 const slug = route.params.slug as string
 
-if (!currentWorkspace.value) {
-  await navigateTo('/dashboard', { replace: true })
-}
+if (!currentWorkspace.value) throw createError({ statusCode: 404, statusMessage: "Workspace not found or you don't have access to it." })
 
 // ── General ──────────────────────────────────────────────
 const saving = ref(false)

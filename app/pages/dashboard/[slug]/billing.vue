@@ -9,6 +9,7 @@ const toast = useToast()
 const { currentWorkspace, fetchWorkspaces } = useWorkspace()
 
 await fetchWorkspaces()
+if (!currentWorkspace.value) throw createError({ statusCode: 404, statusMessage: "Workspace not found or you don't have access to it." })
 
 const slug = route.params.slug as string
 

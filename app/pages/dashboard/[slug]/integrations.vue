@@ -3,7 +3,7 @@ definePageMeta({ layout: 'dashboard', middleware: 'auth', key: route => route.pa
 
 const { currentWorkspace, fetchWorkspaces } = useWorkspace()
 await fetchWorkspaces()
-if (!currentWorkspace.value) await navigateTo('/dashboard', { replace: true })
+if (!currentWorkspace.value) throw createError({ statusCode: 404, statusMessage: "Workspace not found or you don't have access to it." })
 
 const slug = currentWorkspace.value!.slug
 const workspaceId = currentWorkspace.value!.id
