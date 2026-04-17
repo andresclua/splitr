@@ -1093,8 +1093,9 @@ const saveNewVariant = async () => {
             <h3 class="text-base font-bold text-gray-900 mb-1">
               Delete {{ experiment?.variants.find(v => v.id === deletingVariantId)?.name }}?
             </h3>
-            <p class="text-sm text-gray-500 mb-5">
+            <p class="text-sm text-gray-500 mb-5 flex items-center gap-1 flex-wrap">
               Redistribute its {{ experiment?.variants.find(v => v.id === deletingVariantId)?.traffic_weight }}% traffic to remaining variants.
+              <KTooltip text="When you delete a variant, its traffic must be reassigned to the remaining ones. They must still add up to 100%." />
             </p>
 
             <div class="space-y-3 mb-4">
