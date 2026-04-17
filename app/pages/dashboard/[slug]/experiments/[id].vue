@@ -734,7 +734,9 @@ const saveNewVariant = async () => {
                   <div>
                     <p class="flex items-center gap-1 text-sm font-medium text-gray-700">
                       UTM override
-                      <KTooltip text="When enabled, visitors can be re-assigned to a specific variant via a URL query param — useful for testing or sharing a specific variant." />
+                      <span @click.stop>
+                        <KTooltip text="When enabled, visitors can be re-assigned to a specific variant via a URL query param — useful for testing or sharing a specific variant." />
+                      </span>
                     </p>
                     <p class="text-xs text-gray-400">Reassign visitors via query param rules</p>
                   </div>
