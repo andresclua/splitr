@@ -680,7 +680,13 @@ const saveNewVariant = async () => {
                 <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Traffic split</p>
                 <div class="space-y-2">
                   <div v-for="(row, i) in editVariantWeights" :key="row.id" class="flex items-center gap-2">
-                    <span class="text-xs text-gray-600 flex-1 truncate">{{ row.name }}</span>
+                    <span class="text-xs text-gray-600 w-20 shrink-0 truncate">{{ row.name }}</span>
+                    <div class="flex-1 h-5 bg-gray-100 rounded-lg overflow-hidden">
+                      <div
+                        :class="['h-full rounded-lg transition-all', variantColors[i] ?? 'bg-gray-400']"
+                        :style="{ width: Math.min(row.weight, 100) + '%' }"
+                      ></div>
+                    </div>
                     <div class="flex items-center gap-1 shrink-0">
                       <input
                         v-model.number="row.weight"
