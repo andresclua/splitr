@@ -897,19 +897,34 @@ const saveNewVariant = async () => {
             </div>
             <div class="px-5 py-1">
               <div class="flex justify-between items-center py-2.5 border-b border-gray-50">
-                <span class="text-xs text-gray-400">Conversion URL</span>
-                <span class="font-mono text-[11px] bg-gray-100 px-2 py-0.5 rounded text-gray-700 truncate max-w-[200px]">{{ experiment.conversion_url ?? 'not set' }}</span>
-              </div>
-              <div class="flex justify-between items-center py-2.5 border-b border-gray-50">
                 <span class="text-xs text-gray-400">Best variant</span>
                 <span class="text-xs font-semibold text-[#C96A3F]">{{ experiment.variants.find(v => v.id === leadingConvId)?.name ?? '—' }}</span>
               </div>
-              <div class="flex justify-between items-center py-2.5">
+              <div class="flex justify-between items-center py-2.5 border-b border-gray-50">
                 <span class="text-xs text-gray-400">Tracking</span>
                 <span :class="['text-[10px] font-semibold px-2 py-0.5 rounded-full', experiment.conversion_url ? 'bg-green-50 text-green-700 ring-1 ring-green-200' : 'bg-gray-100 text-gray-400']">
                   {{ experiment.conversion_url ? 'Active' : 'No URL set' }}
                 </span>
               </div>
+            </div>
+            <div class="px-5 pt-2 pb-4 border-t border-gray-100">
+              <label for="edit-conv-url" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                Conversion URL
+                <span class="normal-case font-normal text-gray-400 ml-1">(optional)</span>
+              </label>
+              <input
+                id="edit-conv-url"
+                v-model="editConversionUrl"
+                type="url"
+                placeholder="https://acme.com/thank-you"
+                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#C96A3F] placeholder:text-gray-300"
+              />
+              <button
+                type="button"
+                :disabled="savingConversion"
+                :class="['mt-3 bg-[#C96A3F] text-white text-sm font-semibold px-4 py-1.5 rounded-lg transition-opacity', savingConversion ? 'opacity-40 cursor-not-allowed' : 'hover:opacity-90']"
+                @click="saveConversion"
+              >{{ savingConversion ? 'Saving…' : 'Save' }}</button>
             </div>
           </div>
         </template>
