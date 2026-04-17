@@ -393,18 +393,9 @@ const saveNewVariant = async () => {
               <p class="text-[10px] text-gray-400">conv. rate</p>
             </div>
           </div>
-        </div>
-
-        <!-- Ghost variant node (add new variant) -->
-        <div
-          v-if="experiment.status !== 'completed'"
-          class="flex gap-3 w-full max-w-sm"
-        >
-          <!-- Spacer columns matching existing variants -->
-          <div v-for="v in experiment.variants" :key="v.id + '-ghost-spacer'" class="flex-1"></div>
           <!-- Ghost node column -->
-          <div class="flex-1 flex flex-col items-center group">
-            <div class="flex flex-col items-center opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+          <div v-if="experiment.status !== 'completed'" class="flex-1 flex flex-col items-center group">
+            <div :class="['flex flex-col items-center transition-opacity duration-150', selectedNode === 'add-variant' ? 'opacity-100' : 'opacity-0 group-hover:opacity-100']">
               <div class="w-0.5 h-2.5 bg-gray-200"></div>
               <div class="w-0 h-0 border-l-[5px] border-r-[5px] border-t-[7px] border-transparent border-t-gray-200"></div>
             </div>
