@@ -115,6 +115,8 @@ const savingTraffic = ref(false)
 // Experiment
 const editExpName = ref('')
 const editOverrideAssignment = ref(false)
+const editVariantWeights = ref<Array<{ id: string; name: string; weight: number }>>([])
+const weightsTotal = computed(() => editVariantWeights.value.reduce((s, v) => s + v.weight, 0))
 const savingExperiment = ref(false)
 
 // Variant (shared, reset per variant on selectedNode change)
@@ -160,15 +162,21 @@ const saveTraffic = async () => {
 
 const saveExperiment = async () => {
   if (!editExpName.value.trim()) return
+  if (weightsTotal.value !== 100) return
   savingExperiment.value = true
   try {
     await $fetch(`/api/workspaces/${slug}/experiments/${id}`, {
       method: 'PATCH',
-      body: { name: editExpName.value.trim(), override_assignment: editOverrideAssignment.value },
+      body: {
+        name: editExpName.value.trim(),
+        override_assignment: editOverrideAssignment.value,
+        variantWeights: editVariantWeights.value.map(v => ({ id: v.id, traffic_weight: v.weight })),
+      },
     })
     await refresh()
     editExpName.value = experiment.value?.name ?? editExpName.value
     editOverrideAssignment.value = experiment.value?.override_assignment ?? editOverrideAssignment.value
+    editVariantWeights.value = experiment.value?.variants.map(v => ({ id: v.id, name: v.name, weight: v.traffic_weight })) ?? editVariantWeights.value
     toast.success('Experiment updated')
   } catch (e: any) {
     toast.error(e?.data?.message ?? 'Failed to save')
@@ -315,6 +323,7 @@ watch(selectedNode, (val) => {
   } else if (val === 'experiment') {
     editExpName.value = exp.name
     editOverrideAssignment.value = exp.override_assignment ?? false
+    editVariantWeights.value = exp.variants.map(v => ({ id: v.id, name: v.name, weight: v.traffic_weight }))
   } else if (val.startsWith('variant-')) {
     const v = exp.variants.find(v => 'variant-' + v.id === val)
     if (v) {
