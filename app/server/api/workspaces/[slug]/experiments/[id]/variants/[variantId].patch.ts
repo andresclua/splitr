@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
   const slug = getRouterParam(event, 'slug')!
   const id = getRouterParam(event, 'id')!
   const variantId = getRouterParam(event, 'variantId')!
-  const body = await readBody(event)
+  const body = (await readBody(event)) ?? {}
 
   const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
 
@@ -41,13 +41,15 @@ export default defineEventHandler(async (event) => {
   if (!name) throw createError({ statusCode: 400, message: 'Name is required' })
 
   // Build update
-  const updates: Record<string, unknown> = {
-    name,
-    description: (body.description ?? '').trim() || null,
+  const updates: Record<string, unknown> = { name }
+  if ('description' in body) {
+    updates.description = (body.description ?? '').trim() || null
   }
-  if (Array.isArray(body.rules)) {
+  if (body.rules === null) {
+    updates.rules = []
+  } else if (Array.isArray(body.rules)) {
     updates.rules = (body.rules as { param: string; value: string }[])
-      .filter(r => r.param?.trim() && r.value?.trim())
+      .filter(r => typeof r.param === 'string' && typeof r.value === 'string' && r.param.trim() && r.value.trim())
       .map(r => ({ param: r.param.trim(), value: r.value.trim() }))
   }
 
