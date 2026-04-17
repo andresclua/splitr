@@ -1,0 +1,188 @@
+<style>
+  .approaches { display: flex; gap: 16px; align-items: flex-start; }
+  .approach { flex: 1; border: 2px solid #e5e7eb; border-radius: 14px; overflow: hidden; cursor: pointer; transition: all 0.2s; }
+  .approach:hover { border-color: #C96A3F; box-shadow: 0 4px 20px rgba(201,106,63,.12); }
+  .approach.selected { border-color: #C96A3F; box-shadow: 0 4px 24px rgba(201,106,63,.22); }
+  .al { background: #f9fafb; border-bottom: 1px solid #e5e7eb; padding: 10px 14px; display: flex; align-items: center; gap: 8px; }
+  .al .let { background: #C96A3F; color: #fff; font-weight: 700; font-size: 11px; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .al strong { font-size: 12px; color: #111; }
+  .al span { font-size: 10px; color: #6b7280; }
+  .ab { padding: 12px; background: #fff; }
+
+  /* mockup chrome */
+  .page { display: flex; gap: 0; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; background: #f9fafb; height: 220px; }
+  .flow-col { width: 115px; display: flex; flex-direction: column; align-items: center; padding: 10px 6px; gap: 2px; border-right: 1px solid #f0f0f0; }
+  .panel-col { flex: 1; padding: 10px 10px; overflow: hidden; }
+
+  /* flow nodes */
+  .fn { border-radius: 8px; padding: 5px 7px; font-size: 8px; font-weight: 700; width: 100%; text-align: center; margin: 1px 0; }
+  .fn-green { border: 1.5px solid #22c55e; background: #f0fdf4; color: #166534; }
+  .fn-orange { border: 1.5px solid #C96A3F; background: #FEF0E8; color: #9a3412; }
+  .fn-gray { border: 1.5px solid #d1d5db; background: #fff; color: #374151; }
+  .fn-blue { border: 1.5px solid #3b82f6; background: #eff6ff; color: #1d4ed8; }
+  .fn-sel { border: 1.5px solid #C96A3F; ring: 2px solid #C96A3F; box-shadow: 0 0 0 2px rgba(201,106,63,.3); }
+  .fn-variants { display: flex; gap: 3px; width: 100%; }
+  .fn-v { flex: 1; border-radius: 6px; padding: 4px 2px; font-size: 7px; font-weight: 700; text-align: center; border: 1.5px solid #d1d5db; color: #374151; }
+  .fn-v.active { border-color: #C96A3F; box-shadow: 0 0 0 2px rgba(201,106,63,.3); }
+  .arr { font-size: 8px; color: #d1d5db; line-height: 1; }
+
+  /* panel states */
+  .pt { font-size: 7px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #9ca3af; margin-bottom: 6px; }
+  .pfield-label { font-size: 7px; color: #9ca3af; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; margin-top: 6px; }
+  .pfield { background: #fff; border: 1px solid #e5e7eb; border-radius: 5px; padding: 4px 7px; font-size: 8px; color: #374151; width: 100%; box-sizing: border-box; }
+  .pfield.focus { border-color: #C96A3F; box-shadow: 0 0 0 1.5px rgba(201,106,63,.2); }
+  .stat-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+  .stat-box { flex: 1; background: #fff; border: 1px solid #e5e7eb; border-radius: 5px; padding: 4px; text-align: center; margin: 0 1px; }
+  .stat-n { font-size: 10px; font-weight: 800; color: #111; }
+  .stat-l { font-size: 6px; color: #9ca3af; text-transform: uppercase; margin-top: 1px; }
+  .edit-btn { background: none; border: 1px solid #e5e7eb; border-radius: 5px; padding: 3px 7px; font-size: 7px; font-weight: 600; color: #6b7280; cursor: pointer; }
+  .save-btn { background: #C96A3F; border: none; border-radius: 5px; padding: 3px 8px; font-size: 7px; font-weight: 700; color: #fff; cursor: pointer; margin-top: 6px; }
+  .tab-row { display: flex; border-bottom: 1px solid #f0f0f0; margin-bottom: 6px; }
+  .tab { font-size: 7px; font-weight: 700; padding: 3px 7px; color: #9ca3af; border-bottom: 2px solid transparent; margin-bottom: -1px; cursor: pointer; }
+  .tab.active { color: #C96A3F; border-bottom-color: #C96A3F; }
+  .divider { border: none; border-top: 1px solid #f0f0f0; margin: 6px 0; }
+</style>
+
+<h2>¿Cómo editás cada nodo?</h2>
+<p class="subtitle">El panel lateral reemplaza al slide-over de "Edit". Click para elegir.</p>
+
+<div class="approaches">
+
+  <!-- A: View + Edit button in panel -->
+  <div class="approach" data-choice="a" onclick="toggleSelect(this)">
+    <div class="al">
+      <div class="let">A</div>
+      <div>
+        <strong>Stats + botón Editar en el panel</strong>
+        <br><span>Click en nodo → stats. Botón "Edit" en el panel → campos editables</span>
+      </div>
+    </div>
+    <div class="ab">
+      <div class="page">
+        <div class="flow-col">
+          <div class="fn fn-green">🌐 Traffic</div>
+          <div class="arr">↓</div>
+          <div class="fn fn-orange">🔀 Experiment</div>
+          <div class="arr">↓</div>
+          <div class="fn-variants">
+            <div class="fn-v">A</div>
+            <div class="fn-v active" style="background:#FEF0E8;color:#C96A3F;">B</div>
+            <div class="fn-v">C</div>
+          </div>
+          <div class="arr">↓</div>
+          <div class="fn fn-blue">🎯 Goal</div>
+        </div>
+        <div class="panel-col">
+          <div class="pt" style="display:flex;align-items:center;justify-content:space-between;">
+            <span>VARIANT B</span>
+            <button class="edit-btn">✏ Edit</button>
+          </div>
+          <div class="stat-row">
+            <div class="stat-box"><div class="stat-n">0</div><div class="stat-l">Visits</div></div>
+            <div class="stat-box"><div class="stat-n">—</div><div class="stat-l">Conv.</div></div>
+            <div class="stat-box"><div class="stat-n">33%</div><div class="stat-l">Traffic</div></div>
+          </div>
+          <hr class="divider">
+          <!-- edit section expanded -->
+          <div class="pfield-label">DESCRIPTION</div>
+          <div class="pfield focus">CTA: "Make it happen"</div>
+          <div class="pfield-label">UTM RULES</div>
+          <div class="pfield" style="color:#9ca3af;">+ Add rule</div>
+          <button class="save-btn">Save changes</button>
+        </div>
+      </div>
+      <p style="font-size:9px;color:#6b7280;margin-top:8px;">2 clicks para editar. Stats siempre visibles.</p>
+    </div>
+  </div>
+
+  <!-- B: Always editable inline -->
+  <div class="approach" data-choice="b" onclick="toggleSelect(this)">
+    <div class="al">
+      <div class="let">B</div>
+      <div>
+        <strong>Panel unificado (stats + edit inline)</strong>
+        <br><span>Click en nodo → stats y campos editables al mismo tiempo</span>
+      </div>
+    </div>
+    <div class="ab">
+      <div class="page">
+        <div class="flow-col">
+          <div class="fn fn-green">🌐 Traffic</div>
+          <div class="arr">↓</div>
+          <div class="fn fn-orange">🔀 Experiment</div>
+          <div class="arr">↓</div>
+          <div class="fn-variants">
+            <div class="fn-v">A</div>
+            <div class="fn-v active" style="background:#FEF0E8;color:#C96A3F;">B</div>
+            <div class="fn-v">C</div>
+          </div>
+          <div class="arr">↓</div>
+          <div class="fn fn-blue">🎯 Goal</div>
+        </div>
+        <div class="panel-col">
+          <div class="pt">VARIANT B</div>
+          <div class="stat-row">
+            <div class="stat-box"><div class="stat-n">0</div><div class="stat-l">Visits</div></div>
+            <div class="stat-box"><div class="stat-n">—</div><div class="stat-l">Conv.</div></div>
+          </div>
+          <hr class="divider">
+          <div class="pfield-label">DESCRIPTION</div>
+          <div class="pfield focus">CTA: "Make it happen"</div>
+          <div class="pfield-label">TARGET URL</div>
+          <div class="pfield" style="color:#9ca3af;">boostifyjs.com/b</div>
+          <div class="pfield-label">UTM RULE</div>
+          <div class="pfield" style="font-size:7px;">utm_var = b &nbsp;<span style="color:#e5e7eb;">×</span></div>
+          <button class="save-btn">Save</button>
+        </div>
+      </div>
+      <p style="font-size:9px;color:#6b7280;margin-top:8px;">1 click. Todo junto. Sin botón Edit separado.</p>
+    </div>
+  </div>
+
+  <!-- C: Tabs View / Edit -->
+  <div class="approach" data-choice="c" onclick="toggleSelect(this)">
+    <div class="al">
+      <div class="let">C</div>
+      <div>
+        <strong>Panel con tabs Stats / Edit</strong>
+        <br><span>Dos tabs en el panel: uno para ver stats, otro para editar</span>
+      </div>
+    </div>
+    <div class="ab">
+      <div class="page">
+        <div class="flow-col">
+          <div class="fn fn-green">🌐 Traffic</div>
+          <div class="arr">↓</div>
+          <div class="fn fn-orange">🔀 Experiment</div>
+          <div class="arr">↓</div>
+          <div class="fn-variants">
+            <div class="fn-v">A</div>
+            <div class="fn-v active" style="background:#FEF0E8;color:#C96A3F;">B</div>
+            <div class="fn-v">C</div>
+          </div>
+          <div class="arr">↓</div>
+          <div class="fn fn-blue">🎯 Goal</div>
+        </div>
+        <div class="panel-col">
+          <div class="pt">VARIANT B</div>
+          <div class="tab-row">
+            <div class="tab">Stats</div>
+            <div class="tab active">Edit</div>
+          </div>
+          <div class="pfield-label">DESCRIPTION</div>
+          <div class="pfield focus">CTA: "Make it happen"</div>
+          <div class="pfield-label">TARGET URL</div>
+          <div class="pfield">boostifyjs.com/b</div>
+          <div class="pfield-label">UTM RULES</div>
+          <div class="pfield" style="font-size:7px;">utm_var = b</div>
+          <div style="display:flex;gap:4px;margin-top:6px;">
+            <button class="save-btn" style="flex:1;">Save</button>
+            <button class="save-btn" style="background:#f3f4f6;color:#6b7280;flex:0 0 auto;">Cancel</button>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:9px;color:#6b7280;margin-top:8px;">Separación explícita. Un tab extra de overhead.</p>
+    </div>
+  </div>
+
+</div>

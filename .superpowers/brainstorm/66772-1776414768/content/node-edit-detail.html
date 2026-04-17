@@ -1,0 +1,142 @@
+<style>
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .card { border: 1.5px solid #e5e7eb; border-radius: 12px; overflow: hidden; background: #fff; }
+  .card-head { background: #f9fafb; border-bottom: 1px solid #e5e7eb; padding: 7px 12px; display: flex; align-items: center; gap: 7px; }
+  .card-head .icon { font-size: 14px; }
+  .card-head strong { font-size: 11px; color: #111; }
+  .card-head span { font-size: 9px; color: #6b7280; }
+  .card-body { padding: 10px 12px; }
+
+  /* panel mockup */
+  .panel { background: #f9fafb; border-radius: 8px; padding: 8px 10px; font-size: 8px; }
+  .pt { font-size: 6.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #9ca3af; margin-bottom: 5px; }
+  .stat-row { display: flex; gap: 4px; margin-bottom: 6px; }
+  .stat-box { flex: 1; background: #fff; border: 1px solid #e5e7eb; border-radius: 5px; padding: 4px; text-align: center; }
+  .stat-n { font-size: 9px; font-weight: 800; color: #111; }
+  .stat-l { font-size: 5.5px; color: #9ca3af; text-transform: uppercase; }
+  .divider { border: none; border-top: 1px solid #f0f0f0; margin: 5px 0; }
+  .fl { font-size: 6.5px; color: #9ca3af; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin: 4px 0 2px; }
+  .fi { background: #fff; border: 1px solid #e5e7eb; border-radius: 4px; padding: 3px 6px; font-size: 8px; color: #374151; width: 100%; box-sizing: border-box; }
+  .fi.active { border-color: #C96A3F; }
+  .fi.disabled { background: #f9fafb; color: #9ca3af; }
+  .save-btn { background: #C96A3F; border: none; border-radius: 5px; padding: 3px 10px; font-size: 7px; font-weight: 700; color: #fff; margin-top: 6px; }
+  .tag { display: inline-flex; align-items: center; gap: 3px; background: #f3f4f6; border-radius: 4px; padding: 2px 6px; font-size: 7px; color: #374151; margin-right: 3px; margin-bottom: 3px; }
+  .badge { font-size: 6px; font-weight: 700; padding: 1px 5px; border-radius: 10px; background: #dcfce7; color: #16a34a; }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; }
+  .toggle { width: 20px; height: 11px; background: #e5e7eb; border-radius: 10px; position: relative; }
+  .toggle.on { background: #C96A3F; }
+  .toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 7px; height: 7px; background: #fff; border-radius: 50%; transition: left .15s; }
+  .toggle.on::after { left: 11px; }
+  .note { font-size: 7px; color: #9ca3af; margin-top: 3px; }
+  .deleted-chip { font-size: 6px; background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; border-radius: 4px; padding: 1px 5px; }
+</style>
+
+<h2>Panel lateral — diseño por nodo</h2>
+<p class="subtitle">Cada nodo muestra stats + campos editables. Save guarda solo ese nodo.</p>
+
+<div class="grid">
+
+  <!-- Traffic -->
+  <div class="card">
+    <div class="card-head">
+      <span class="icon">🌐</span>
+      <div><strong>Traffic</strong> <br><span>Stats + URL editable</span></div>
+    </div>
+    <div class="card-body">
+      <div class="panel">
+        <div class="pt">TRAFFIC NODE</div>
+        <div class="stat-row">
+          <div class="stat-box"><div class="stat-n">48</div><div class="stat-l">Visits</div></div>
+          <div class="stat-box"><div class="stat-n">3</div><div class="stat-l">Variants</div></div>
+        </div>
+        <hr class="divider">
+        <div class="fl">BASE URL</div>
+        <div class="fi active">https://boostifyjs.com/</div>
+        <button class="save-btn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Experiment -->
+  <div class="card">
+    <div class="card-head">
+      <span class="icon">🔀</span>
+      <div><strong>Experiment</strong><br><span>Nombre + override toggle</span></div>
+    </div>
+    <div class="card-body">
+      <div class="panel">
+        <div class="pt">EXPERIMENT NODE</div>
+        <div class="stat-row">
+          <div class="stat-box"><div class="stat-n">48</div><div class="stat-l">Impressions</div></div>
+          <div class="stat-box"><div class="stat-n">21</div><div class="stat-l">Conversions</div></div>
+          <div class="stat-box"><div class="stat-n">43.8%</div><div class="stat-l">Avg</div></div>
+        </div>
+        <hr class="divider">
+        <div class="fl">EXPERIMENT NAME</div>
+        <div class="fi active">Homepage Button Text Test</div>
+        <div class="fl" style="margin-top:6px;">UTM OVERRIDE</div>
+        <div class="toggle-row">
+          <div class="note" style="margin:0;">Reassign via query param rules</div>
+          <div class="toggle on"></div>
+        </div>
+        <button class="save-btn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Variant -->
+  <div class="card">
+    <div class="card-head">
+      <span class="icon">🟠</span>
+      <div><strong>Variant B</strong><br><span>Description + rules editables</span></div>
+    </div>
+    <div class="card-body">
+      <div class="panel">
+        <div class="pt" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>VARIANT B</span><span class="badge">Leading ▲</span>
+        </div>
+        <div class="stat-row">
+          <div class="stat-box"><div class="stat-n">16</div><div class="stat-l">Visits</div></div>
+          <div class="stat-box"><div class="stat-n">57.1%</div><div class="stat-l">Conv.</div></div>
+          <div class="stat-box"><div class="stat-n">33%</div><div class="stat-l">Traffic</div></div>
+        </div>
+        <hr class="divider">
+        <div class="fl">DESCRIPTION</div>
+        <div class="fi active">CTA: "Make it happen"</div>
+        <div class="fl">TARGET URL <span style="font-weight:400;text-transform:none;font-size:6px;">(edge only)</span></div>
+        <div class="fi disabled">— (component experiment)</div>
+        <div class="fl">UTM RULES</div>
+        <div><span class="tag">utm_var = b <span style="color:#9ca3af;">×</span></span><span class="tag" style="background:none;border:1px dashed #e5e7eb;color:#9ca3af;">+ Add</span></div>
+        <button class="save-btn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Conversion -->
+  <div class="card">
+    <div class="card-head">
+      <span class="icon">🎯</span>
+      <div><strong>Conversion goal</strong><br><span>URL editable</span></div>
+    </div>
+    <div class="card-body">
+      <div class="panel">
+        <div class="pt">CONVERSION NODE</div>
+        <div class="stat-row">
+          <div class="stat-box"><div class="stat-n">21</div><div class="stat-l">Total</div></div>
+          <div class="stat-box"><div class="stat-n">43.8%</div><div class="stat-l">Avg rate</div></div>
+          <div class="stat-box"><div class="stat-n">+32.1pp</div><div class="stat-l">Best lift</div></div>
+        </div>
+        <hr class="divider">
+        <div class="fl">CONVERSION URL</div>
+        <div class="fi active">https://boostifyjs.com/guides/introduction/</div>
+        <button class="save-btn">Save</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:14px;padding:10px 14px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;font-size:9px;color:#6b7280;line-height:1.6;">
+  <strong style="color:#374151;">Lo que desaparece:</strong> el botón "Edit" en el header y el slide-over. El header queda solo con Pause / Complete / Delete.<br>
+  <strong style="color:#374151;">Cada PATCH:</strong> Traffic → PATCH base_url · Experiment → PATCH name + override · Variant → PATCH description + rules · Conversion → PATCH conversion_url
+</div>

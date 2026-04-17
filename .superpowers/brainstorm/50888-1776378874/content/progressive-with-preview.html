@@ -1,0 +1,176 @@
+<style>
+  .wrap { display: flex; gap: 20px; align-items: flex-start; }
+  .options-col { flex: 1; display: flex; flex-direction: column; gap: 16px; }
+  .opt { border: 2px solid #e5e7eb; border-radius: 16px; overflow: hidden; cursor: pointer; transition: all 0.2s; }
+  .opt:hover { border-color: #C96A3F; box-shadow: 0 4px 16px rgba(201,106,63,.12); }
+  .opt.selected { border-color: #C96A3F; box-shadow: 0 4px 20px rgba(201,106,63,.2); }
+  .opt-label { background: #f9fafb; border-bottom: 1px solid #e5e7eb; padding: 8px 14px; display: flex; align-items: center; gap: 8px; }
+  .opt-label .letter { background: #C96A3F; color: #fff; font-weight: 700; font-size: 11px; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .opt-label strong { font-size: 12px; color: #111; }
+  .opt-label span { font-size: 11px; color: #6b7280; }
+  .opt-body { padding: 12px 14px; background: #fff; }
+
+  /* mini utility */
+  .arr { display: flex; flex-direction: column; align-items: center; }
+  .arr .al { width: 2px; height: 12px; background: #d1d5db; }
+  .arr .ah { width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid #d1d5db; }
+
+  /* node base */
+  .node { border-radius: 12px; border: 1.5px solid; padding: 10px 12px; font-size: 11px; font-weight: 600; position: relative; }
+  .node.done-green { border-color: #22c55e; background: #f0fdf4; color: #166534; }
+  .node.done-orange { border-color: #C96A3F; background: #FEF0E8; color: #9a3412; }
+  .node.done-gray { border-color: #d1d5db; background: #fff; color: #374151; }
+  .node.active-node { border-color: #C96A3F; background: #fff; box-shadow: 0 0 0 3px rgba(201,106,63,.12); }
+  .node.pending { border-color: #e5e7eb; background: #f9fafb; color: #d1d5db; border-style: dashed; text-align: center; }
+  .done-badge { position: absolute; top: -6px; right: -6px; width: 14px; height: 14px; border-radius: 50%; background: #22c55e; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #fff; }
+
+  /* inline form */
+  .inline-form { margin-top: 8px; background: #f9fafb; border-radius: 10px; padding: 10px; border: 1px solid #f3f4f6; }
+  .fl { font-size: 9px; color: #9ca3af; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 3px; margin-top: 6px; }
+  .fi { background: #fff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 5px 8px; font-size: 10px; color: #374151; width: 100%; box-sizing: border-box; }
+  .fi.active { border-color: #C96A3F; }
+  .fi-row { display: flex; gap: 6px; }
+  .btn-confirm { margin-top: 8px; background: #C96A3F; color: #fff; border: none; border-radius: 6px; padding: 5px 14px; font-size: 10px; font-weight: 600; cursor: pointer; }
+  .btn-add { background: none; border: 1.5px dashed #C96A3F; color: #C96A3F; border-radius: 6px; padding: 4px 10px; font-size: 10px; font-weight: 600; cursor: pointer; margin-top: 6px; }
+
+  /* summary strip */
+  .summary-strip { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .ss-node { font-size: 9px; font-weight: 700; padding: 3px 8px; border-radius: 20px; }
+  .ss-green { background: #dcfce7; color: #16a34a; }
+  .ss-orange { background: #FEF0E8; color: #C96A3F; }
+  .ss-gray { background: #f3f4f6; color: #6b7280; }
+  .ss-blue { background: #dbeafe; color: #2563eb; }
+  .ss-pending { background: #f9fafb; color: #d1d5db; border: 1px dashed #e5e7eb; }
+  .ss-arrow { font-size: 10px; color: #d1d5db; }
+
+  /* side panel variant */
+  .side-layout { display: flex; gap: 10px; }
+  .side-flow { flex: 0 0 130px; display: flex; flex-direction: column; align-items: center; }
+  .side-panel { flex: 1; background: #f9fafb; border-radius: 10px; padding: 10px; border: 1px solid #f3f4f6; }
+  .sp-title { font-size: 9px; font-weight: 700; text-transform: uppercase; color: #C96A3F; letter-spacing: .05em; margin-bottom: 6px; }
+</style>
+
+<h2>Builder progresivo + preview</h2>
+<p class="subtitle">¿Cómo querés ver el formulario mientras construís?</p>
+
+<div class="wrap">
+  <div class="options-col">
+
+    <!-- Option 1: Expandable nodes inline -->
+    <div class="opt" data-choice="expand" onclick="toggleSelect(this)">
+      <div class="opt-label">
+        <div class="letter">1</div>
+        <strong>Nodo expandible</strong>
+        <span>— El nodo activo se abre y muestra el form adentro. Los completados se colapsan.</span>
+      </div>
+      <div class="opt-body">
+        <!-- done nodes -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:0;max-width:240px;margin:0 auto;">
+          <div class="node done-green" style="width:100%;">
+            <div class="done-badge">✓</div>
+            🌐 acme.com/pricing
+            <div style="font-size:9px;color:#16a34a;font-weight:400;margin-top:2px;">Traffic · Edge</div>
+          </div>
+          <div class="arr" style="padding:2px 0;"><div class="al"></div><div class="ah"></div></div>
+
+          <!-- active node with inline form -->
+          <div class="node active-node" style="width:100%;">
+            🔀 <span style="color:#111;">Variants</span>
+            <div class="inline-form">
+              <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:8px;margin-bottom:5px;">
+                <div style="font-size:9px;color:#9ca3af;font-weight:700;margin-bottom:4px;">⚪ CONTROL</div>
+                <div class="fi" style="color:#9ca3af;">Leave empty — uses base URL</div>
+              </div>
+              <div style="background:#fff;border:1.5px solid #C96A3F;border-radius:8px;padding:8px;">
+                <div style="font-size:9px;color:#C96A3F;font-weight:700;margin-bottom:4px;">🟠 VARIANT B</div>
+                <div class="fi-row">
+                  <div class="fi active" style="flex:2;">acme.com/pricing-b</div>
+                  <div class="fi active" style="flex:0 0 32px;text-align:center;">50%</div>
+                </div>
+              </div>
+              <button class="btn-add">+ Add variant</button>
+              <br>
+              <button class="btn-confirm">Confirm →</button>
+            </div>
+          </div>
+          <div class="arr" style="padding:2px 0;"><div class="al"></div><div class="ah"></div></div>
+          <div class="node pending" style="width:100%;">🎯 Add conversion goal (optional)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Option 2: Builder + side panel -->
+    <div class="opt" data-choice="sidepanel" onclick="toggleSelect(this)">
+      <div class="opt-label">
+        <div class="letter">2</div>
+        <strong>Flow + panel lateral</strong>
+        <span>— El flow siempre visible a la izquierda, el form del paso activo a la derecha</span>
+      </div>
+      <div class="opt-body">
+        <div class="side-layout">
+          <div class="side-flow">
+            <div class="node done-green" style="width:100%;font-size:10px;padding:8px 10px;">
+              <div class="done-badge">✓</div>
+              🌐 Traffic
+            </div>
+            <div class="arr" style="padding:2px 0;"><div class="al"></div><div class="ah"></div></div>
+            <div class="node done-orange" style="width:100%;font-size:10px;padding:8px 10px;">
+              <div class="done-badge" style="background:#C96A3F;">✓</div>
+              🔀 Experiment
+            </div>
+            <div class="arr" style="padding:2px 0;"><div class="al"></div><div class="ah"></div></div>
+            <div class="node active-node" style="width:100%;font-size:10px;padding:8px 10px;">
+              🔀 Variants
+            </div>
+            <div class="arr" style="padding:2px 0;"><div class="al"></div><div class="ah"></div></div>
+            <div class="node pending" style="width:100%;font-size:10px;padding:8px 10px;">🎯 Goal</div>
+          </div>
+          <div class="side-panel">
+            <div class="sp-title">Step 3 — Variants</div>
+            <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:8px;margin-bottom:5px;">
+              <div style="font-size:9px;color:#9ca3af;font-weight:700;margin-bottom:4px;">⚪ CONTROL</div>
+              <div class="fi" style="font-size:9px;color:#9ca3af;">Leave empty — uses base URL</div>
+              <div class="fi-row" style="margin-top:4px;">
+                <div class="fi active" style="font-size:9px;flex:0 0 36px;text-align:center;">50%</div>
+                <div class="fi" style="font-size:9px;flex:1;color:#9ca3af;">Description (optional)</div>
+              </div>
+            </div>
+            <div style="background:#fff;border:1.5px solid #C96A3F;border-radius:8px;padding:8px;">
+              <div style="font-size:9px;color:#C96A3F;font-weight:700;margin-bottom:4px;">🟠 VARIANT B</div>
+              <div class="fi active" style="font-size:9px;">acme.com/pricing-b</div>
+              <div class="fi-row" style="margin-top:4px;">
+                <div class="fi active" style="font-size:9px;flex:0 0 36px;text-align:center;">50%</div>
+                <div class="fi" style="font-size:9px;flex:1;color:#9ca3af;">Description (optional)</div>
+              </div>
+            </div>
+            <button class="btn-add" style="font-size:9px;padding:3px 8px;">+ Add variant</button>
+            <br>
+            <button class="btn-confirm" style="font-size:9px;padding:4px 12px;margin-top:6px;">Next → Conversion Goal</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Right: summary strip preview -->
+  <div style="flex: 0 0 160px; padding-top: 4px;">
+    <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#9ca3af;letter-spacing:.05em;margin-bottom:8px;">Preview del flow</div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+      <div class="ss-node ss-green">🌐 acme.com</div>
+      <div class="ss-arrow">↓</div>
+      <div class="ss-node ss-orange">🔀 Homepage test</div>
+      <div class="ss-arrow">↓</div>
+      <div style="display:flex;gap:4px;">
+        <div class="ss-node ss-gray">⚪ CTL</div>
+        <div class="ss-node ss-orange">🟠 B</div>
+      </div>
+      <div class="ss-arrow">↓</div>
+      <div class="ss-node ss-pending">🎯 Goal?</div>
+    </div>
+    <div style="margin-top:12px;font-size:9px;color:#9ca3af;line-height:1.5;">
+      Este mini-flow aparece siempre en el costado derecho mostrando lo que llevás hasta ahora.
+    </div>
+  </div>
+
+</div>

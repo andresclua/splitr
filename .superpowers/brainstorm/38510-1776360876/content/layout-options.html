@@ -1,0 +1,214 @@
+<style>
+  .layouts { display: flex; flex-direction: column; gap: 28px; margin-top: 8px; }
+  .layout-option {
+    border: 2px solid #e5e7eb; border-radius: 16px; overflow: hidden; cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .layout-option:hover { border-color: #C96A3F; box-shadow: 0 4px 20px rgba(201,106,63,0.12); }
+  .layout-option.selected { border-color: #C96A3F; box-shadow: 0 4px 20px rgba(201,106,63,0.2); }
+  .layout-label {
+    background: #f9fafb; border-bottom: 1px solid #e5e7eb;
+    padding: 10px 18px; display: flex; align-items: center; gap-10px;
+  }
+  .layout-label .letter {
+    background: #C96A3F; color: white; font-weight: 700; font-size: 12px;
+    width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px;
+  }
+  .layout-label strong { font-size: 13px; color: #111; }
+  .layout-label span { font-size: 12px; color: #6b7280; margin-left: 6px; }
+  .mockup-wrap { padding: 16px 20px; background: #fff; }
+
+  /* Option A — Flow pipeline */
+  .flow-pipe { display: flex; align-items: center; gap: 0; }
+  .flow-node {
+    background: #fff; border: 1.5px solid #d1d5db; border-radius: 12px;
+    padding: 12px 16px; min-width: 110px; text-align: center;
+  }
+  .flow-node .node-icon { font-size: 18px; margin-bottom: 4px; }
+  .flow-node .node-label { font-size: 11px; font-weight: 600; color: #374151; }
+  .flow-node .node-sub { font-size: 10px; color: #9ca3af; margin-top: 2px; }
+  .flow-node.active { border-color: #22c55e; background: #f0fdf4; }
+  .flow-arrow { color: #9ca3af; font-size: 18px; padding: 0 6px; flex-shrink: 0; }
+  .flow-variants { display: flex; flex-direction: column; gap: 6px; }
+  .flow-variant {
+    background: #fff; border: 1.5px solid #d1d5db; border-radius: 10px;
+    padding: 8px 14px; min-width: 120px; display: flex; align-items: center; gap: 8px;
+  }
+  .flow-variant .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .flow-variant .vname { font-size: 10px; font-weight: 600; color: #374151; }
+  .flow-variant .vpct { font-size: 10px; color: #9ca3af; margin-left: auto; }
+  .flow-lines { display: flex; flex-direction: column; justify-content: center; gap: 22px; padding: 0 4px; }
+  .flow-line { width: 20px; height: 1.5px; background: #9ca3af; }
+
+  /* Option B — Dashboard cards */
+  .dash-header { background: #0F2235; color: white; padding: 14px 18px; border-radius: 10px 10px 0 0; display: flex; align-items: center; justify-content: space-between; }
+  .dash-header .exp-name { font-size: 13px; font-weight: 700; }
+  .dash-badge { background: #22c55e; color: white; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+  .dash-stats { display: flex; gap: 10px; padding: 12px 0 8px 0; }
+  .dash-stat { flex: 1; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px; text-align: center; }
+  .dash-stat .sv { font-size: 18px; font-weight: 700; color: #111; }
+  .dash-stat .sk { font-size: 10px; color: #9ca3af; }
+  .dash-variants-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #6b7280; margin-bottom: 6px; }
+  .dash-vrow { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .dash-vrow .vdot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dash-vrow .vname { font-size: 11px; font-weight: 600; color: #374151; width: 120px; }
+  .dash-bar-wrap { flex: 1; height: 6px; background: #f3f4f6; border-radius: 3px; overflow: hidden; }
+  .dash-bar { height: 100%; border-radius: 3px; }
+  .dash-vpct { font-size: 10px; color: #6b7280; width: 28px; text-align: right; }
+
+  /* Option C — Timeline */
+  .timeline { position: relative; padding-left: 28px; }
+  .timeline::before { content: ''; position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: #e5e7eb; }
+  .tl-item { position: relative; margin-bottom: 16px; }
+  .tl-dot {
+    position: absolute; left: -24px; top: 4px;
+    width: 14px; height: 14px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 2px #d1d5db;
+  }
+  .tl-dot.green { background: #22c55e; box-shadow: 0 0 0 2px #22c55e; }
+  .tl-dot.orange { background: #C96A3F; box-shadow: 0 0 0 2px #C96A3F; }
+  .tl-dot.blue { background: #3b82f6; box-shadow: 0 0 0 2px #3b82f6; }
+  .tl-dot.gray { background: #9ca3af; box-shadow: 0 0 0 2px #9ca3af; }
+  .tl-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 14px; }
+  .tl-card .tc-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #9ca3af; }
+  .tl-card .tc-title { font-size: 12px; font-weight: 600; color: #111; margin-top: 2px; }
+  .tl-card .tc-sub { font-size: 11px; color: #6b7280; margin-top: 3px; }
+  .tl-variants { display: flex; gap: 6px; margin-top: 6px; }
+  .tl-vchip { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 4px 10px; font-size: 10px; font-weight: 600; color: #374151; display: flex; align-items: center; gap: 5px; }
+</style>
+
+<h2>¿Cómo querés ver el experimento?</h2>
+<p class="subtitle">Tres enfoques de layout — click para seleccionar</p>
+
+<div class="layouts">
+
+  <!-- Option A -->
+  <div class="layout-option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="layout-label">
+      <div class="letter">A</div>
+      <strong>Flow / Pipeline</strong>
+      <span>— Como Zapier: nodos conectados de izquierda a derecha</span>
+    </div>
+    <div class="mockup-wrap">
+      <div class="flow-pipe" style="align-items:flex-start; padding: 8px 0;">
+        <div class="flow-node active">
+          <div class="node-icon">🌐</div>
+          <div class="node-label">Tráfico</div>
+          <div class="node-sub">boostifyjs.com</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color:#C96A3F; background:#FEF0E8;">
+          <div class="node-icon">🔀</div>
+          <div class="node-label">Experimento</div>
+          <div class="node-sub">50 / 50 split</div>
+        </div>
+        <div class="flow-lines">
+          <div class="flow-line"></div>
+          <div class="flow-line"></div>
+        </div>
+        <div class="flow-variants">
+          <div class="flow-variant">
+            <div class="dot" style="background:#9ca3af;"></div>
+            <div class="vname">Control</div>
+            <div class="vpct">50%</div>
+          </div>
+          <div class="flow-variant">
+            <div class="dot" style="background:#C96A3F;"></div>
+            <div class="vname">Variant B</div>
+            <div class="vpct">50%</div>
+          </div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="border-color:#3b82f6; background:#eff6ff;">
+          <div class="node-icon">🎯</div>
+          <div class="node-label">Conversión</div>
+          <div class="node-sub">/guides/intro</div>
+        </div>
+      </div>
+      <div style="font-size:11px; color:#9ca3af; margin-top:8px;">Stats y analytics se muestran al hacer click en cada nodo</div>
+    </div>
+  </div>
+
+  <!-- Option B -->
+  <div class="layout-option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="layout-label">
+      <div class="letter">B</div>
+      <strong>Dashboard mejorado</strong>
+      <span>— Misma estructura pero con más jerarquía visual y contexto</span>
+    </div>
+    <div class="mockup-wrap">
+      <div class="dash-header">
+        <span class="exp-name">Homepage Button Text Test</span>
+        <span class="dash-badge">● Live</span>
+      </div>
+      <div style="padding: 12px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 10px 10px;">
+        <div class="dash-stats">
+          <div class="dash-stat"><div class="sv">1,240</div><div class="sk">Impressions</div></div>
+          <div class="dash-stat"><div class="sv">87</div><div class="sk">Conversions</div></div>
+          <div class="dash-stat"><div class="sv">7.0%</div><div class="sk">Conv. Rate</div></div>
+        </div>
+        <div class="dash-variants-title">Variantes</div>
+        <div class="dash-vrow">
+          <div class="vdot" style="background:#9ca3af;"></div>
+          <div class="vname">Control — Get Started</div>
+          <div class="dash-bar-wrap"><div class="dash-bar" style="width:50%;background:#9ca3af;"></div></div>
+          <div class="dash-vpct">50%</div>
+        </div>
+        <div class="dash-vrow">
+          <div class="vdot" style="background:#C96A3F;"></div>
+          <div class="vname">Variant B — Make it happen</div>
+          <div class="dash-bar-wrap"><div class="dash-bar" style="width:50%;background:#C96A3F;"></div></div>
+          <div class="dash-vpct">50%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Option C -->
+  <div class="layout-option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="layout-label">
+      <div class="letter">C</div>
+      <strong>Timeline vertical</strong>
+      <span>— Pasos del experimento de arriba a abajo, con marcadores</span>
+    </div>
+    <div class="mockup-wrap">
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-dot green"></div>
+          <div class="tl-card">
+            <div class="tc-label">Inicio</div>
+            <div class="tc-title">Experimento activo</div>
+            <div class="tc-sub">boostifyjs.com · Arrancó 14 Apr</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot orange"></div>
+          <div class="tl-card">
+            <div class="tc-label">Split 50 / 50</div>
+            <div class="tc-title">Asignación de variantes</div>
+            <div class="tl-variants">
+              <div class="tl-vchip"><span style="width:8px;height:8px;border-radius:50%;background:#9ca3af;display:inline-block;"></span> Control (620)</div>
+              <div class="tl-vchip"><span style="width:8px;height:8px;border-radius:50%;background:#C96A3F;display:inline-block;"></span> Variant B (620)</div>
+            </div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot blue"></div>
+          <div class="tl-card">
+            <div class="tc-label">Conversión</div>
+            <div class="tc-title">87 conversiones · 7.0%</div>
+            <div class="tc-sub">Meta: /guides/introduction/</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot gray"></div>
+          <div class="tl-card" style="border-style:dashed; background:#f9fafb;">
+            <div class="tc-label">Pendiente</div>
+            <div class="tc-title">Conclusión del experimento</div>
+            <div class="tc-sub">Esperando significancia estadística</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

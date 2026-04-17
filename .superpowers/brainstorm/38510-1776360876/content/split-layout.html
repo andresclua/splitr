@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Experiment View</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f9fb; height: 100vh; overflow: hidden; }
+
+  /* Top bar */
+  .topbar {
+    height: 52px; background: #fff; border-bottom: 1px solid #e5e7eb;
+    display: flex; align-items: center; padding: 0 24px; gap: 12px;
+  }
+  .topbar .back { font-size: 12px; color: #9ca3af; cursor: pointer; }
+  .topbar .exp-name { font-size: 15px; font-weight: 700; color: #111; }
+  .badge-live { background: #dcfce7; color: #16a34a; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+  .topbar-actions { margin-left: auto; display: flex; gap: 8px; }
+  .btn { font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 8px; border: none; cursor: pointer; }
+  .btn-ghost { background: #f3f4f6; color: #374151; }
+  .btn-primary { background: #C96A3F; color: white; }
+
+  /* Main split */
+  .main { display: flex; height: calc(100vh - 52px); }
+
+  /* LEFT — flow panel */
+  .flow-panel {
+    width: 50%; border-right: 1px solid #e5e7eb; background: #fff;
+    overflow-y: auto; padding: 28px 32px;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .flow-panel h3 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #9ca3af; margin-bottom: 20px; align-self: flex-start; }
+
+  /* Nodes */
+  .vnode {
+    width: 100%; max-width: 340px; background: #fff; border: 1.5px solid #e5e7eb;
+    border-radius: 14px; padding: 14px 18px; cursor: pointer;
+    transition: all 0.15s; position: relative;
+  }
+  .vnode:hover { border-color: #C96A3F; box-shadow: 0 2px 12px rgba(201,106,63,.12); transform: translateY(-1px); }
+  .vnode.selected { border-color: #C96A3F; box-shadow: 0 2px 16px rgba(201,106,63,.2); }
+  .vnode.entry-node { border-color: #22c55e; background: #f0fdf4; }
+  .vnode.entry-node:hover, .vnode.entry-node.selected { box-shadow: 0 2px 12px rgba(34,197,94,.2); }
+  .vnode.split-node { border-color: #C96A3F; background: #FEF0E8; }
+  .vnode.conv-node { border-color: #3b82f6; background: #eff6ff; }
+  .vnode.conv-node:hover, .vnode.conv-node.selected { box-shadow: 0 2px 12px rgba(59,130,246,.2); }
+  .node-row { display: flex; align-items: center; gap: 12px; }
+  .node-icon { font-size: 22px; flex-shrink: 0; }
+  .node-title { font-size: 13px; font-weight: 700; color: #111; }
+  .node-sub { font-size: 11px; color: #6b7280; margin-top: 2px; }
+  .node-hint { font-size: 9px; color: #d1d5db; position: absolute; top: 10px; right: 12px; transition: color .15s; }
+  .vnode:hover .node-hint, .vnode.selected .node-hint { color: #C96A3F; }
+
+  /* Arrow */
+  .arrow { display: flex; flex-direction: column; align-items: center; padding: 4px 0; width: 100%; max-width: 340px; }
+  .arrow-line { width: 2px; height: 20px; background: #d1d5db; }
+  .arrow-head { width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #d1d5db; }
+
+  /* Variant branch */
+  .branch-h { width: 60%; height: 2px; background: #d1d5db; }
+  .variants-row { display: flex; gap: 12px; width: 100%; max-width: 340px; }
+  .variant-col { flex: 1; display: flex; flex-direction: column; align-items: center; }
+  .arrow-sm { display:flex;flex-direction:column;align-items:center; }
+  .arrow-sm .al { width:2px;height:10px;background:#d1d5db; }
+  .arrow-sm .ah { width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #d1d5db; }
+  .vnode-sm {
+    width: 100%; background: #fff; border: 1.5px solid #e5e7eb;
+    border-radius: 12px; padding: 12px; text-align: center; cursor: pointer; transition: all .15s; position: relative;
+  }
+  .vnode-sm:hover { border-color: #C96A3F; box-shadow: 0 2px 8px rgba(201,106,63,.12); transform: translateY(-1px); }
+  .vnode-sm.selected { border-color: #C96A3F; box-shadow: 0 2px 12px rgba(201,106,63,.2); }
+  .vdot { width: 12px; height: 12px; border-radius: 50%; margin: 0 auto 6px; }
+  .vnode-sm .vname { font-size: 11px; font-weight: 700; color: #374151; }
+  .vnode-sm .vrate { font-size: 12px; font-weight: 700; margin-top: 4px; }
+  .vnode-sm .vlabel { font-size: 10px; color: #9ca3af; }
+  .merge-lines { display:flex;justify-content:space-around;width:100%;max-width:340px;padding:4px 20px; }
+  .merge-line { width:2px;height:12px;background:#d1d5db; }
+
+  /* RIGHT — data panel */
+  .data-panel { width: 50%; overflow-y: auto; padding: 24px 28px; background: #f8f9fb; }
+  .data-panel h3 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #9ca3af; margin-bottom: 14px; }
+
+  /* Detail card */
+  .detail-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; overflow: hidden; margin-bottom: 16px; }
+  .dc-header { padding: 16px 20px; border-bottom: 1px solid #f3f4f6; display: flex; align-items: center; gap: 12px; }
+  .dc-icon { font-size: 26px; }
+  .dc-title { font-size: 14px; font-weight: 700; color: #111; }
+  .dc-sub { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+  .dc-body { padding: 16px 20px; }
+  .dc-desc { font-size: 12px; color: #6b7280; line-height: 1.65; background: #f9fafb; border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; }
+  .dc-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid #f9fafb; }
+  .dc-row:last-child { border: none; }
+  .dc-label { font-size: 11px; color: #9ca3af; }
+  .dc-value { font-size: 12px; font-weight: 600; color: #374151; }
+  .mono { font-family: monospace; font-size: 10px; background: #f3f4f6; padding: 2px 7px; border-radius: 5px; color: #374151; }
+
+  /* Stats row */
+  .stats-row { display: flex; gap: 10px; margin-bottom: 16px; }
+  .stat-card { flex: 1; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 14px; text-align: center; }
+  .stat-val { font-size: 22px; font-weight: 800; color: #111; }
+  .stat-key { font-size: 10px; color: #9ca3af; margin-top: 4px; text-transform: uppercase; letter-spacing: .04em; }
+
+  /* Bar chart */
+  .chart-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 18px 20px; margin-bottom: 16px; }
+  .chart-title { font-size: 12px; font-weight: 700; color: #374151; margin-bottom: 14px; }
+  .bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .bar-label { font-size: 11px; color: #6b7280; width: 80px; flex-shrink: 0; text-align: right; }
+  .bar-track { flex: 1; height: 24px; background: #f3f4f6; border-radius: 6px; overflow: hidden; position: relative; }
+  .bar-fill { height: 100%; border-radius: 6px; display: flex; align-items: center; padding-left: 10px; transition: width .4s ease; }
+  .bar-pct { font-size: 11px; font-weight: 700; color: #fff; }
+  .bar-val { font-size: 11px; color: #9ca3af; width: 50px; flex-shrink: 0; text-align: right; }
+
+  /* Tag */
+  .tag { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+  .tag-green { background: #dcfce7; color: #16a34a; }
+  .tag-orange { background: #FEF0E8; color: #C96A3F; }
+  .tag-blue { background: #dbeafe; color: #2563eb; }
+  .tag-gray { background: #f3f4f6; color: #6b7280; }
+
+  /* Placeholder */
+  .placeholder-state { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; gap: 10px; }
+  .placeholder-state p { font-size: 12px; color: #d1d5db; }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <span class="back">← All experiments</span>
+  <span style="color:#d1d5db;">|</span>
+  <span class="exp-name">Homepage Button Text Test</span>
+  <span class="badge-live">● Live</span>
+  <div class="topbar-actions">
+    <button class="btn btn-ghost">Edit</button>
+    <button class="btn btn-ghost" style="color:#ef4444;">Pause</button>
+    <button class="btn btn-primary">Complete</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- LEFT: Flow -->
+  <div class="flow-panel">
+    <h3>Experiment flow</h3>
+
+    <div class="vnode entry-node" onclick="select(this,'traffic')">
+      <span class="node-hint">click for details</span>
+      <div class="node-row">
+        <div class="node-icon">🌐</div>
+        <div>
+          <div class="node-title">Incoming traffic</div>
+          <div class="node-sub">boostifyjs.com · 1,240 visits</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow"><div class="arrow-line"></div><div class="arrow-head"></div></div>
+
+    <div class="vnode split-node" onclick="select(this,'experiment')">
+      <span class="node-hint">click for details</span>
+      <div class="node-row">
+        <div class="node-icon">🔀</div>
+        <div>
+          <div class="node-title">Homepage Button Text Test</div>
+          <div class="node-sub">Random split 50 / 50</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- branch -->
+    <div class="arrow"><div class="arrow-line" style="height:10px;"></div></div>
+    <div class="branch-h"></div>
+    <div class="variants-row">
+      <div class="variant-col">
+        <div class="arrow-sm"><div class="al"></div><div class="ah"></div></div>
+        <div class="vnode-sm" onclick="select(this,'control')" style="margin-top:4px;">
+          <span class="node-hint" style="font-size:8px;top:6px;right:8px;">click</span>
+          <div class="vdot" style="background:#9ca3af;"></div>
+          <div class="vname">Control</div>
+          <div class="vrate" style="color:#374151;">3.8%</div>
+          <div class="vlabel">conv. rate</div>
+        </div>
+      </div>
+      <div class="variant-col">
+        <div class="arrow-sm"><div class="al"></div><div class="ah"></div></div>
+        <div class="vnode-sm" onclick="select(this,'variantb')" style="margin-top:4px; border-color:#C96A3F;">
+          <span class="node-hint" style="font-size:8px;top:6px;right:8px;">click</span>
+          <div class="vdot" style="background:#C96A3F;"></div>
+          <div class="vname">Variant B</div>
+          <div class="vrate" style="color:#16a34a;">10.2% ▲</div>
+          <div class="vlabel">conv. rate</div>
+        </div>
+      </div>
+    </div>
+    <div class="merge-lines"><div class="merge-line"></div><div class="merge-line"></div></div>
+    <div class="branch-h"></div>
+    <div class="arrow"><div class="arrow-line" style="height:10px;"></div><div class="arrow-head"></div></div>
+
+    <div class="vnode conv-node" onclick="select(this,'conversion')">
+      <span class="node-hint">click for details</span>
+      <div class="node-row">
+        <div class="node-icon">🎯</div>
+        <div>
+          <div class="node-title">Conversion goal</div>
+          <div class="node-sub">87 conversions · 7.0% avg rate</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: Data -->
+  <div class="data-panel" id="data-panel">
+    <div class="placeholder-state">
+      <p style="font-size:28px;">👈</p>
+      <p>Click a node to see its data</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let currentSelected = null
+
+function select(el, key) {
+  document.querySelectorAll('.vnode, .vnode-sm').forEach(n => n.classList.remove('selected'))
+  el.classList.add('selected')
+  document.getElementById('data-panel').innerHTML = panels[key]
+}
+
+const panels = {
+  traffic: `
+    <h3>Traffic node</h3>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-val">1,240</div><div class="stat-key">Total visits</div></div>
+      <div class="stat-card"><div class="stat-val">100%</div><div class="stat-key">Captured</div></div>
+      <div class="stat-card"><div class="stat-val">60s</div><div class="stat-key">Config TTL</div></div>
+    </div>
+    <div class="detail-card">
+      <div class="dc-header"><div class="dc-icon">🌐</div><div><div class="dc-title">Incoming traffic</div><div class="dc-sub">Entry point of the experiment</div></div></div>
+      <div class="dc-body">
+        <div class="dc-desc">A Cloudflare Worker intercepts every visit to this URL before it reaches the server. If it matches an active experiment, it assigns a variant and rewrites the destination URL — with no visible redirect.</div>
+        <div class="dc-row"><span class="dc-label">Monitored URL</span><span class="mono">boostifyjs.com</span></div>
+        <div class="dc-row"><span class="dc-label">Worker status</span><span class="tag tag-green">● Active</span></div>
+        <div class="dc-row"><span class="dc-label">Config cache</span><span class="dc-value">KV · 60s TTL</span></div>
+      </div>
+    </div>`,
+
+  experiment: `
+    <h3>Experiment node</h3>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-val">1,240</div><div class="stat-key">Impressions</div></div>
+      <div class="stat-card"><div class="stat-val">87</div><div class="stat-key">Conversions</div></div>
+      <div class="stat-card"><div class="stat-val">7.0%</div><div class="stat-key">Avg rate</div></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Traffic distribution</div>
+      <div class="bar-row">
+        <span class="bar-label">Control</span>
+        <div class="bar-track"><div class="bar-fill" style="width:50%;background:#9ca3af;"><span class="bar-pct">50%</span></div></div>
+        <span class="bar-val">620 visits</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">Variant B</span>
+        <div class="bar-track"><div class="bar-fill" style="width:50%;background:#C96A3F;"><span class="bar-pct">50%</span></div></div>
+        <span class="bar-val">620 visits</span>
+      </div>
+    </div>
+    <div class="detail-card">
+      <div class="dc-header"><div class="dc-icon">🔀</div><div><div class="dc-title">Homepage Button Text Test</div><div class="dc-sub">Active experiment</div></div></div>
+      <div class="dc-body">
+        <div class="dc-desc">When a new visitor arrives, the worker assigns a variant at random based on traffic weights. The assignment is saved in a cookie so the visitor always sees the same variant.</div>
+        <div class="dc-row"><span class="dc-label">Split</span><span class="dc-value">50% / 50%</span></div>
+        <div class="dc-row"><span class="dc-label">Started</span><span class="dc-value">14 Apr 2026</span></div>
+        <div class="dc-row"><span class="dc-label">UTM override</span><span class="tag tag-gray">Off</span></div>
+      </div>
+    </div>`,
+
+  control: `
+    <h3>Control variant</h3>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-val">620</div><div class="stat-key">Visits</div></div>
+      <div class="stat-card"><div class="stat-val">3.8%</div><div class="stat-key">Conv. rate</div></div>
+      <div class="stat-card"><div class="stat-val">24</div><div class="stat-key">Conversions</div></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Conversion rate vs Variant B</div>
+      <div class="bar-row">
+        <span class="bar-label">Control</span>
+        <div class="bar-track"><div class="bar-fill" style="width:37%;background:#9ca3af;"><span class="bar-pct">3.8%</span></div></div>
+        <span class="bar-val">24 conv.</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">Variant B</span>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#C96A3F;"><span class="bar-pct">10.2%</span></div></div>
+        <span class="bar-val">63 conv.</span>
+      </div>
+    </div>
+    <div class="detail-card">
+      <div class="dc-header"><div class="dc-icon">⚪</div><div><div class="dc-title">Control — Get Started</div><div class="dc-sub">Original variant</div></div></div>
+      <div class="dc-body">
+        <div class="dc-desc">This is the original version of the site. 50% of new visitors see it. Can also be forced by passing the configured UTM parameter.</div>
+        <div class="dc-row"><span class="dc-label">Target URL</span><span class="mono">boostifyjs.com/</span></div>
+        <div class="dc-row"><span class="dc-label">UTM rule</span><span class="mono">utm_text_variation=1</span></div>
+        <div class="dc-row"><span class="dc-label">Performance</span><span class="tag tag-gray">Trailing</span></div>
+      </div>
+    </div>`,
+
+  variantb: `
+    <h3>Variant B</h3>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-val">620</div><div class="stat-key">Visits</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:#16a34a;">10.2%</div><div class="stat-key">Conv. rate</div></div>
+      <div class="stat-card"><div class="stat-val">63</div><div class="stat-key">Conversions</div></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Conversion rate vs Control</div>
+      <div class="bar-row">
+        <span class="bar-label">Control</span>
+        <div class="bar-track"><div class="bar-fill" style="width:37%;background:#9ca3af;"><span class="bar-pct">3.8%</span></div></div>
+        <span class="bar-val">24 conv.</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">Variant B</span>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#C96A3F;"><span class="bar-pct">10.2%</span></div></div>
+        <span class="bar-val">63 conv.</span>
+      </div>
+    </div>
+    <div class="detail-card">
+      <div class="dc-header"><div class="dc-icon">🟠</div><div><div class="dc-title">Variant B — Make it happen</div><div class="dc-sub">Test variant · Leading</div></div></div>
+      <div class="dc-body">
+        <div class="dc-desc">Replaces the "Get Started" CTA with "Let's make it happen". The worker rewrites the destination URL transparently.</div>
+        <div class="dc-row"><span class="dc-label">Target URL</span><span class="mono">boostifyjs.com/</span></div>
+        <div class="dc-row"><span class="dc-label">UTM rule</span><span class="mono">utm_text_variation=2</span></div>
+        <div class="dc-row"><span class="dc-label">Performance</span><span class="tag tag-green">▲ Leading</span></div>
+      </div>
+    </div>`,
+
+  conversion: `
+    <h3>Conversion goal</h3>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-val">87</div><div class="stat-key">Total</div></div>
+      <div class="stat-card"><div class="stat-val">7.0%</div><div class="stat-key">Avg rate</div></div>
+      <div class="stat-card"><div class="stat-val">+6.4pp</div><div class="stat-key">Variant B lift</div></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Conversions by variant</div>
+      <div class="bar-row">
+        <span class="bar-label">Control</span>
+        <div class="bar-track"><div class="bar-fill" style="width:38%;background:#9ca3af;"><span class="bar-pct">24</span></div></div>
+        <span class="bar-val">3.8%</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">Variant B</span>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#C96A3F;"><span class="bar-pct">63</span></div></div>
+        <span class="bar-val">10.2%</span>
+      </div>
+    </div>
+    <div class="detail-card">
+      <div class="dc-header"><div class="dc-icon">🎯</div><div><div class="dc-title">Conversion goal</div><div class="dc-sub">Experiment objective</div></div></div>
+      <div class="dc-body">
+        <div class="dc-desc">When a visitor who was already assigned reaches this URL, a conversion is recorded. This lets you compare which variant converts better.</div>
+        <div class="dc-row"><span class="dc-label">Conversion URL</span><span class="mono">/guides/introduction/</span></div>
+        <div class="dc-row"><span class="dc-label">Best variant</span><span class="tag tag-orange">Variant B (+168%)</span></div>
+        <div class="dc-row"><span class="dc-label">Tracking</span><span class="tag tag-green">Active</span></div>
+      </div>
+    </div>`
+}
+</script>
+</body>
+</html>

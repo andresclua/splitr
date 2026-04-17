@@ -1,0 +1,227 @@
+<style>
+  .demo-wrap { display: flex; gap: 24px; align-items: flex-start; }
+  .flow-side { flex: 0 0 260px; }
+  .detail-side { flex: 1; }
+
+  /* Flow nodes */
+  .vnode {
+    background: #fff; border: 1.5px solid #d1d5db; border-radius: 14px;
+    padding: 14px 16px; cursor: pointer; transition: all 0.15s; position: relative;
+  }
+  .vnode:hover { border-color: #C96A3F; box-shadow: 0 2px 12px rgba(201,106,63,0.15); }
+  .vnode.active { border-color: #C96A3F; box-shadow: 0 2px 16px rgba(201,106,63,0.25); }
+  .vnode.entry { border-color: #22c55e; background: #f0fdf4; }
+  .vnode.entry:hover, .vnode.entry.active { border-color: #16a34a; box-shadow: 0 2px 12px rgba(34,197,94,0.2); }
+  .vnode.experiment-node { border-color: #C96A3F; background: #FEF0E8; }
+  .vnode.conversion-node { border-color: #3b82f6; background: #eff6ff; }
+  .vnode.conversion-node:hover, .vnode.conversion-node.active { border-color: #2563eb; box-shadow: 0 2px 12px rgba(59,130,246,0.2); }
+  .vnode .node-icon { font-size: 18px; margin-bottom: 5px; }
+  .vnode .node-title { font-size: 12px; font-weight: 700; color: #111; }
+  .vnode .node-sub { font-size: 10px; color: #6b7280; margin-top: 2px; }
+  .click-hint { font-size: 9px; color: #d1d5db; position: absolute; top: 8px; right: 10px; }
+  .vnode:hover .click-hint, .vnode.active .click-hint { color: #C96A3F; }
+
+  /* Arrow */
+  .arrow-down { display: flex; flex-direction: column; align-items: center; padding: 3px 0; }
+  .arrow-down .al { width: 2px; height: 18px; background: #d1d5db; }
+  .arrow-down .ah { width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #d1d5db; }
+
+  /* Variant branch */
+  .variant-row { display: flex; gap: 8px; align-items: flex-start; }
+  .variant-col { flex: 1; display: flex; flex-direction: column; align-items: center; }
+  .vnode-sm {
+    background: #fff; border: 1.5px solid #d1d5db; border-radius: 12px;
+    padding: 10px 12px; width: 100%; box-sizing: border-box; text-align: center; cursor: pointer;
+    transition: all 0.15s; position: relative;
+  }
+  .vnode-sm:hover { border-color: #C96A3F; box-shadow: 0 2px 8px rgba(201,106,63,0.15); }
+  .vnode-sm.active { border-color: #C96A3F; box-shadow: 0 2px 12px rgba(201,106,63,0.2); }
+  .vnode-sm .vdot { width: 10px; height: 10px; border-radius: 50%; margin: 0 auto 5px; }
+  .vnode-sm .vname { font-size: 11px; font-weight: 700; color: #374151; }
+  .vnode-sm .vstat { font-size: 10px; color: #9ca3af; margin-top: 2px; }
+
+  /* Detail panel */
+  .detail-panel {
+    background: #fff; border: 1.5px solid #e5e7eb; border-radius: 16px;
+    overflow: hidden; min-height: 200px;
+  }
+  .detail-panel .dp-header {
+    padding: 14px 18px; border-bottom: 1px solid #f3f4f6;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .detail-panel .dp-icon { font-size: 22px; }
+  .detail-panel .dp-title { font-size: 13px; font-weight: 700; color: #111; }
+  .detail-panel .dp-sub { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+  .detail-panel .dp-body { padding: 14px 18px; }
+  .detail-panel .dp-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f9fafb; }
+  .detail-panel .dp-row:last-child { border-bottom: none; }
+  .detail-panel .dp-label { font-size: 11px; color: #9ca3af; }
+  .detail-panel .dp-value { font-size: 11px; font-weight: 600; color: #374151; }
+  .detail-panel .dp-desc { font-size: 12px; color: #6b7280; line-height: 1.6; margin-bottom: 14px; background: #f9fafb; border-radius: 10px; padding: 12px; }
+  .tag { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+  .tag-green { background: #dcfce7; color: #16a34a; }
+  .tag-orange { background: #FEF0E8; color: #C96A3F; }
+  .tag-blue { background: #dbeafe; color: #2563eb; }
+  .tag-gray { background: #f3f4f6; color: #6b7280; }
+  .mono { font-family: monospace; font-size: 10px; background: #f3f4f6; padding: 2px 6px; border-radius: 4px; }
+
+  /* default placeholder */
+  .dp-placeholder { display: flex; align-items: center; justify-content: center; min-height: 200px; flex-direction: column; gap: 8px; }
+  .dp-placeholder p { font-size: 12px; color: #d1d5db; }
+</style>
+
+<h2>Flow vertical con contexto al click</h2>
+<p class="subtitle">Hacé click en cualquier nodo para ver qué hace — probalo acá</p>
+
+<div class="demo-wrap">
+
+  <!-- LEFT: flow -->
+  <div class="flow-side">
+
+    <div class="vnode entry" onclick="showDetail('traffic')">
+      <span class="click-hint">click para info</span>
+      <div class="node-icon">🌐</div>
+      <div class="node-title">Tráfico entrante</div>
+      <div class="node-sub">boostifyjs.com</div>
+    </div>
+
+    <div class="arrow-down"><div class="al"></div><div class="ah"></div></div>
+
+    <div class="vnode experiment-node" onclick="showDetail('experiment')">
+      <span class="click-hint">click para info</span>
+      <div class="node-icon">🔀</div>
+      <div class="node-title">Homepage Button Text Test</div>
+      <div class="node-sub">Split 50/50 · <span style="color:#16a34a; font-weight:700;">● Live</span></div>
+    </div>
+
+    <!-- branch -->
+    <div style="display:flex;flex-direction:column;align-items:center;padding:3px 0;">
+      <div style="width:2px;height:10px;background:#d1d5db;"></div>
+      <div style="width:55%;height:2px;background:#d1d5db;"></div>
+    </div>
+    <div class="variant-row">
+      <div class="variant-col">
+        <div style="width:2px;height:8px;background:#d1d5db;"></div>
+        <div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #d1d5db;margin-bottom:4px;"></div>
+        <div class="vnode-sm" onclick="showDetail('control')">
+          <span class="click-hint" style="font-size:8px;">click</span>
+          <div class="vdot" style="background:#9ca3af;"></div>
+          <div class="vname">Control</div>
+          <div class="vstat">50% · 620 visits</div>
+        </div>
+      </div>
+      <div class="variant-col">
+        <div style="width:2px;height:8px;background:#d1d5db;"></div>
+        <div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #d1d5db;margin-bottom:4px;"></div>
+        <div class="vnode-sm" style="border-color:#C96A3F;" onclick="showDetail('variantb')">
+          <span class="click-hint" style="font-size:8px;">click</span>
+          <div class="vdot" style="background:#C96A3F;"></div>
+          <div class="vname">Variant B</div>
+          <div class="vstat">50% · 620 visits</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-around;padding:3px 20px;">
+      <div style="width:2px;height:10px;background:#d1d5db;"></div>
+      <div style="width:2px;height:10px;background:#d1d5db;"></div>
+    </div>
+    <div style="width:55%;margin:0 auto;height:2px;background:#d1d5db;"></div>
+    <div class="arrow-down" style="padding-top:0;"><div class="al" style="height:10px;"></div><div class="ah"></div></div>
+
+    <div class="vnode conversion-node" onclick="showDetail('conversion')">
+      <span class="click-hint">click para info</span>
+      <div class="node-icon">🎯</div>
+      <div class="node-title">Conversión</div>
+      <div class="node-sub">87 conversiones · 7.0%</div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: detail panel -->
+  <div class="detail-side">
+    <div class="detail-panel" id="detail-panel">
+      <div class="dp-placeholder">
+        <p style="font-size:24px;">👆</p>
+        <p>Hacé click en un nodo para ver su detalle</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const panels = {
+  traffic: `
+    <div class="dp-header">
+      <div class="dp-icon">🌐</div>
+      <div><div class="dp-title">Tráfico entrante</div><div class="dp-sub">Punto de entrada al experimento</div></div>
+    </div>
+    <div class="dp-body">
+      <div class="dp-desc">
+        Un Cloudflare Worker intercepta cada visita a esta URL antes de que llegue al servidor.
+        Si matchea con un experimento activo, asigna una variante al visitante y reescribe la URL destino — sin redirección visible.
+      </div>
+      <div class="dp-row"><span class="dp-label">URL monitorada</span><span class="dp-value mono">boostifyjs.com</span></div>
+      <div class="dp-row"><span class="dp-label">Estado</span><span class="tag tag-green">● Activo</span></div>
+      <div class="dp-row"><span class="dp-label">Total de visitas</span><span class="dp-value">1,240</span></div>
+    </div>`,
+  experiment: `
+    <div class="dp-header">
+      <div class="dp-icon">🔀</div>
+      <div><div class="dp-title">Homepage Button Text Test</div><div class="dp-sub">Experimento activo</div></div>
+    </div>
+    <div class="dp-body">
+      <div class="dp-desc">
+        Cuando llega una visita nueva, el worker asigna una variante al azar según los pesos de tráfico configurados.
+        La asignación se guarda en una cookie para que el visitante siempre vea la misma variante.
+      </div>
+      <div class="dp-row"><span class="dp-label">Distribución</span><span class="dp-value">50% / 50%</span></div>
+      <div class="dp-row"><span class="dp-label">Arrancó</span><span class="dp-value">14 Apr 2026</span></div>
+      <div class="dp-row"><span class="dp-label">Override UTM</span><span class="tag tag-gray">Desactivado</span></div>
+    </div>`,
+  control: `
+    <div class="dp-header">
+      <div class="dp-icon">⚪</div>
+      <div><div class="dp-title">Control — Get Started</div><div class="dp-sub">Variante original</div></div>
+    </div>
+    <div class="dp-body">
+      <div class="dp-desc">
+        Esta es la versión original del sitio. El 50% de los visitantes nuevos la ven. También se puede forzar pasando el parámetro UTM configurado.
+      </div>
+      <div class="dp-row"><span class="dp-label">Tráfico asignado</span><span class="dp-value">50% · 620 visitas</span></div>
+      <div class="dp-row"><span class="dp-label">Conversión</span><span class="dp-value">3.8%</span></div>
+      <div class="dp-row"><span class="dp-label">Regla UTM</span><span class="dp-value mono">utm_text_variation=1</span></div>
+      <div class="dp-row"><span class="dp-label">URL destino</span><span class="dp-value mono">boostifyjs.com/</span></div>
+    </div>`,
+  variantb: `
+    <div class="dp-header">
+      <div class="dp-icon">🟠</div>
+      <div><div class="dp-title">Variant B — Make it happen</div><div class="dp-sub">Variante en prueba</div></div>
+    </div>
+    <div class="dp-body">
+      <div class="dp-desc">
+        Esta variante reemplaza el CTA "Get Started" por "Let's make it happen". El worker reescribe la URL destino sin que el visitante lo note.
+      </div>
+      <div class="dp-row"><span class="dp-label">Tráfico asignado</span><span class="dp-value">50% · 620 visitas</span></div>
+      <div class="dp-row"><span class="dp-label">Conversión</span><span class="dp-value" style="color:#16a34a; font-weight:700;">10.2% ▲ ganando</span></div>
+      <div class="dp-row"><span class="dp-label">Regla UTM</span><span class="dp-value mono">utm_text_variation=2</span></div>
+      <div class="dp-row"><span class="dp-label">URL destino</span><span class="dp-value mono">boostifyjs.com/</span></div>
+    </div>`,
+  conversion: `
+    <div class="dp-header">
+      <div class="dp-icon">🎯</div>
+      <div><div class="dp-title">Conversión</div><div class="dp-sub">Meta del experimento</div></div>
+    </div>
+    <div class="dp-body">
+      <div class="dp-desc">
+        Cuando un visitante que ya fue asignado llega a esta URL, se registra una conversión. Esto permite comparar qué variante convierte mejor.
+      </div>
+      <div class="dp-row"><span class="dp-label">URL de conversión</span><span class="dp-value mono">/guides/introduction/</span></div>
+      <div class="dp-row"><span class="dp-label">Total conversiones</span><span class="dp-value">87</span></div>
+      <div class="dp-row"><span class="dp-label">Tasa general</span><span class="dp-value">7.0%</span></div>
+    </div>`
+}
+
+function showDetail(key) {
+  document.getElementById('detail-panel').innerHTML = panels[key]
+}
+</script>

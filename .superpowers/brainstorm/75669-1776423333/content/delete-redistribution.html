@@ -1,0 +1,108 @@
+<style>
+  .scenario { background: #f9fafb; border: 1.5px solid #e5e7eb; border-radius: 12px; overflow: hidden; margin-bottom: 8px; }
+  .scenario-head { background: #fff; padding: 8px 12px; border-bottom: 1px solid #f0f0f0; font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: .07em; }
+  .before-after { display: flex; gap: 10px; padding: 10px 12px; }
+  .col { flex: 1; }
+  .col-label { font-size: 8px; font-weight: 700; color: #9ca3af; text-transform: uppercase; margin-bottom: 6px; }
+  .variant-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+  .vname { font-size: 9px; font-weight: 700; color: #374151; width: 60px; flex-shrink: 0; }
+  .bar-wrap { flex: 1; background: #f3f4f6; border-radius: 4px; overflow: hidden; height: 14px; }
+  .bar { height: 14px; border-radius: 4px; display: flex; align-items: center; padding-left: 5px; font-size: 8px; font-weight: 700; color: #fff; }
+  .bar-ctrl { background: #6b7280; }
+  .bar-b { background: #C96A3F; }
+  .bar-c { background: #374151; }
+  .bar-deleted { background: #fca5a5; }
+  .arrow { font-size: 16px; color: #9ca3af; display: flex; align-items: center; padding: 0 4px; }
+  .badge { font-size: 7px; font-weight: 700; padding: 1px 6px; border-radius: 10px; margin-left: 4px; }
+  .badge-del { background: #fee2e2; color: #dc2626; }
+  .badge-up { background: #dcfce7; color: #16a34a; }
+  .badge-same { background: #f3f4f6; color: #6b7280; }
+  .note { font-size: 8px; color: #6b7280; padding: 4px 12px 8px; }
+</style>
+
+<h2>¿Cómo redistribuir el tráfico al borrar una variante?</h2>
+<p class="subtitle">Cuando borrás Variant C (33%), ¿qué pasa con ese tráfico?</p>
+
+<div class="options">
+
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Auto-redistribución proporcional</h3>
+      <p>El tráfico de la variante borrada se reparte entre las restantes en proporción a sus pesos actuales. Sin intervención del usuario.</p>
+      <div class="scenario">
+        <div class="scenario-head">Antes → Después de borrar Variant C (33%)</div>
+        <div class="before-after">
+          <div class="col">
+            <div class="col-label">Antes</div>
+            <div class="variant-row"><div class="vname">Control</div><div class="bar-wrap"><div class="bar bar-ctrl" style="width:34%">34%</div></div></div>
+            <div class="variant-row"><div class="vname">Variant B</div><div class="bar-wrap"><div class="bar bar-b" style="width:33%">33%</div></div></div>
+            <div class="variant-row"><div class="vname">Variant C</div><div class="bar-wrap"><div class="bar bar-deleted" style="width:33%">33%</div></div></div>
+          </div>
+          <div class="arrow">→</div>
+          <div class="col">
+            <div class="col-label">Después (auto)</div>
+            <div class="variant-row"><div class="vname">Control</div><div class="bar-wrap"><div class="bar bar-ctrl" style="width:51%">51%</div></div><span class="badge badge-up">+17%</span></div>
+            <div class="variant-row"><div class="vname">Variant B</div><div class="bar-wrap"><div class="bar bar-b" style="width:49%">49%</div></div><span class="badge badge-up">+16%</span></div>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:9px;color:#6b7280;">Rápido y sin fricción. El sistema calcula todo automáticamente.</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Modal de redistribución manual</h3>
+      <p>Al borrar, aparece un modal donde el usuario ajusta manualmente los pesos de las variantes restantes. Requiere que sumen 100%.</p>
+      <div class="scenario">
+        <div class="scenario-head">Flujo al borrar Variant C</div>
+        <div class="before-after" style="align-items:center;">
+          <div class="col" style="font-size:8.5px;color:#374151;">
+            <div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:8px;padding:8px 10px;">
+              <div style="font-weight:700;font-size:9px;margin-bottom:6px;">Reasignar tráfico</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                <span>Control</span>
+                <div style="background:#f3f4f6;border-radius:4px;padding:2px 8px;font-weight:700;">50%</div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <span>Variant B</span>
+                <div style="background:#f3f4f6;border-radius:4px;padding:2px 8px;font-weight:700;">50%</div>
+              </div>
+              <div style="font-size:8px;color:#16a34a;font-weight:700;">✓ Suma: 100%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:9px;color:#6b7280;">Más control. Un paso extra al borrar.</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Editor de pesos inline (unified)</h3>
+      <p>El panel de cada variante ya tiene inputs de peso editables para todas las variantes. Borrar + redistribuir ocurren en el mismo lugar, sin modal separado.</p>
+      <div class="scenario">
+        <div class="scenario-head">Panel derecho de cualquier variante</div>
+        <div class="before-after">
+          <div class="col" style="font-size:8.5px;">
+            <div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:8px;padding:8px 10px;">
+              <div style="font-size:7px;font-weight:700;color:#9ca3af;text-transform:uppercase;margin-bottom:5px;">TRAFFIC SPLIT</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;"><span>Control</span><input style="width:44px;border:1px solid #e5e7eb;border-radius:4px;padding:2px 5px;text-align:right;font-size:8px;" value="34%" readonly/></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;"><span>Variant B</span><input style="width:44px;border:1px solid #e5e7eb;border-radius:4px;padding:2px 5px;text-align:right;font-size:8px;" value="33%" readonly/></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="color:#C96A3F;">Variant C ←</span><input style="width:44px;border:1px solid #C96A3F;border-radius:4px;padding:2px 5px;text-align:right;font-size:8px;" value="33%" readonly/></div>
+              <div style="display:flex;gap:4px;margin-top:4px;">
+                <div style="flex:1;background:#C96A3F;color:#fff;border-radius:4px;padding:3px 0;text-align:center;font-size:7px;font-weight:700;">Save</div>
+                <div style="background:#fee2e2;color:#dc2626;border-radius:4px;padding:3px 6px;font-size:7px;font-weight:700;">Delete</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:9px;color:#6b7280;">Una sola pantalla para editar pesos y borrar. Más complejo de implementar.</p>
+    </div>
+  </div>
+
+</div>

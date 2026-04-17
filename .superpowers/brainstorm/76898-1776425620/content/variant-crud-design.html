@@ -1,0 +1,179 @@
+<style>
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+  .card { border: 1.5px solid #e5e7eb; border-radius: 12px; overflow: hidden; background: #fff; }
+  .card-head { background: #f9fafb; border-bottom: 1px solid #e5e7eb; padding: 8px 12px; }
+  .card-head strong { font-size: 11px; color: #111; }
+  .card-head span { font-size: 9px; color: #6b7280; display: block; }
+  .card-body { padding: 10px 12px; }
+
+  /* panel mockup */
+  .panel { background: #f9fafb; border-radius: 8px; padding: 8px 10px; font-size: 8px; }
+  .pt { font-size: 6.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #9ca3af; margin-bottom: 5px; }
+  .stat-row { display: flex; gap: 4px; margin-bottom: 6px; }
+  .stat-box { flex: 1; background: #fff; border: 1px solid #e5e7eb; border-radius: 5px; padding: 4px; text-align: center; }
+  .stat-n { font-size: 9px; font-weight: 800; color: #111; }
+  .stat-l { font-size: 5.5px; color: #9ca3af; text-transform: uppercase; }
+  .divider { border: none; border-top: 1px solid #f0f0f0; margin: 6px 0; }
+  .fl { font-size: 6.5px; color: #9ca3af; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin: 5px 0 2px; }
+  .fi { background: #fff; border: 1px solid #e5e7eb; border-radius: 4px; padding: 3px 6px; font-size: 7.5px; color: #374151; width: 100%; box-sizing: border-box; }
+  .fi.active { border-color: #C96A3F; box-shadow: 0 0 0 1.5px rgba(201,106,63,.15); }
+  .fi.disabled { background: #f9fafb; color: #9ca3af; }
+  .save-btn { background: #C96A3F; border: none; border-radius: 5px; padding: 3px 10px; font-size: 7px; font-weight: 700; color: #fff; }
+  .del-btn { background: #fff; border: 1px solid #fca5a5; border-radius: 5px; padding: 3px 10px; font-size: 7px; font-weight: 700; color: #dc2626; }
+  .btn-row { display: flex; gap: 5px; margin-top: 6px; }
+  .row { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; border-bottom: 1px solid #f9fafb; }
+  .row-label { font-size: 7px; color: #9ca3af; }
+  .row-val { font-size: 7.5px; font-weight: 600; color: #374151; }
+
+  /* modal mockup */
+  .modal { background: #fff; border: 1.5px solid #e5e7eb; border-radius: 10px; padding: 12px; box-shadow: 0 4px 20px rgba(0,0,0,.08); }
+  .modal-title { font-size: 10px; font-weight: 800; color: #111; margin-bottom: 3px; }
+  .modal-sub { font-size: 8px; color: #6b7280; margin-bottom: 10px; }
+  .weight-row { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+  .weight-name { font-size: 8px; color: #374151; flex: 1; }
+  .weight-input { width: 40px; border: 1.5px solid #e5e7eb; border-radius: 5px; padding: 2px 5px; font-size: 8px; font-weight: 700; text-align: right; }
+  .weight-input.active { border-color: #C96A3F; }
+  .weight-bar { flex: 2; height: 6px; background: #f3f4f6; border-radius: 3px; overflow: hidden; }
+  .weight-fill { height: 6px; border-radius: 3px; }
+  .total-ok { font-size: 8px; font-weight: 700; color: #16a34a; margin-top: 6px; }
+  .total-err { font-size: 8px; font-weight: 700; color: #dc2626; margin-top: 6px; }
+
+  /* experiment panel with editable split */
+  .split-row { display: flex; align-items: center; gap: 5px; margin-bottom: 4px; }
+  .split-name { font-size: 7.5px; color: #374151; width: 55px; flex-shrink: 0; }
+  .split-input { width: 36px; border: 1.5px solid #e5e7eb; border-radius: 4px; padding: 2px 4px; font-size: 7.5px; font-weight: 700; text-align: right; }
+  .split-bar { flex: 1; height: 5px; background: #f3f4f6; border-radius: 3px; overflow: hidden; }
+  .split-fill-ctrl { background: #6b7280; height: 5px; border-radius: 3px; }
+  .split-fill-b { background: #C96A3F; height: 5px; border-radius: 3px; }
+  .split-fill-c { background: #374151; height: 5px; border-radius: 3px; }
+</style>
+
+<h2>Diseño del CRUD completo de variantes</h2>
+<p class="subtitle">Rename + delete (con modal de redistribución) + editor de pesos en el experimento</p>
+
+<div class="grid3">
+
+  <!-- Variant panel: rename + delete -->
+  <div class="card">
+    <div class="card-head">
+      <strong>1. Panel de variante</strong>
+      <span>Name editable + botón Delete</span>
+    </div>
+    <div class="card-body">
+      <div class="panel">
+        <div class="pt">VARIANT C</div>
+        <div class="stat-row">
+          <div class="stat-box"><div class="stat-n">0</div><div class="stat-l">Visits</div></div>
+          <div class="stat-box"><div class="stat-n">—</div><div class="stat-l">Conv.</div></div>
+          <div class="stat-box"><div class="stat-n">33%</div><div class="stat-l">Traffic</div></div>
+        </div>
+        <div class="row"><span class="row-label">Target URL</span><span class="row-val">—</span></div>
+        <div class="row"><span class="row-label">Traffic share</span><span class="row-val">33%</span></div>
+        <hr class="divider">
+        <div class="fl">NAME</div>
+        <div class="fi active">Variant C</div>
+        <div class="fl">DESCRIPTION</div>
+        <div class="fi" style="color:#9ca3af;">What's different? (optional)</div>
+        <div class="fl">UTM RULES</div>
+        <div style="font-size:7px;color:#C96A3F;margin-top:2px;">+ Add rule</div>
+        <div class="btn-row">
+          <button class="save-btn">Save</button>
+          <button class="del-btn">Delete variant</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete modal -->
+  <div class="card">
+    <div class="card-head">
+      <strong>2. Modal al hacer Delete</strong>
+      <span>Redistribuir tráfico de Variant C (33%)</span>
+    </div>
+    <div class="card-body">
+      <div class="modal">
+        <div class="modal-title">Delete Variant C?</div>
+        <div class="modal-sub">Redistribute its 33% traffic to remaining variants.</div>
+
+        <div class="weight-row">
+          <div class="weight-name">Control</div>
+          <div class="weight-bar"><div class="weight-fill" style="width:50%;background:#6b7280;"></div></div>
+          <input class="weight-input active" value="50%" readonly/>
+        </div>
+        <div class="weight-row">
+          <div class="weight-name">Variant B</div>
+          <div class="weight-bar"><div class="weight-fill" style="width:50%;background:#C96A3F;"></div></div>
+          <input class="weight-input active" value="50%" readonly/>
+        </div>
+        <div class="total-ok">✓ Total: 100%</div>
+
+        <div style="display:flex;gap:6px;margin-top:10px;">
+          <button style="flex:1;background:#dc2626;color:#fff;border:none;border-radius:5px;padding:4px 0;font-size:8px;font-weight:700;">Delete &amp; save</button>
+          <button style="background:#f3f4f6;color:#374151;border:none;border-radius:5px;padding:4px 8px;font-size:8px;font-weight:700;">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Experiment panel: editable split -->
+  <div class="card">
+    <div class="card-head">
+      <strong>3. Panel de experimento</strong>
+      <span>Traffic split editable (todos los pesos)</span>
+    </div>
+    <div class="card-body">
+      <div class="panel">
+        <div class="pt">EXPERIMENT NODE</div>
+        <div class="stat-row">
+          <div class="stat-box"><div class="stat-n">48</div><div class="stat-l">Impressions</div></div>
+          <div class="stat-box"><div class="stat-n">21</div><div class="stat-l">Conv.</div></div>
+          <div class="stat-box"><div class="stat-n">43%</div><div class="stat-l">Avg</div></div>
+        </div>
+        <div class="row"><span class="row-label">Started</span><span class="row-val">Apr 12, 2026</span></div>
+        <hr class="divider">
+        <div class="fl">EXPERIMENT NAME</div>
+        <div class="fi active" style="margin-bottom:6px;">Homepage Button Text Test</div>
+        <div class="fl">TRAFFIC SPLIT</div>
+        <div style="margin: 4px 0 6px;">
+          <div class="split-row">
+            <div class="split-name">Control</div>
+            <div class="split-bar"><div class="split-fill-ctrl" style="width:34%;"></div></div>
+            <input class="split-input" value="34" readonly/>
+            <span style="font-size:7px;color:#9ca3af;">%</span>
+          </div>
+          <div class="split-row">
+            <div class="split-name">Variant B</div>
+            <div class="split-bar"><div class="split-fill-b" style="width:33%;"></div></div>
+            <input class="split-input" value="33" readonly/>
+            <span style="font-size:7px;color:#9ca3af;">%</span>
+          </div>
+          <div class="split-row">
+            <div class="split-name">Variant C</div>
+            <div class="split-bar"><div class="split-fill-c" style="width:33%;"></div></div>
+            <input class="split-input" value="33" readonly/>
+            <span style="font-size:7px;color:#9ca3af;">%</span>
+          </div>
+          <div style="font-size:7px;color:#16a34a;font-weight:700;margin-top:3px;">✓ Total: 100%</div>
+        </div>
+        <div class="fl">UTM OVERRIDE</div>
+        <div style="font-size:7.5px;color:#6b7280;margin-top:2px;">Toggle: off</div>
+        <button class="save-btn" style="margin-top:6px;">Save</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:14px;padding:10px 14px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;font-size:9px;color:#6b7280;line-height:1.7;">
+  <strong style="color:#374151;">Nuevos endpoints:</strong>
+  PATCH <code>/variants/[variantId]</code> → actualiza name, description, rules ·
+  DELETE <code>/variants/[variantId]</code> → borra + recibe nuevos pesos para restantes ·
+  PATCH <code>/experiments/[id]</code> → ya existe, extender para aceptar <code>variantWeights: [{id, traffic_weight}]</code><br>
+  <strong style="color:#374151;">UI:</strong>
+  Variante: agrega campo Name + botón Delete →
+  Modal: redistribución manual →
+  Experimento: traffic split con inputs editables<br>
+  <strong style="color:#374151;">Restricciones:</strong>
+  No se puede borrar el Control · No se puede borrar si queda solo 1 variante · Pesos deben sumar 100
+</div>

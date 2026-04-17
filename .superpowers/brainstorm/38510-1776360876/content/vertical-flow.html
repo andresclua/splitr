@@ -1,0 +1,195 @@
+<style>
+  .split { display: flex; gap: 32px; align-items: flex-start; justify-content: center; }
+  .flow-col { flex: 1; max-width: 320px; }
+  .flow-col h3 { font-size: 13px; font-weight: 700; color: #111; margin-bottom: 4px; text-align: center; }
+  .flow-col .sub { font-size: 11px; color: #9ca3af; text-align: center; margin-bottom: 16px; }
+
+  /* Shared node styles */
+  .vnode {
+    background: #fff; border: 1.5px solid #d1d5db; border-radius: 14px;
+    padding: 14px 16px; position: relative;
+  }
+  .vnode.entry { border-color: #22c55e; background: #f0fdf4; }
+  .vnode.split-node { border-color: #C96A3F; background: #FEF0E8; }
+  .vnode.conversion { border-color: #3b82f6; background: #eff6ff; }
+  .vnode .node-icon { font-size: 20px; margin-bottom: 6px; }
+  .vnode .node-title { font-size: 12px; font-weight: 700; color: #111; }
+  .vnode .node-sub { font-size: 11px; color: #6b7280; margin-top: 3px; }
+  .vnode .node-badge { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; margin-top: 6px; }
+  .badge-green { background: #dcfce7; color: #16a34a; }
+  .badge-orange { background: #FEF0E8; color: #C96A3F; }
+  .badge-blue { background: #dbeafe; color: #2563eb; }
+
+  /* Arrow connector */
+  .arrow-down {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 4px 0; gap: 0;
+  }
+  .arrow-down .arrow-line { width: 2px; height: 20px; background: #d1d5db; }
+  .arrow-down .arrow-head { width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 8px solid #d1d5db; }
+
+  /* Option A — side by side variants */
+  .branch-wrap { display: flex; align-items: flex-start; gap: 0; position: relative; }
+  .branch-line-wrap { display: flex; flex-direction: column; align-items: center; }
+  .branch-h-line { width: 100%; height: 2px; background: #d1d5db; }
+  .variant-col { flex: 1; display: flex; flex-direction: column; align-items: center; }
+  .variant-col .arrow-line-short { width: 2px; height: 12px; background: #d1d5db; }
+  .vnode-variant {
+    background: #fff; border: 1.5px solid #d1d5db; border-radius: 12px;
+    padding: 10px 12px; width: 100%; box-sizing: border-box; text-align: center;
+  }
+  .vnode-variant .vdot { width: 10px; height: 10px; border-radius: 50%; margin: 0 auto 6px; }
+  .vnode-variant .vname { font-size: 11px; font-weight: 700; color: #374151; }
+  .vnode-variant .vstat { font-size: 10px; color: #9ca3af; margin-top: 3px; }
+  .merge-wrap { display: flex; justify-content: space-around; padding-top: 4px; }
+  .merge-line { width: 2px; height: 14px; background: #d1d5db; }
+
+  /* Option B — stacked variants with indentation */
+  .stacked-variant {
+    display: flex; align-items: flex-start; gap: 10px; margin-left: 24px;
+    position: relative;
+  }
+  .stacked-variant::before {
+    content: ''; position: absolute; left: -14px; top: 0; bottom: 0;
+    width: 2px; background: #e5e7eb;
+  }
+  .stacked-variant .sv-arrow { font-size: 10px; color: #9ca3af; padding-top: 12px; flex-shrink: 0; }
+  .stacked-vnode {
+    flex: 1; background: #fff; border: 1.5px solid #d1d5db; border-radius: 12px; padding: 10px 14px;
+  }
+  .stacked-vnode .vdot-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .stacked-vnode .vdot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .stacked-vnode .vname { font-size: 11px; font-weight: 700; color: #374151; }
+  .stacked-vnode .vstats { display: flex; gap: 12px; margin-top: 4px; }
+  .stacked-vnode .vstat { font-size: 10px; color: #9ca3af; }
+  .stacked-vnode .rule-tag { font-size: 9px; background: #f3f4f6; color: #6b7280; border-radius: 4px; padding: 2px 6px; margin-top: 5px; display: inline-block; font-family: monospace; }
+</style>
+
+<h2>Vertical con flechas — ¿cómo se muestran las variantes?</h2>
+<p class="subtitle">La diferencia es cómo se ramifica el split</p>
+
+<div class="split">
+
+  <!-- Option A: side by side -->
+  <div class="flow-col">
+    <h3>A — Variantes una al lado de la otra</h3>
+    <p class="sub">Más compacto, visual, tipo diagrama</p>
+
+    <div class="vnode entry">
+      <div class="node-icon">🌐</div>
+      <div class="node-title">Tráfico entrante</div>
+      <div class="node-sub">boostifyjs.com</div>
+    </div>
+
+    <div class="arrow-down"><div class="arrow-line"></div><div class="arrow-head"></div></div>
+
+    <div class="vnode split-node">
+      <div class="node-icon">🔀</div>
+      <div class="node-title">Homepage Button Text Test</div>
+      <div class="node-sub">Split 50 / 50 · Live</div>
+      <span class="node-badge badge-green">● Live</span>
+    </div>
+
+    <!-- Branch to two variants side by side -->
+    <div style="display:flex; flex-direction:column; align-items:center; padding: 4px 0;">
+      <div style="width:2px; height:12px; background:#d1d5db;"></div>
+      <div style="width:60%; height:2px; background:#d1d5db;"></div>
+    </div>
+    <div style="display:flex; gap:8px; align-items:flex-start;">
+      <div style="flex:1; display:flex; flex-direction:column; align-items:center;">
+        <div style="width:2px; height:10px; background:#d1d5db;"></div>
+        <div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #d1d5db;"></div>
+        <div class="vnode-variant" style="margin-top:4px;">
+          <div class="vdot" style="background:#9ca3af;"></div>
+          <div class="vname">Control</div>
+          <div class="vstat">620 visitas · 3.8%</div>
+        </div>
+      </div>
+      <div style="flex:1; display:flex; flex-direction:column; align-items:center;">
+        <div style="width:2px; height:10px; background:#d1d5db;"></div>
+        <div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #d1d5db;"></div>
+        <div class="vnode-variant" style="margin-top:4px; border-color:#C96A3F;">
+          <div class="vdot" style="background:#C96A3F;"></div>
+          <div class="vname">Variant B</div>
+          <div class="vstat">620 visitas · 10.2% ▲</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex; justify-content:space-around; padding: 4px 16px;">
+      <div style="width:2px; height:14px; background:#d1d5db;"></div>
+      <div style="width:2px; height:14px; background:#d1d5db;"></div>
+    </div>
+    <div style="width:60%; margin: 0 auto; height:2px; background:#d1d5db;"></div>
+    <div class="arrow-down" style="padding-top:0;"><div class="arrow-line" style="height:10px;"></div><div class="arrow-head"></div></div>
+
+    <div class="vnode conversion">
+      <div class="node-icon">🎯</div>
+      <div class="node-title">Conversión</div>
+      <div class="node-sub">87 conversiones · /guides/introduction/</div>
+    </div>
+  </div>
+
+  <!-- Option B: stacked -->
+  <div class="flow-col">
+    <h3>B — Variantes apiladas con detalle</h3>
+    <p class="sub">Más espacio para mostrar stats y reglas UTM</p>
+
+    <div class="vnode entry">
+      <div class="node-icon">🌐</div>
+      <div class="node-title">Tráfico entrante</div>
+      <div class="node-sub">boostifyjs.com</div>
+    </div>
+
+    <div class="arrow-down"><div class="arrow-line"></div><div class="arrow-head"></div></div>
+
+    <div class="vnode split-node">
+      <div class="node-icon">🔀</div>
+      <div class="node-title">Homepage Button Text Test</div>
+      <div class="node-sub">Split 50 / 50 · Live</div>
+      <span class="node-badge badge-green">● Live</span>
+    </div>
+
+    <div class="arrow-down"><div class="arrow-line"></div><div class="arrow-head"></div></div>
+
+    <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:4px;">
+      <div class="stacked-variant">
+        <div class="sv-arrow">↳</div>
+        <div class="stacked-vnode">
+          <div class="vdot-row">
+            <div class="vdot" style="background:#9ca3af;"></div>
+            <div class="vname">Control — Get Started</div>
+          </div>
+          <div class="vstats">
+            <div class="vstat">620 visitas</div>
+            <div class="vstat">Conv: 3.8%</div>
+          </div>
+          <div class="rule-tag">utm_text_variation=1</div>
+        </div>
+      </div>
+      <div class="stacked-variant">
+        <div class="sv-arrow">↳</div>
+        <div class="stacked-vnode" style="border-color:#C96A3F;">
+          <div class="vdot-row">
+            <div class="vdot" style="background:#C96A3F;"></div>
+            <div class="vname">Variant B — Make it happen</div>
+          </div>
+          <div class="vstats">
+            <div class="vstat">620 visitas</div>
+            <div class="vstat">Conv: 10.2% ▲</div>
+          </div>
+          <div class="rule-tag">utm_text_variation=2</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down"><div class="arrow-line"></div><div class="arrow-head"></div></div>
+
+    <div class="vnode conversion">
+      <div class="node-icon">🎯</div>
+      <div class="node-title">Conversión</div>
+      <div class="node-sub">87 conversiones · /guides/introduction/</div>
+    </div>
+  </div>
+
+</div>

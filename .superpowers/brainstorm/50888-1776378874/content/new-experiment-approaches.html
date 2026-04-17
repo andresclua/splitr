@@ -1,0 +1,184 @@
+<style>
+  .approaches { display: flex; gap: 20px; align-items: flex-start; }
+  .approach { flex: 1; border: 2px solid #e5e7eb; border-radius: 16px; overflow: hidden; cursor: pointer; transition: all 0.2s; }
+  .approach:hover { border-color: #C96A3F; box-shadow: 0 4px 20px rgba(201,106,63,0.12); }
+  .approach.selected { border-color: #C96A3F; box-shadow: 0 4px 24px rgba(201,106,63,0.22); }
+  .approach-label { background: #f9fafb; border-bottom: 1px solid #e5e7eb; padding: 10px 16px; display: flex; align-items: center; gap: 10px; }
+  .approach-label .letter { background: #C96A3F; color: white; font-weight: 700; font-size: 12px; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .approach-label strong { font-size: 13px; color: #111; }
+  .approach-label span { font-size: 11px; color: #6b7280; }
+  .mockup-inner { padding: 14px; background: #fff; }
+
+  /* Shared mini node styles */
+  .mn { border-radius: 10px; padding: 9px 12px; border: 1.5px solid; font-size: 11px; font-weight: 600; }
+  .mn-green { border-color: #22c55e; background: #f0fdf4; color: #166534; }
+  .mn-orange { border-color: #C96A3F; background: #FEF0E8; color: #9a3412; }
+  .mn-blue { border-color: #3b82f6; background: #eff6ff; color: #1d4ed8; }
+  .mn-gray { border-color: #d1d5db; background: #fff; color: #374151; }
+  .mn-dashed { border-style: dashed; border-color: #d1d5db; background: #f9fafb; color: #9ca3af; text-align: center; }
+  .arr { display: flex; flex-direction: column; align-items: center; padding: 2px 0; }
+  .arr .al { width: 2px; height: 14px; background: #d1d5db; }
+  .arr .ah { width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid #d1d5db; }
+
+  /* Approach A: Split screen */
+  .split-screen { display: flex; gap: 8px; height: 280px; }
+  .split-left { width: 42%; border-right: 1px solid #f3f4f6; padding-right: 8px; display: flex; flex-direction: column; align-items: center; padding-top: 8px; overflow: hidden; }
+  .split-right { flex: 1; background: #f9fafb; border-radius: 8px; padding: 10px; }
+  .split-right .step-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #C96A3F; margin-bottom: 6px; }
+  .split-right .field-label { font-size: 9px; color: #9ca3af; margin-bottom: 3px; margin-top: 6px; }
+  .split-right .field { background: #fff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 5px 8px; font-size: 10px; color: #374151; }
+  .split-right .field.active { border-color: #C96A3F; }
+  .split-right .btn-next { margin-top: 8px; background: #C96A3F; color: white; border: none; border-radius: 6px; padding: 5px 12px; font-size: 10px; font-weight: 600; cursor: pointer; }
+
+  /* Approach B: Progressive builder */
+  .builder { display: flex; flex-direction: column; align-items: center; gap: 0; height: 280px; overflow: hidden; padding-top: 6px; }
+  .builder-node { width: 100%; max-width: 200px; }
+  .builder-node .bfield { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 5px 8px; font-size: 9px; color: #9ca3af; margin-top: 4px; }
+  .add-step { border: 1.5px dashed #d1d5db; border-radius: 8px; padding: 6px 12px; font-size: 10px; color: #9ca3af; text-align: center; width: 100%; max-width: 200px; cursor: pointer; }
+  .add-step:hover { border-color: #C96A3F; color: #C96A3F; }
+
+  /* Approach C: Stepped tabs */
+  .tabs-wrap { height: 280px; overflow: hidden; }
+  .tabs { display: flex; gap: 0; border-bottom: 2px solid #f3f4f6; margin-bottom: 10px; }
+  .tab { flex: 1; text-align: center; padding: 7px 4px; font-size: 10px; font-weight: 600; color: #9ca3af; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+  .tab.active { color: #C96A3F; border-bottom-color: #C96A3F; }
+  .tab.done { color: #16a34a; }
+  .tab-content { padding: 0 4px; }
+  .tab-content .field-row { display: flex; gap: 6px; margin-bottom: 6px; }
+  .tab-content .field { flex: 1; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 5px 8px; font-size: 10px; color: #374151; }
+  .mini-flow { display: flex; align-items: center; gap: 4px; margin-top: 10px; padding: 8px; background: #f9fafb; border-radius: 8px; }
+  .mini-node { background: #fff; border: 1px solid #d1d5db; border-radius: 6px; padding: 4px 7px; font-size: 9px; color: #374151; }
+  .mini-arrow { font-size: 10px; color: #d1d5db; }
+</style>
+
+<h2>¿Cómo se crea el nuevo experimento?</h2>
+<p class="subtitle">Tres enfoques para la página dedicada — click para elegir</p>
+
+<div class="approaches">
+
+  <!-- A: Split screen -->
+  <div class="approach" data-choice="a" onclick="toggleSelect(this)">
+    <div class="approach-label">
+      <div class="letter">A</div>
+      <div>
+        <strong>Flow + formulario split</strong>
+        <br><span>Izquierda: flow en vivo. Derecha: campos del paso actual</span>
+      </div>
+    </div>
+    <div class="mockup-inner">
+      <div class="split-screen">
+        <div class="split-left">
+          <div style="font-size:9px;color:#9ca3af;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Flow preview</div>
+          <div class="builder-node">
+            <div class="mn mn-green">🌐 Traffic · acme.com</div>
+          </div>
+          <div class="arr"><div class="al"></div><div class="ah"></div></div>
+          <div class="builder-node">
+            <div class="mn mn-orange" style="opacity:.4;">🔀 Experiment</div>
+          </div>
+          <div class="arr"><div class="al"></div><div class="ah"></div></div>
+          <div class="builder-node">
+            <div class="mn mn-dashed" style="opacity:.3;">+ Variants</div>
+          </div>
+          <div class="arr"><div class="al"></div><div class="ah"></div></div>
+          <div class="builder-node">
+            <div class="mn mn-dashed" style="opacity:.2;">🎯 Conversion</div>
+          </div>
+        </div>
+        <div class="split-right">
+          <div class="step-title">Step 2 — Experiment</div>
+          <div class="field-label">EXPERIMENT NAME</div>
+          <div class="field active">Homepage hero test</div>
+          <div class="field-label">TYPE</div>
+          <div class="field">Edge (Worker / Middleware)</div>
+          <button class="btn-next">Next → Variants</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B: Progressive builder -->
+  <div class="approach" data-choice="b" onclick="toggleSelect(this)">
+    <div class="approach-label">
+      <div class="letter">B</div>
+      <div>
+        <strong>Builder progresivo</strong>
+        <br><span>Los nodos aparecen uno a uno mientras configurás</span>
+      </div>
+    </div>
+    <div class="mockup-inner">
+      <div class="builder">
+        <div class="builder-node">
+          <div class="mn mn-green">🌐 Traffic</div>
+          <div class="bfield">acme.com/pricing</div>
+        </div>
+        <div class="arr"><div class="al"></div><div class="ah"></div></div>
+        <div class="builder-node">
+          <div class="mn mn-orange">🔀 Homepage test</div>
+          <div class="bfield">Edge · 50/50</div>
+        </div>
+        <div class="arr"><div class="al"></div><div class="ah"></div></div>
+        <div style="display:flex;gap:6px;width:100%;max-width:200px;">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;">
+            <div class="arr"><div class="al" style="height:8px;"></div><div class="ah"></div></div>
+            <div class="mn mn-gray" style="width:100%;font-size:9px;padding:6px 8px;">⚪ Control<br><span style="color:#9ca3af;font-weight:400;">acme.com</span></div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;">
+            <div class="arr"><div class="al" style="height:8px;"></div><div class="ah"></div></div>
+            <div class="mn mn-orange" style="width:100%;font-size:9px;padding:6px 8px;border-style:dashed;">🟠 Variant B<br><span style="font-weight:400;">acme.com/b</span></div>
+          </div>
+        </div>
+        <div class="arr" style="padding:2px 0;"><div class="al" style="height:8px;"></div><div class="ah"></div></div>
+        <div class="add-step">+ Add conversion goal</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C: Steps with mini preview -->
+  <div class="approach" data-choice="c" onclick="toggleSelect(this)">
+    <div class="approach-label">
+      <div class="letter">C</div>
+      <div>
+        <strong>Pasos con preview</strong>
+        <br><span>Tabs numerados arriba, mini-flow al pie de cada paso</span>
+      </div>
+    </div>
+    <div class="mockup-inner">
+      <div class="tabs-wrap">
+        <div class="tabs">
+          <div class="tab done">✓ Type</div>
+          <div class="tab done">✓ Traffic</div>
+          <div class="tab active">3 Variants</div>
+          <div class="tab">4 Goal</div>
+        </div>
+        <div class="tab-content">
+          <div style="font-size:10px;color:#374151;font-weight:600;margin-bottom:6px;">Add variants</div>
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:8px;margin-bottom:5px;">
+            <div style="font-size:9px;font-weight:700;color:#9ca3af;margin-bottom:4px;">⚪ CONTROL</div>
+            <div class="field-row">
+              <div class="field" style="flex:2;">Leave empty — uses base URL</div>
+              <div class="field" style="flex:0 0 30px;text-align:center;">50%</div>
+            </div>
+          </div>
+          <div style="background:#fff;border:1.5px solid #C96A3F;border-radius:8px;padding:8px;margin-bottom:5px;">
+            <div style="font-size:9px;font-weight:700;color:#C96A3F;margin-bottom:4px;">🟠 VARIANT B</div>
+            <div class="field-row">
+              <div class="field active" style="flex:2;">acme.com/pricing-b</div>
+              <div class="field active" style="flex:0 0 30px;text-align:center;">50%</div>
+            </div>
+          </div>
+          <div class="mini-flow">
+            <div class="mini-node">🌐 acme.com</div>
+            <div class="mini-arrow">→</div>
+            <div class="mini-node">🔀 50/50</div>
+            <div class="mini-arrow">→</div>
+            <div class="mini-node">⚪🟠</div>
+            <div class="mini-arrow" style="opacity:.3;">→</div>
+            <div class="mini-node" style="opacity:.3;border-style:dashed;">🎯?</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
