@@ -518,10 +518,6 @@ const saveNewVariant = async () => {
             </div>
             <div class="px-5 py-1">
               <div class="flex justify-between items-center py-2.5 border-b border-gray-50">
-                <span class="text-xs text-gray-400">Monitored URL</span>
-                <span class="font-mono text-[11px] bg-gray-100 px-2 py-0.5 rounded text-gray-700">{{ experiment.base_url }}</span>
-              </div>
-              <div class="flex justify-between items-center py-2.5 border-b border-gray-50">
                 <span class="text-xs text-gray-400">Worker status</span>
                 <span :class="['text-[10px] font-semibold px-2 py-0.5 rounded-full', statusConfig[experiment.status]?.badge]">{{ statusConfig[experiment.status]?.label }}</span>
               </div>
@@ -529,6 +525,21 @@ const saveNewVariant = async () => {
                 <span class="text-xs text-gray-400">Config cache</span>
                 <span class="text-xs font-semibold text-gray-700">KV · 60s TTL</span>
               </div>
+            </div>
+            <div class="px-5 pt-2 pb-4 border-t border-gray-100">
+              <label for="edit-base-url" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Base URL</label>
+              <input
+                id="edit-base-url"
+                v-model="editBaseUrl"
+                type="url"
+                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#C96A3F]"
+              />
+              <button
+                type="button"
+                :disabled="savingTraffic || !editBaseUrl.trim()"
+                :class="['mt-3 bg-[#C96A3F] text-white text-sm font-semibold px-4 py-1.5 rounded-lg transition-opacity', (savingTraffic || !editBaseUrl.trim()) ? 'opacity-40 cursor-not-allowed' : 'hover:opacity-90']"
+                @click="saveTraffic"
+              >{{ savingTraffic ? 'Saving…' : 'Save' }}</button>
             </div>
           </div>
         </template>
