@@ -506,7 +506,10 @@ const saveNewVariant = async () => {
                 {{ v.impressions ? variantConvRate(v).toFixed(1) + '%' : '—' }}
                 <span v-if="leadingConvId === v.id" class="text-[10px]">▲</span>
               </p>
-              <p class="text-[10px] text-gray-400">conv. rate</p>
+              <p class="text-[10px] text-gray-400 flex items-center justify-center gap-0.5">
+                conv. rate
+                <KTooltip text="Conversion rate for this variant. Higher is better — but wait for enough data before drawing conclusions." />
+              </p>
             </div>
           </div>
           <!-- Ghost node column -->
@@ -760,17 +763,26 @@ const saveNewVariant = async () => {
               <div class="grid grid-cols-3 gap-2.5 mb-4">
                 <div class="bg-white border border-gray-200 rounded-xl p-3.5 text-center">
                   <p class="text-xl font-extrabold text-gray-900 tabular-nums">{{ v.impressions.toLocaleString() }}</p>
-                  <p class="text-[10px] uppercase tracking-wide text-gray-400 mt-1">Visits</p>
+                  <p class="text-[10px] uppercase tracking-wide text-gray-400 mt-1 flex items-center justify-center gap-1">
+                    Visits
+                    <KTooltip text="How many visitors were assigned to this variant." />
+                  </p>
                 </div>
                 <div class="bg-white border border-gray-200 rounded-xl p-3.5 text-center">
                   <p :class="['text-xl font-extrabold tabular-nums', leadingConvId === v.id ? 'text-green-600' : 'text-gray-900']">
                     {{ v.impressions ? variantConvRate(v).toFixed(1) + '%' : '—' }}
                   </p>
-                  <p class="text-[10px] uppercase tracking-wide text-gray-400 mt-1">Conv. rate</p>
+                  <p class="text-[10px] uppercase tracking-wide text-gray-400 mt-1 flex items-center justify-center gap-1">
+                    Conv. rate
+                    <KTooltip text="% of visitors who completed the conversion goal (e.g. clicked a button)." />
+                  </p>
                 </div>
                 <div class="bg-white border border-gray-200 rounded-xl p-3.5 text-center">
                   <p class="text-xl font-extrabold text-gray-900 tabular-nums">{{ v.conversion_count }}</p>
-                  <p class="text-[10px] uppercase tracking-wide text-gray-400 mt-1">Conversions</p>
+                  <p class="text-[10px] uppercase tracking-wide text-gray-400 mt-1 flex items-center justify-center gap-1">
+                    Conversions
+                    <KTooltip text="Total number of conversion events for this variant." />
+                  </p>
                 </div>
               </div>
               <div class="bg-white border border-gray-200 rounded-2xl p-5 mb-4">
@@ -802,13 +814,19 @@ const saveNewVariant = async () => {
                     <span class="font-mono text-[11px] bg-gray-100 px-2 py-0.5 rounded text-gray-700 truncate max-w-[200px]">{{ v.target_url || '—' }}</span>
                   </div>
                   <div class="flex justify-between items-center py-2.5 border-b border-gray-50">
-                    <span class="text-xs text-gray-400">Traffic share</span>
+                    <span class="flex items-center gap-1 text-xs text-gray-400">
+                      Traffic share
+                      <KTooltip text="This variant's share of total traffic. Change it in the experiment panel's Traffic split section." />
+                    </span>
                     <span class="text-xs font-semibold text-gray-700">{{ v.traffic_weight }}%</span>
                   </div>
                 </div>
                 <div class="px-5 pt-2 pb-4 border-t border-gray-100 space-y-3">
                   <div>
-                    <label :for="'edit-name-' + v.id" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Name</label>
+                    <label :for="'edit-name-' + v.id" class="flex items-center gap-1 text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                      Name
+                      <KTooltip text="Display name for this variant. Shown in reports and the flow diagram." />
+                    </label>
                     <input
                       :id="'edit-name-' + v.id"
                       v-model="editVariantName"
