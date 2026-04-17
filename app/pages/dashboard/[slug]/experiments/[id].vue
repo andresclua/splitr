@@ -262,9 +262,9 @@ const confirmDelete = async () => {
       method: 'DELETE',
       body: { new_weights: deleteRedistWeights.value.map(v => ({ id: v.id, traffic_weight: v.weight })) },
     })
+    showDeleteModal.value = false
     await refresh()
     selectedNode.value = 'experiment'
-    showDeleteModal.value = false
     toast.success('Variant deleted')
   } catch (e: any) {
     toast.error(e?.data?.message ?? 'Failed to delete')

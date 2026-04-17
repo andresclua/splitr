@@ -61,11 +61,11 @@ export default defineEventHandler(async (event) => {
     ![...providedIds].every(pid => remainingIds.has(pid))
   ) throw createError({ statusCode: 400, message: 'new_weights must cover exactly the remaining variants' })
 
-  const total = newWeights.reduce((s, v) => s + Number(v.traffic_weight), 0)
-  if (Math.round(total) !== 100) throw createError({ statusCode: 400, message: `Weights must sum to 100 (got ${total})` })
-
   if (!newWeights.every(v => Number.isInteger(Number(v.traffic_weight)) && Number(v.traffic_weight) >= 1))
     throw createError({ statusCode: 400, message: 'Each traffic_weight must be a positive integer' })
+
+  const total = newWeights.reduce((s, v) => s + Number(v.traffic_weight), 0)
+  if (total !== 100) throw createError({ statusCode: 400, message: `Weights must sum to 100 (got ${total})` })
 
   // Update remaining weights first (reversible; delete is irreversible)
   for (const entry of newWeights) {
