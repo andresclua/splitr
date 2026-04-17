@@ -6,7 +6,7 @@ const toast = useToast()
 const confirm = useConfirm()
 
 await fetchWorkspaces()
-if (!currentWorkspace.value) await navigateTo('/dashboard', { replace: true })
+if (!currentWorkspace.value) throw createError({ statusCode: 404, statusMessage: "Workspace not found or you don't have access to it." })
 
 const route = useRoute()
 const slug = route.params.slug as string
@@ -29,7 +29,7 @@ interface Experiment {
   variants: Variant[]; total_impressions: number; total_conversions: number
 }
 
-const { data: experiments, refresh } = await useFetch<Experiment[]>(`/api/workspaces/${slug}/experiments`)
+const { data: experiments, refresh } = await useFetch<Experiment[]>(() => `/api/workspaces/${route.params.slug}/experiments`)
 const experiment = computed(() => experiments.value?.find(e => e.id === id) ?? null)
 
 if (!experiment.value) await navigateTo(`/dashboard/${slug}`, { replace: true })

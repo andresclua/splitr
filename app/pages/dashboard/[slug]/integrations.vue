@@ -13,8 +13,9 @@ interface Variant { id: string; name: string; traffic_weight: number; is_control
 interface Experiment { id: string; name: string; status: string; type: string; variants: Variant[] }
 interface ApiKey { id: string; key_prefix: string }
 
-const { data: experiments } = await useFetch<Experiment[]>(`/api/workspaces/${slug}/experiments`)
-const { data: keys } = await useFetch<ApiKey[]>(`/api/workspaces/${slug}/keys`)
+const route = useRoute()
+const { data: experiments } = await useFetch<Experiment[]>(() => `/api/workspaces/${route.params.slug}/experiments`)
+const { data: keys } = await useFetch<ApiKey[]>(() => `/api/workspaces/${route.params.slug}/keys`)
 
 const appUrl = import.meta.client ? window.location.origin : 'https://app.koryla.com'
 

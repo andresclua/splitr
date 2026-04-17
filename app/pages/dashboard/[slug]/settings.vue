@@ -41,7 +41,7 @@ const saveGeneral = async () => {
 // ── API Keys ──────────────────────────────────────────────
 interface ApiKey { id: string; key_prefix: string; created_at: string; last_used_at: string | null }
 
-const { data: keys, refresh: refreshKeys } = await useFetch<ApiKey[]>(`/api/workspaces/${slug}/keys`)
+const { data: keys, refresh: refreshKeys } = await useFetch<ApiKey[]>(() => `/api/workspaces/${route.params.slug}/keys`)
 const SESSION_KEY = `koryla-new-key-${slug}`
 const newKey = ref<string | null>(null)
 const generatingKey = ref(false)
@@ -96,7 +96,7 @@ const deleteKey = async (id: string) => {
 // ── Members ───────────────────────────────────────────────
 interface Member { id: string; role: string; email: string; user_id: string; created_at: string }
 
-const { data: members, refresh: refreshMembers } = await useFetch<Member[]>(`/api/workspaces/${slug}/members`)
+const { data: members, refresh: refreshMembers } = await useFetch<Member[]>(() => `/api/workspaces/${route.params.slug}/members`)
 const inviteEmail = ref('')
 const inviteRole = ref('member')
 const inviting = ref(false)
@@ -165,7 +165,7 @@ const deleteWorkspace = async () => {
 // ── Analytics destinations ────────────────────────────────
 interface Destination { id: string; provider: string; enabled: boolean; config: Record<string, string> }
 
-const { data: destinations, refresh: refreshDestinations } = await useFetch<Destination[]>(`/api/workspaces/${slug}/destinations`)
+const { data: destinations, refresh: refreshDestinations } = await useFetch<Destination[]>(() => `/api/workspaces/${route.params.slug}/destinations`)
 
 const PROVIDERS = [
   { id: 'ga4', label: 'Google Analytics 4', fields: [
