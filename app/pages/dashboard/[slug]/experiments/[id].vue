@@ -194,13 +194,21 @@ const saveVariant = async (variantId: string) => {
 }
 
 const saveConversion = async () => {
+  const url = editConversionUrl.value.trim()
+  if (url) {
+    try { new URL(url) } catch {
+      toast.error('Please enter a valid URL (e.g. https://acme.com/thank-you)')
+      return
+    }
+  }
   savingConversion.value = true
   try {
     await $fetch(`/api/workspaces/${slug}/experiments/${id}`, {
       method: 'PATCH',
-      body: { conversion_url: editConversionUrl.value.trim() || null },
+      body: { conversion_url: url || null },
     })
     await refresh()
+    editConversionUrl.value = experiment.value?.conversion_url ?? ''
     toast.success('Conversion goal updated')
   } catch (e: any) {
     toast.error(e?.data?.message ?? 'Failed to save')
