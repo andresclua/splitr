@@ -598,12 +598,18 @@ const saveNewVariant = async () => {
                 <span :class="['text-[10px] font-semibold px-2 py-0.5 rounded-full', statusConfig[experiment.status]?.badge]">{{ statusConfig[experiment.status]?.label }}</span>
               </div>
               <div class="flex justify-between items-center py-2.5">
-                <span class="text-xs text-gray-400">Config cache</span>
+                <span class="flex items-center gap-1 text-xs text-gray-400">
+                  Config cache
+                  <KTooltip text="Experiment config is cached for 60 seconds. Changes take up to 1 minute to propagate to visitors." />
+                </span>
                 <span class="text-xs font-semibold text-gray-700">KV · 60s TTL</span>
               </div>
             </div>
             <div class="px-5 pt-2 pb-4 border-t border-gray-100">
-              <label for="edit-base-url" class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Base URL</label>
+              <label for="edit-base-url" class="flex items-center gap-1 text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                Base URL
+                <KTooltip text="The URL your experiment runs on. All visitors to this URL get routed to a variant." />
+              </label>
               <input
                 id="edit-base-url"
                 v-model="editBaseUrl"
@@ -626,15 +632,24 @@ const saveNewVariant = async () => {
           <div class="grid grid-cols-3 gap-2.5 mb-4">
             <div class="bg-white border border-gray-200 rounded-xl p-3.5 text-center">
               <p class="text-xl font-extrabold text-gray-900 tabular-nums">{{ experiment.total_impressions.toLocaleString() }}</p>
-              <p class="text-[10px] uppercase tracking-wide text-gray-400 mt-1">Impressions</p>
+              <p class="text-[10px] uppercase tracking-wide text-gray-400 mt-1 flex items-center justify-center gap-1">
+                Impressions
+                <KTooltip text="Total visitors assigned to any variant of this experiment." />
+              </p>
             </div>
             <div class="bg-white border border-gray-200 rounded-xl p-3.5 text-center">
               <p class="text-xl font-extrabold text-gray-900 tabular-nums">{{ experiment.total_conversions.toLocaleString() }}</p>
-              <p class="text-[10px] uppercase tracking-wide text-gray-400 mt-1">Conversions</p>
+              <p class="text-[10px] uppercase tracking-wide text-gray-400 mt-1 flex items-center justify-center gap-1">
+                Conversions
+                <KTooltip text="Total conversion events recorded across all variants." />
+              </p>
             </div>
             <div class="bg-white border border-gray-200 rounded-xl p-3.5 text-center">
               <p class="text-xl font-extrabold text-gray-900">{{ overallConvRate }}</p>
-              <p class="text-[10px] uppercase tracking-wide text-gray-400 mt-1">Avg rate</p>
+              <p class="text-[10px] uppercase tracking-wide text-gray-400 mt-1 flex items-center justify-center gap-1">
+                Avg rate
+                <KTooltip text="Overall conversion rate: total conversions ÷ total impressions." />
+              </p>
             </div>
           </div>
           <div class="bg-white border border-gray-200 rounded-2xl p-5 mb-4">
@@ -677,7 +692,10 @@ const saveNewVariant = async () => {
                 />
               </div>
               <div>
-                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Traffic split</p>
+                <p class="flex items-center gap-1 text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                  Traffic split
+                  <KTooltip text="What % of visitors see each variant. Must always add up to 100%." />
+                </p>
                 <div class="space-y-2">
                   <div v-for="(row, i) in editVariantWeights" :key="row.id" class="flex items-center gap-2">
                     <span class="text-xs text-gray-600 w-20 shrink-0 truncate">{{ row.name }}</span>
@@ -714,7 +732,10 @@ const saveNewVariant = async () => {
                     <div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4" />
                   </div>
                   <div>
-                    <p class="text-sm font-medium text-gray-700">UTM override</p>
+                    <p class="flex items-center gap-1 text-sm font-medium text-gray-700">
+                      UTM override
+                      <KTooltip text="When enabled, visitors can be re-assigned to a specific variant via a URL query param — useful for testing or sharing a specific variant." />
+                    </p>
                     <p class="text-xs text-gray-400">Reassign visitors via query param rules</p>
                   </div>
                 </label>
