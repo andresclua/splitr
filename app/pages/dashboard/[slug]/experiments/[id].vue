@@ -139,6 +139,7 @@ const saveTraffic = async () => {
       body: { base_url: url },
     })
     await refresh()
+    editBaseUrl.value = experiment.value?.base_url ?? editBaseUrl.value
     toast.success('Traffic updated')
   } catch (e: any) {
     toast.error(e?.data?.message ?? 'Failed to save')
