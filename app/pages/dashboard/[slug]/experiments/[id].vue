@@ -127,11 +127,16 @@ const editConversionUrl = ref('')
 const savingConversion = ref(false)
 
 const saveTraffic = async () => {
+  const url = editBaseUrl.value.trim()
+  try { new URL(url) } catch {
+    toast.error('Please enter a valid URL (e.g. https://acme.com)')
+    return
+  }
   savingTraffic.value = true
   try {
     await $fetch(`/api/workspaces/${slug}/experiments/${id}`, {
       method: 'PATCH',
-      body: { base_url: editBaseUrl.value.trim() },
+      body: { base_url: url },
     })
     await refresh()
     toast.success('Traffic updated')
