@@ -188,7 +188,7 @@ const addingVariant = ref(false)
 
 const nextVariantLetter = computed(() => {
   const count = experiment.value?.variants.filter(v => !v.is_control).length ?? 0
-  return ['B', 'C', 'D', 'E', 'F', 'G', 'H'][count] ?? String.fromCharCode(65 + count + 1)
+  return ['B', 'C', 'D', 'E', 'F', 'G', 'H'][count] ?? String(count + 1)
 })
 
 const initAddVariantForm = () => {
@@ -249,6 +249,7 @@ const saveNewVariant = async () => {
     toast.success('Variant added')
   } catch (e: any) {
     toast.error(e?.data?.message ?? 'Failed to add variant')
+    await refresh() // sync UI with DB in case insert succeeded but weight updates failed
   } finally {
     addingVariant.value = false
   }
