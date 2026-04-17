@@ -148,6 +148,7 @@ const saveTraffic = async () => {
 }
 
 const saveExperiment = async () => {
+  if (!editExpName.value.trim()) return
   savingExperiment.value = true
   try {
     await $fetch(`/api/workspaces/${slug}/experiments/${id}`, {
@@ -155,6 +156,8 @@ const saveExperiment = async () => {
       body: { name: editExpName.value.trim(), override_assignment: editOverrideAssignment.value },
     })
     await refresh()
+    editExpName.value = experiment.value?.name ?? editExpName.value
+    editOverrideAssignment.value = experiment.value?.override_assignment ?? editOverrideAssignment.value
     toast.success('Experiment updated')
   } catch (e: any) {
     toast.error(e?.data?.message ?? 'Failed to save')
