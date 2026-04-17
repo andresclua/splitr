@@ -45,8 +45,8 @@ export default defineEventHandler(async (event) => {
   const total = trafficWeight + existingWeights.reduce((s, v) => s + Number(v.traffic_weight), 0)
   if (total !== 100) throw createError({ statusCode: 400, message: `Weights must sum to 100 (got ${total})` })
 
-  // For edge experiments, target_url is required
-  const targetUrl: string | null = body.target_url?.trim() || null
+  // For edge experiments, target_url is required; for component, default to empty string (NOT NULL constraint)
+  const targetUrl: string = body.target_url?.trim() || ''
   if (exp.type === 'edge' && !targetUrl)
     throw createError({ statusCode: 400, message: 'target_url is required for edge experiments' })
 
