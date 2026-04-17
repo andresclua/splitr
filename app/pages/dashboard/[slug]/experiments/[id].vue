@@ -107,78 +107,97 @@ const maxConvRate = computed(() =>
 
 const variantColors = ['bg-gray-400', 'bg-[#C96A3F]', 'bg-[#0F2235]', 'bg-emerald-500']
 
-// ── Edit panel ────────────────────────────────────────────
-const showEdit = ref(false)
-const saving = ref(false)
+// ── Per-node inline edit state ────────────────────────────
+// Traffic
+const editBaseUrl = ref('')
+const savingTraffic = ref(false)
 
-interface EditVariant {
-  id: string
-  name: string
-  description: string
-  rules: Rule[]
-}
+// Experiment
+const editExpName = ref('')
+const editOverrideAssignment = ref(false)
+const savingExperiment = ref(false)
 
-interface EditForm {
-  name: string
-  conversion_url: string
-  override_assignment: boolean
-  variantDescriptions: EditVariant[]
-}
+// Variant (shared, reset per variant on selectedNode change)
+const editVariantDescription = ref('')
+const editVariantRules = ref<Rule[]>([])
+const savingVariant = ref(false)
 
-const editForm = ref<EditForm>({
-  name: '',
-  conversion_url: '',
-  override_assignment: false,
-  variantDescriptions: [],
-})
+// Conversion
+const editConversionUrl = ref('')
+const savingConversion = ref(false)
 
-const openEdit = () => {
-  const exp = experiment.value!
-  editForm.value = {
-    name: exp.name,
-    conversion_url: exp.conversion_url ?? '',
-    override_assignment: exp.override_assignment ?? false,
-    variantDescriptions: exp.variants.map(v => ({
-      id: v.id,
-      name: v.name,
-      description: v.description ?? '',
-      rules: v.rules ? [...v.rules.map(r => ({ ...r }))] : [],
-    })),
-  }
-  showEdit.value = true
-}
-
-const saveEdit = async () => {
-  saving.value = true
+const saveTraffic = async () => {
+  savingTraffic.value = true
   try {
     await $fetch(`/api/workspaces/${slug}/experiments/${id}`, {
       method: 'PATCH',
-      body: {
-        name: editForm.value.name,
-        conversion_url: editForm.value.conversion_url || null,
-        override_assignment: editForm.value.override_assignment,
-        variantDescriptions: editForm.value.variantDescriptions,
-      },
+      body: { base_url: editBaseUrl.value.trim() },
     })
     await refresh()
-    showEdit.value = false
+    toast.success('Traffic updated')
+  } catch (e: any) {
+    toast.error(e?.data?.message ?? 'Failed to save')
+  } finally {
+    savingTraffic.value = false
+  }
+}
+
+const saveExperiment = async () => {
+  savingExperiment.value = true
+  try {
+    await $fetch(`/api/workspaces/${slug}/experiments/${id}`, {
+      method: 'PATCH',
+      body: { name: editExpName.value.trim(), override_assignment: editOverrideAssignment.value },
+    })
+    await refresh()
     toast.success('Experiment updated')
   } catch (e: any) {
     toast.error(e?.data?.message ?? 'Failed to save')
   } finally {
-    saving.value = false
+    savingExperiment.value = false
   }
 }
 
-const addRule = (variantId: string) => {
-  const v = editForm.value.variantDescriptions.find(v => v.id === variantId)
-  if (v) v.rules.push({ param: '', value: '' })
+const saveVariant = async (variantId: string) => {
+  savingVariant.value = true
+  try {
+    await $fetch(`/api/workspaces/${slug}/experiments/${id}`, {
+      method: 'PATCH',
+      body: {
+        variantDescriptions: [{
+          id: variantId,
+          description: editVariantDescription.value,
+          rules: editVariantRules.value.filter(r => r.param.trim() && r.value.trim()),
+        }],
+      },
+    })
+    await refresh()
+    toast.success('Variant updated')
+  } catch (e: any) {
+    toast.error(e?.data?.message ?? 'Failed to save')
+  } finally {
+    savingVariant.value = false
+  }
 }
 
-const removeRule = (variantId: string, index: number) => {
-  const v = editForm.value.variantDescriptions.find(v => v.id === variantId)
-  if (v) v.rules.splice(index, 1)
+const saveConversion = async () => {
+  savingConversion.value = true
+  try {
+    await $fetch(`/api/workspaces/${slug}/experiments/${id}`, {
+      method: 'PATCH',
+      body: { conversion_url: editConversionUrl.value.trim() || null },
+    })
+    await refresh()
+    toast.success('Conversion goal updated')
+  } catch (e: any) {
+    toast.error(e?.data?.message ?? 'Failed to save')
+  } finally {
+    savingConversion.value = false
+  }
 }
+
+const addEditRule = () => editVariantRules.value.push({ param: '', value: '' })
+const removeEditRule = (index: number) => editVariantRules.value.splice(index, 1)
 
 // ── Add variant form ──────────────────────────────────────
 const newVariantName = ref('')
@@ -221,7 +240,24 @@ const canAddVariant = computed(() =>
 )
 
 watch(selectedNode, (val) => {
-  if (val === 'add-variant') initAddVariantForm()
+  const exp = experiment.value
+  if (!exp) return
+  if (val === 'add-variant') {
+    initAddVariantForm()
+  } else if (val === 'traffic') {
+    editBaseUrl.value = exp.base_url
+  } else if (val === 'experiment') {
+    editExpName.value = exp.name
+    editOverrideAssignment.value = exp.override_assignment ?? false
+  } else if (val.startsWith('variant-')) {
+    const v = exp.variants.find(v => 'variant-' + v.id === val)
+    if (v) {
+      editVariantDescription.value = v.description ?? ''
+      editVariantRules.value = v.rules ? v.rules.map(r => ({ ...r })) : []
+    }
+  } else if (val === 'conversion') {
+    editConversionUrl.value = exp.conversion_url ?? ''
+  }
 })
 
 watch(newVariantName, (val) => {
@@ -318,11 +354,6 @@ const saveNewVariant = async () => {
               Complete
             </button>
           </KTooltip>
-          <button
-            class="text-sm font-medium text-gray-500 hover:text-gray-700 bg-white border border-gray-200 hover:border-gray-300 px-4 py-2 rounded-lg transition-colors"
-            @click="openEdit">
-            Edit
-          </button>
           <button
             class="text-sm font-medium text-gray-400 hover:text-red-500 hover:bg-red-50 px-3 py-2 rounded-lg transition-colors"
             @click="deleteExperiment">
@@ -797,120 +828,4 @@ const saveNewVariant = async () => {
     </div>
   </div>
 
-  <!-- Edit panel -->
-  <Teleport to="body">
-    <Transition enter-active-class="transition-opacity duration-200" enter-from-class="opacity-0" enter-to-class="opacity-100"
-      leave-active-class="transition-opacity duration-150" leave-from-class="opacity-100" leave-to-class="opacity-0">
-      <div v-if="showEdit" class="fixed inset-0 z-40 flex">
-        <div class="absolute inset-0 bg-black/30 backdrop-blur-sm" @click="showEdit = false" />
-        <Transition enter-active-class="transition-transform duration-300 ease-out" enter-from-class="translate-x-full" enter-to-class="translate-x-0"
-          leave-active-class="transition-transform duration-200 ease-in" leave-from-class="translate-x-0" leave-to-class="translate-x-full">
-          <div v-if="showEdit" class="relative ml-auto w-full max-w-lg bg-white h-full flex flex-col shadow-2xl">
-
-            <!-- Header -->
-            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
-              <h2 class="text-base font-semibold text-gray-900">Edit experiment</h2>
-              <button class="text-gray-400 hover:text-gray-600 transition-colors" @click="showEdit = false">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <!-- Body -->
-            <div class="flex-1 overflow-y-auto px-6 py-6 space-y-6">
-
-              <div>
-                <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Experiment name</label>
-                <input v-model="editForm.name" type="text"
-                  class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#C96A3F]" />
-              </div>
-
-              <div>
-                <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">
-                  Conversion URL
-                  <span class="normal-case font-normal ml-1 text-gray-400">(optional)</span>
-                </label>
-                <input v-model="editForm.conversion_url" type="url" placeholder="https://acme.com/thank-you"
-                  class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#C96A3F] placeholder:text-gray-300" />
-              </div>
-
-              <div>
-                <label class="flex items-center gap-3 cursor-pointer select-none">
-                  <div class="relative">
-                    <input v-model="editForm.override_assignment" type="checkbox" class="sr-only peer" />
-                    <div class="w-9 h-5 bg-gray-200 peer-checked:bg-[#C96A3F] rounded-full transition-colors" />
-                    <div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4" />
-                  </div>
-                  <div>
-                    <p class="text-sm font-medium text-gray-700">Rules override existing assignment</p>
-                    <p class="text-xs text-gray-400">When active, query param rules reassign visitors even if they already have a cookie.</p>
-                  </div>
-                </label>
-              </div>
-
-              <div>
-                <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">Variant descriptions</label>
-                <div class="space-y-3">
-                  <div v-for="v in editForm.variantDescriptions" :key="v.id" class="border border-gray-200 rounded-xl p-4 space-y-2">
-                    <div class="flex items-center gap-2">
-                      <div :class="['w-2 h-2 rounded-full shrink-0', v.id === editForm.variantDescriptions[0]?.id ? 'bg-gray-400' : 'bg-[#C96A3F]']" />
-                      <span class="text-sm font-semibold text-gray-700">{{ v.name }}</span>
-                    </div>
-                    <input v-model="v.description" type="text"
-                      placeholder="What's different in this variant? (optional)"
-                      class="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#C96A3F] placeholder:text-gray-300" />
-                    <!-- Targeting rules -->
-                    <div class="pt-2 space-y-2">
-                      <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Targeting rules
-                        <span class="normal-case font-normal ml-1">(OR — any match routes here)</span>
-                      </p>
-                      <div v-for="(rule, i) in v.rules" :key="i" class="flex items-center gap-2">
-                        <input v-model="rule.param" type="text" placeholder="utm_source"
-                          class="flex-1 border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#C96A3F] placeholder:text-gray-300 font-mono" />
-                        <span class="text-xs text-gray-400">=</span>
-                        <input v-model="rule.value" type="text" placeholder="facebook"
-                          class="flex-1 border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#C96A3F] placeholder:text-gray-300 font-mono" />
-                        <button type="button" class="text-gray-300 hover:text-red-400 transition-colors shrink-0" @click="removeRule(v.id, i)">
-                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </div>
-                      <button type="button"
-                        class="text-xs text-[#C96A3F] hover:text-[#A8522D] font-medium transition-colors flex items-center gap-1"
-                        @click="addRule(v.id)">
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                        </svg>
-                        Add rule
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <p v-if="experiment?.status === 'active'" class="text-xs text-amber-600 mt-3 flex items-center gap-1.5">
-                  <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-                  </svg>
-                  Variant URLs and traffic weights can't be changed while the experiment is active.
-                </p>
-              </div>
-            </div>
-
-            <!-- Footer -->
-            <div class="px-6 py-4 border-t border-gray-100 flex items-center gap-3 shrink-0">
-              <button
-                :disabled="saving || !editForm.name"
-                class="flex-1 bg-[#C96A3F] text-white text-sm font-medium py-2.5 rounded-xl hover:bg-[#A8522D] disabled:opacity-40 transition-colors"
-                @click="saveEdit"
-              >{{ saving ? 'Saving…' : 'Save changes' }}</button>
-              <button class="text-sm text-gray-500 hover:text-gray-700 px-4 py-2.5 transition-colors" @click="showEdit = false">
-                Cancel
-              </button>
-            </div>
-          </div>
-        </Transition>
-      </div>
-    </Transition>
-  </Teleport>
 </template>
