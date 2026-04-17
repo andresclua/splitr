@@ -623,6 +623,108 @@ const saveNewVariant = async () => {
           </template>
         </template>
 
+        <!-- ── Add Variant ── -->
+        <template v-else-if="selectedNode === 'add-variant'">
+          <p class="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-4">Add Variant</p>
+
+          <!-- Name -->
+          <div class="mb-4">
+            <label for="new-variant-name" class="block text-xs font-semibold text-gray-600 mb-1">Name</label>
+            <input
+              id="new-variant-name"
+              v-model="newVariantName"
+              type="text"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#C96A3F]"
+              :placeholder="`Variant ${nextVariantLetter}`"
+            />
+          </div>
+
+          <!-- Target URL (edge experiments only) -->
+          <div v-if="experiment.type === 'edge'" class="mb-4">
+            <label for="new-variant-url" class="block text-xs font-semibold text-gray-600 mb-1">Target URL</label>
+            <input
+              id="new-variant-url"
+              v-model="newVariantUrl"
+              type="url"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-[#C96A3F]"
+              placeholder="https://acme.com/pricing-c"
+            />
+          </div>
+
+          <!-- Traffic distribution -->
+          <div class="mb-4">
+            <p class="text-xs font-semibold text-gray-600 mb-1">Traffic distribution</p>
+            <p class="text-[11px] text-gray-400 mb-3">Redistribute weights evenly among all variants, then adjust if needed. Total must equal 100.</p>
+
+            <div class="space-y-2">
+              <div
+                v-for="row in newVariantWeights"
+                :key="row.id"
+                class="flex items-center gap-2"
+              >
+                <div class="flex items-center gap-1.5 flex-1 min-w-0">
+                  <span :class="['w-2.5 h-2.5 rounded-full shrink-0', row.isNew ? 'bg-[#C96A3F]' : 'bg-gray-400']"></span>
+                  <span :class="['text-xs truncate', row.isNew ? 'text-[#C96A3F] font-semibold' : 'text-gray-600']">
+                    {{ row.name }}{{ row.isNew ? ' (new)' : '' }}
+                  </span>
+                </div>
+                <div class="flex items-center gap-1 shrink-0">
+                  <input
+                    v-model.number="row.weight"
+                    type="number"
+                    min="1"
+                    max="98"
+                    :class="[
+                      'w-14 border rounded px-2 py-1 text-xs text-right focus:outline-none',
+                      row.isNew ? 'border-[#C96A3F] text-[#C96A3F] font-semibold focus:border-[#C96A3F]' : 'border-gray-200 focus:border-[#C96A3F]'
+                    ]"
+                  />
+                  <span class="text-xs text-gray-400">%</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Total badge -->
+            <div class="flex justify-end items-center gap-1.5 mt-2 pt-2 border-t border-gray-100">
+              <span class="text-xs text-gray-400">Total:</span>
+              <span :class="['text-xs font-bold px-2 py-0.5 rounded-full', newVariantTotalWeight === 100 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600']">
+                {{ newVariantTotalWeight }}%
+              </span>
+              <span v-if="newVariantTotalWeight === 100" class="text-green-500 text-xs">✓</span>
+            </div>
+          </div>
+
+          <!-- Warning banner -->
+          <div class="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-5">
+            <p class="text-[11px] text-amber-700">
+              ⚠ Only new visitors will be assigned to {{ newVariantName || `Variant ${nextVariantLetter}` }}.
+              Existing visitors keep their current assignment.
+            </p>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex gap-2">
+            <button
+              type="button"
+              :disabled="addingVariant || newVariantTotalWeight !== 100 || !newVariantName.trim() || (experiment.type === 'edge' && !newVariantUrl.trim())"
+              :class="[
+                'flex-1 bg-[#C96A3F] text-white text-sm font-semibold py-2 rounded-lg transition-opacity',
+                (addingVariant || newVariantTotalWeight !== 100 || !newVariantName.trim() || (experiment.type === 'edge' && !newVariantUrl.trim())) ? 'opacity-40 cursor-not-allowed' : 'hover:opacity-90'
+              ]"
+              @click="saveNewVariant"
+            >
+              {{ addingVariant ? 'Adding…' : 'Add variant' }}
+            </button>
+            <button
+              type="button"
+              class="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg transition-colors"
+              @click="selectedNode = ''"
+            >
+              Cancel
+            </button>
+          </div>
+        </template>
+
         <!-- ── Conversion ── -->
         <template v-else-if="selectedNode === 'conversion'">
           <p class="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-3">Conversion goal</p>
