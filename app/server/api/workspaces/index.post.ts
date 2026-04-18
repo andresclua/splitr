@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 import { extractDomain, isPublicDomain } from '~/lib/publicDomains'
 import { sendWelcomeEmail } from '~/server/utils/resend'
+import { PLANS } from '~/lib/plans'
+import type { PlanKey } from '~/lib/plans'
 
 interface Body {
   userId: string
@@ -8,8 +10,6 @@ interface Body {
   email: string
   joinWorkspaceId?: string | null
 }
-
-const WORKSPACE_LIMITS: Record<string, number> = { free: 1, starter: 1, growth: 3 }
 
 export default defineEventHandler(async (event) => {
   const { userId, workspaceName, email, joinWorkspaceId } = await readBody<Body>(event)
@@ -36,15 +36,16 @@ export default defineEventHandler(async (event) => {
       .filter((w: any) => w && !w.is_demo)
 
     const highestPlan = ownedWorkspaces.reduce((best: string, w: any) => {
-      const order = ['free', 'starter', 'growth']
+      const order = ['free', 'starter', 'growth', 'scale']
       return order.indexOf(w.plan) > order.indexOf(best) ? w.plan : best
     }, 'free')
 
-    const limit = WORKSPACE_LIMITS[highestPlan] ?? 1
-    if (ownedWorkspaces.length >= limit) {
+    const planConfig = PLANS[(highestPlan as PlanKey)] ?? PLANS.free
+    const limit = planConfig.workspaces
+    if (isFinite(limit as number) && ownedWorkspaces.length >= (limit as number)) {
       throw createError({
         statusCode: 403,
-        message: `Your ${highestPlan} plan allows up to ${limit} workspace${limit === 1 ? '' : 's'}. Upgrade to Growth to create more.`,
+        message: `Your ${highestPlan} plan allows up to ${limit} workspace${limit === 1 ? '' : 's'}. Upgrade to create more.`,
       })
     }
   }
