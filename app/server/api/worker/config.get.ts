@@ -1,5 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 import { hashApiKey } from '~/lib/apiKeys'
+import { PLANS } from '~/lib/plans'
+import type { PlanKey } from '~/lib/plans'
+import { isOverImpressionLimit } from '~/lib/usage'
 
 export default defineEventHandler(async (event) => {
   // Machine-to-machine auth — API key in Authorization header, no user session
@@ -30,6 +33,18 @@ export default defineEventHandler(async (event) => {
     .update({ last_used_at: new Date().toISOString() })
     .eq('id', apiKey.id)
     .then()
+
+  // Fetch workspace plan and check impression limit
+  const { data: workspace } = await supabase
+    .from('workspaces')
+    .select('plan')
+    .eq('id', apiKey.workspace_id)
+    .single()
+
+  const plan = ((workspace?.plan ?? 'free') as PlanKey)
+
+  const overLimit = await isOverImpressionLimit(supabase, apiKey.workspace_id, plan)
+  if (overLimit) return []
 
   // Fetch active experiments with variants — optionally filter by type
   const typeFilter = getQuery(event).type as string | undefined
