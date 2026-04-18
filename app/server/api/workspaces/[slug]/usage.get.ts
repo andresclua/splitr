@@ -29,7 +29,7 @@ export default defineEventHandler(async (event) => {
   const plan = ((ws.plan ?? 'free') as PlanKey)
   const planLimits = PLANS[plan] ?? PLANS.free
 
-  const [impressionsUsed, experimentsResult, workspacesResult] = await Promise.all([
+  const [impressionsUsed, experimentsResult, ownedMembers] = await Promise.all([
     getMonthlyImpressions(supabase, ws.id),
     supabase
       .from('experiments')
@@ -38,10 +38,13 @@ export default defineEventHandler(async (event) => {
       .in('status', ['draft', 'active', 'paused']),
     supabase
       .from('workspace_members')
-      .select('workspace_id', { count: 'exact', head: true })
+      .select('workspace_id, workspace:workspaces(is_demo)')
       .eq('user_id', user.id)
       .eq('role', 'owner'),
   ])
+
+  // Exclude demo workspaces from the count (Koryla's demo workspace is shown to all users but shouldn't count toward limits)
+  const nonDemoWorkspaceCount = (ownedMembers.data ?? []).filter((m: any) => !m.workspace?.is_demo).length
 
   return {
     plan,
@@ -54,7 +57,7 @@ export default defineEventHandler(async (event) => {
       limit: planLimits.experiments,
     },
     workspaces: {
-      used: workspacesResult.count ?? 0,
+      used: nonDemoWorkspaceCount,
       limit: planLimits.workspaces,
     },
     resets_at: nextMonthReset(),
