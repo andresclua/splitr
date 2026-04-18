@@ -300,7 +300,7 @@ const openPortal = async () => {
               <svg class="w-4 h-4 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
               </svg>
-              {{ PLANS[planKey].experiments }} experiments
+              {{ PLANS[planKey].experiments }} experiment{{ PLANS[planKey].experiments === 1 ? '' : 's' }}
             </li>
             <li class="flex items-center gap-2 text-sm text-gray-600">
               <svg class="w-4 h-4 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -325,12 +325,6 @@ const openPortal = async () => {
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
               </svg>
               Webhooks
-            </li>
-            <li class="flex items-center gap-2 text-sm text-gray-600">
-              <svg class="w-4 h-4 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-              No branding
             </li>
           </ul>
 
