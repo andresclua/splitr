@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { PLANS } from '~/lib/plans'
+import type { PlanKey } from '~/lib/plans'
+
 definePageMeta({ layout: 'dashboard', middleware: 'auth', key: route => route.path })
 
 const { currentWorkspace, fetchWorkspaces } = useWorkspace()
@@ -103,9 +106,16 @@ const hasActiveFilters = computed(() => search.value || filterStatus.value !== '
 const clearFilters = () => { search.value = ''; filterStatus.value = 'all'; filterType.value = 'all' }
 
 // ── Plan limits ───────────────────────────────────────────
-const EXPERIMENT_LIMITS: Record<string, number> = { free: 3, starter: 3, growth: Infinity }
-const experimentLimit = computed(() => EXPERIMENT_LIMITS[currentWorkspace.value?.plan ?? 'free'] ?? 3)
-const atExperimentLimit = computed(() => isFinite(experimentLimit.value) && (experiments.value?.length ?? 0) >= experimentLimit.value)
+const experimentLimit = computed(() => {
+  const plan = (currentWorkspace.value?.plan ?? 'free') as PlanKey
+  return PLANS[plan]?.experiments ?? 1
+})
+const activeExperiments = computed(() =>
+  (experiments.value ?? []).filter(e => ['draft', 'active', 'paused'].includes(e.status))
+)
+const atExperimentLimit = computed(() =>
+  isFinite(experimentLimit.value as number) && activeExperiments.value.length >= (experimentLimit.value as number)
+)
 </script>
 
 <template>
