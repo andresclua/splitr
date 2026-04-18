@@ -19,7 +19,7 @@ export const PLANS = {
     multivariate: false,
     webhooks: false,
     whiteLabel: false,
-    analyticsDestinations: [] as string[],
+    analyticsDestinations: [],
     showBranding: true,
     supportLevel: 'none',
     stripePrices: null,
@@ -54,7 +54,7 @@ export const PLANS = {
   },
   scale: {
     name: 'Scale',
-    price: { monthly: 0, yearly: 0 },
+    price: null,
     experiments: Infinity,
     impressionsPerMonth: Infinity,
     workspaces: Infinity,

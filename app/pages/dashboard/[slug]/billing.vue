@@ -41,7 +41,8 @@ const isPaid = computed(() => currentPlan.value !== 'free')
 const upgradeablePlans = computed((): PlanKey[] => ['free', 'starter', 'growth'])
 
 const priceFor = (planKey: PlanKey, period: 'monthly' | 'yearly') => {
-  return PLANS[planKey].price[period]
+  const price = PLANS[planKey].price
+  return price ? price[period] : null
 }
 
 const stripePriceId = (planKey: PlanKey, period: 'monthly' | 'yearly'): string | null => {
