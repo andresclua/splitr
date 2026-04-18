@@ -1,5 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 import { hashApiKey } from '~/lib/apiKeys'
+import { PLANS } from '~/lib/plans'
+import type { PlanKey } from '~/lib/plans'
+import { getMonthlyImpressions, incrementMonthlyImpressions } from '~/lib/usage'
 
 export default defineEventHandler(async (event) => {
   // Machine-to-machine auth — same pattern as config.get.ts
@@ -45,6 +48,23 @@ export default defineEventHandler(async (event) => {
       .maybeSingle()
 
     if (existing) return { ok: true, duplicate: true }
+
+    // Check monthly impression limit
+    const { data: workspace } = await supabase
+      .from('workspaces')
+      .select('plan')
+      .eq('id', apiKey.workspace_id)
+      .single()
+
+    const plan = ((workspace?.plan ?? 'free') as PlanKey)
+    const limit = PLANS[plan]?.impressionsPerMonth
+
+    if (limit && isFinite(limit as number)) {
+      const used = await getMonthlyImpressions(supabase, apiKey.workspace_id)
+      if (used >= (limit as number)) {
+        return { ok: false, reason: 'over_limit' }
+      }
+    }
   }
 
   // Store event
@@ -58,6 +78,11 @@ export default defineEventHandler(async (event) => {
   })
 
   if (error) throw createError({ statusCode: 500, message: error.message })
+
+  // Increment monthly impression counter (fire-and-forget)
+  if (event_type === 'impression') {
+    incrementMonthlyImpressions(supabase, apiKey.workspace_id).catch(() => {})
+  }
 
   // Route to analytics destinations — fire-and-forget
   supabase
