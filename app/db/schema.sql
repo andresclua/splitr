@@ -129,3 +129,14 @@ create table workspace_invites (
   accepted_at timestamptz,
   created_at timestamptz default now()
 );
+
+-- Atomic impression counter increment (run in Supabase SQL editor)
+create or replace function increment_monthly_impressions(p_workspace_id uuid, p_month text)
+returns void language plpgsql as $$
+begin
+  insert into usage_monthly (workspace_id, month, visits_count)
+  values (p_workspace_id, p_month, 1)
+  on conflict (workspace_id, month)
+  do update set visits_count = usage_monthly.visits_count + 1;
+end;
+$$;
