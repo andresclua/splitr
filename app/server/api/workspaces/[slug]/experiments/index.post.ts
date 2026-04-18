@@ -1,5 +1,7 @@
 import { serverSupabaseUser } from '#supabase/server'
 import { createClient } from '@supabase/supabase-js'
+import { PLANS } from '~/lib/plans'
+import type { PlanKey } from '~/lib/plans'
 
 interface VariantInput {
   name: string
@@ -30,25 +32,25 @@ export default defineEventHandler(async (event) => {
   const totalWeight = variants.reduce((sum, v) => sum + (v.traffic_weight ?? 0), 0)
   if (totalWeight !== 100) throw createError({ statusCode: 400, message: 'Variant weights must sum to 100' })
 
-  const EXPERIMENT_LIMITS: Record<string, number> = { free: 3, starter: 3, growth: Infinity }
-
   const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
 
   const { data: ws } = await supabase
     .from('workspaces').select('id, plan').eq('slug', slug).single()
   if (!ws) throw createError({ statusCode: 404, message: 'Workspace not found' })
 
-  // Enforce experiment limit
-  const expLimit = EXPERIMENT_LIMITS[ws.plan] ?? 3
-  if (isFinite(expLimit)) {
+  // Enforce experiment limit (only draft/active/paused count)
+  const plan = PLANS[(ws.plan ?? 'free') as PlanKey] ?? PLANS.free
+  const expLimit = plan.experiments
+  if (isFinite(expLimit as number)) {
     const { count } = await supabase
       .from('experiments')
       .select('id', { count: 'exact', head: true })
       .eq('workspace_id', ws.id)
-    if ((count ?? 0) >= expLimit) {
+      .in('status', ['draft', 'active', 'paused'])
+    if ((count ?? 0) >= (expLimit as number)) {
       throw createError({
         statusCode: 403,
-        message: `Your ${ws.plan} plan allows up to ${expLimit} experiment${expLimit === 1 ? '' : 's'}. Upgrade to Growth for more.`,
+        message: `Your ${ws.plan} plan allows up to ${expLimit} active experiment${expLimit === 1 ? '' : 's'}. Upgrade to create more.`,
       })
     }
   }
