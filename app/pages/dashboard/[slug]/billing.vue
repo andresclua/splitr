@@ -13,6 +13,25 @@ if (!currentWorkspace.value) throw createError({ statusCode: 404, statusMessage:
 
 const slug = route.params.slug as string
 
+interface UsageData {
+  plan: string
+  impressions: { used: number; limit: number }
+  experiments: { used: number; limit: number }
+  workspaces: { used: number; limit: number }
+  resets_at: string
+}
+const { data: usage } = await useFetch<UsageData>(`/api/workspaces/${slug}/usage`)
+
+const formatLimit = (n: number) => n === Infinity ? '∞' : n.toLocaleString()
+const usagePct = (used: number, limit: number) => limit === Infinity ? 0 : Math.min(100, Math.round(used / limit * 100))
+const isNearLimit = (used: number, limit: number) => limit !== Infinity && used / limit >= 0.9
+const isAtLimit = (used: number, limit: number) => limit !== Infinity && used >= limit
+
+const resetDate = computed(() => {
+  if (!usage.value?.resets_at) return ''
+  return new Date(usage.value.resets_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })
+})
+
 // Show success toast if redirected back from Stripe
 onMounted(() => {
   if (route.query.success === '1') {
@@ -100,6 +119,72 @@ const openPortal = async () => {
       <p class="text-sm text-gray-500 mt-0.5">Manage your plan and subscription</p>
     </div>
 
+    <!-- Usage bars -->
+    <div v-if="usage" class="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
+      <div class="flex items-center justify-between mb-5">
+        <p class="text-sm font-semibold text-gray-900">Current usage</p>
+        <span class="text-xs text-gray-400">Resets {{ resetDate }}</span>
+      </div>
+
+      <!-- At-limit banner -->
+      <div
+        v-if="isAtLimit(usage.impressions.used, usage.impressions.limit) || isAtLimit(usage.experiments.used, usage.experiments.limit) || isAtLimit(usage.workspaces.used, usage.workspaces.limit)"
+        class="mb-4 bg-[#FEF0E8] border border-[#F0C9B0] rounded-xl px-4 py-3 text-sm text-[#C96A3F] font-medium"
+      >
+        You've reached your plan limit — upgrade to continue.
+      </div>
+
+      <div class="space-y-4">
+        <!-- Impressions -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-xs font-medium text-gray-600">Impressions this month</span>
+            <span class="text-xs tabular-nums text-gray-500">
+              {{ usage.impressions.used.toLocaleString() }} / {{ formatLimit(usage.impressions.limit) }}
+            </span>
+          </div>
+          <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div
+              :class="['h-full rounded-full transition-all', isNearLimit(usage.impressions.used, usage.impressions.limit) ? 'bg-red-500' : 'bg-[#C96A3F]']"
+              :style="{ width: usagePct(usage.impressions.used, usage.impressions.limit) + '%' }"
+            />
+          </div>
+        </div>
+
+        <!-- Experiments -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-xs font-medium text-gray-600">Active experiments</span>
+            <span class="text-xs tabular-nums text-gray-500">
+              {{ usage.experiments.used }} / {{ formatLimit(usage.experiments.limit) }}
+            </span>
+          </div>
+          <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div
+              :class="['h-full rounded-full transition-all', isNearLimit(usage.experiments.used, usage.experiments.limit) ? 'bg-red-500' : 'bg-[#C96A3F]']"
+              :style="{ width: usagePct(usage.experiments.used, usage.experiments.limit) + '%' }"
+            />
+          </div>
+        </div>
+
+        <!-- Workspaces -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-xs font-medium text-gray-600">Workspaces</span>
+            <span class="text-xs tabular-nums text-gray-500">
+              {{ usage.workspaces.used }} / {{ formatLimit(usage.workspaces.limit) }}
+            </span>
+          </div>
+          <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div
+              :class="['h-full rounded-full transition-all', isNearLimit(usage.workspaces.used, usage.workspaces.limit) ? 'bg-red-500' : 'bg-[#C96A3F]']"
+              :style="{ width: usagePct(usage.workspaces.used, usage.workspaces.limit) + '%' }"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Current plan card -->
     <div class="bg-white border border-gray-200 rounded-2xl p-6 mb-8">
       <div class="flex items-start justify-between gap-4">
@@ -141,8 +226,8 @@ const openPortal = async () => {
           <p class="text-sm font-semibold text-gray-800">{{ planDetails.experiments.toLocaleString() }}</p>
         </div>
         <div>
-          <p class="text-xs text-gray-400 mb-0.5">Monthly visits</p>
-          <p class="text-sm font-semibold text-gray-800">{{ planDetails.visitsPerMonth.toLocaleString() }}</p>
+          <p class="text-xs text-gray-400 mb-0.5">Monthly impressions</p>
+          <p class="text-sm font-semibold text-gray-800">{{ formatLimit(planDetails.impressionsPerMonth as number) }}</p>
         </div>
         <div>
           <p class="text-xs text-gray-400 mb-0.5">Workspaces</p>
@@ -221,7 +306,7 @@ const openPortal = async () => {
               <svg class="w-4 h-4 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
               </svg>
-              {{ PLANS[planKey].visitsPerMonth.toLocaleString() }} visits/month
+              {{ formatLimit(PLANS[planKey].impressionsPerMonth as number) }} impressions/month
             </li>
             <li class="flex items-center gap-2 text-sm text-gray-600">
               <svg class="w-4 h-4 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
