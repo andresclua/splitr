@@ -2,8 +2,16 @@ import { describe, it, expect } from 'vitest'
 import { PLANS } from './plans'
 
 describe('PLANS', () => {
-  it('free plan has 10k visit limit', () => {
-    expect(PLANS.free.visitsPerMonth).toBe(10_000)
+  it('free plan has 250 impression limit', () => {
+    expect(PLANS.free.impressionsPerMonth).toBe(250)
+  })
+
+  it('free plan has 1 experiment limit', () => {
+    expect(PLANS.free.experiments).toBe(1)
+  })
+
+  it('free plan has 1 workspace limit', () => {
+    expect(PLANS.free.workspaces).toBe(1)
   })
 
   it('free plan shows branding', () => {
@@ -23,14 +31,14 @@ describe('PLANS', () => {
     expect(PLANS.starter.multivariate).toBe(false)
   })
 
-  it('all plan visit limits are in ascending order', () => {
-    const limits = [
-      PLANS.free.visitsPerMonth,
-      PLANS.starter.visitsPerMonth,
-      PLANS.growth.visitsPerMonth,
-    ]
-    for (let i = 1; i < limits.length; i++) {
-      expect(limits[i]).toBeGreaterThan(limits[i - 1])
-    }
+  it('scale plan has Infinity limits', () => {
+    expect(PLANS.scale.impressionsPerMonth).toBe(Infinity)
+    expect(PLANS.scale.experiments).toBe(Infinity)
+    expect(PLANS.scale.workspaces).toBe(Infinity)
+  })
+
+  it('impression limits are in ascending order', () => {
+    expect(PLANS.starter.impressionsPerMonth).toBeGreaterThan(PLANS.free.impressionsPerMonth)
+    expect(PLANS.growth.impressionsPerMonth).toBeGreaterThan(PLANS.starter.impressionsPerMonth)
   })
 })
