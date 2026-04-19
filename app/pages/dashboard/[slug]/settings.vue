@@ -503,6 +503,29 @@ const toggleDemo = (val: boolean) => {
       </div>
     </section>
 
+    <!-- Claude AI Skill -->
+    <section class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100">
+        <h2 class="text-sm font-semibold text-gray-900">Claude AI Skill</h2>
+        <p class="text-xs text-gray-500 mt-0.5">Download a skill file for Claude Code that helps you integrate Koryla into any project.</p>
+      </div>
+      <div class="px-6 py-5 flex items-center justify-between gap-4">
+        <div>
+          <p class="text-sm text-gray-700">Drop <code class="text-xs font-mono bg-gray-100 px-1.5 py-0.5 rounded">koryla.md</code> into your project's <code class="text-xs font-mono bg-gray-100 px-1.5 py-0.5 rounded">.claude/skills/</code> folder. Claude will know how to install Koryla, generate experiment code, and track conversions for your specific setup.</p>
+        </div>
+        <a
+          href="/api/public/skill/download"
+          download="koryla.md"
+          class="shrink-0 inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-xl bg-[#0F2235] text-white hover:bg-[#1a3a5c] transition-colors"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Download skill
+        </a>
+      </div>
+    </section>
+
     <!-- Demo workspace -->
     <section class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-100">

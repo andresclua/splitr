@@ -45,6 +45,39 @@ async function signOut() {
   await navigateTo('/login')
 }
 
+// ── Skill editor ──────────────────────────────────────────
+const skillContent = ref('')
+const skillSaving = ref(false)
+const skillRegenerating = ref(false)
+const skillMsg = ref('')
+
+async function loadSkill() {
+  const { content } = await $fetch<{ content: string }>('/api/admin/skill')
+  skillContent.value = content
+}
+
+async function saveSkill() {
+  skillSaving.value = true; skillMsg.value = ''
+  try {
+    await $fetch('/api/admin/skill', { method: 'PUT', body: { content: skillContent.value } })
+    skillMsg.value = 'Saved!'
+  } catch { skillMsg.value = 'Error saving' }
+  finally { skillSaving.value = false; setTimeout(() => skillMsg.value = '', 2500) }
+}
+
+async function regenerateSkill() {
+  skillRegenerating.value = true; skillMsg.value = ''
+  try {
+    const { content } = await $fetch<{ content: string }>('/api/admin/skill/regenerate', { method: 'POST' })
+    skillContent.value = content
+    skillMsg.value = 'Regenerated!'
+  } catch { skillMsg.value = 'Error regenerating' }
+  finally { skillRegenerating.value = false; setTimeout(() => skillMsg.value = '', 2500) }
+}
+
+const showSkillEditor = ref(false)
+watch(showSkillEditor, (v) => { if (v && !skillContent.value) loadSkill() })
+
 const planBadge: Record<string, string> = {
   free:    'bg-gray-100 text-gray-600',
   starter: 'bg-blue-100 text-blue-700',
@@ -111,10 +144,10 @@ const limitBar = (used: number, limit: number | null) => {
             <p class="text-xs text-gray-400 mt-2">{{ data.impressions_this_month.toLocaleString() }} este mes</p>
           </div>
 
-          <div class="bg-white rounded-xl border border-gray-200 px-5 py-4">
+          <div class="bg-white rounded-xl border border-gray-200 px-5 py-4 cursor-pointer hover:border-gray-300 transition-colors" @click="showSkillEditor = !showSkillEditor">
             <p class="text-[11px] text-gray-400 uppercase tracking-wider mb-1">Claude Skill</p>
             <p class="text-2xl font-bold text-gray-900">{{ data.skill_downloads }}</p>
-            <p class="text-xs text-gray-400 mt-2">descargas totales</p>
+            <p class="text-xs text-gray-400 mt-2">descargas · click para editar</p>
           </div>
 
           <div class="bg-white rounded-xl border border-gray-200 px-5 py-4">
@@ -128,6 +161,35 @@ const limitBar = (used: number, limit: number | null) => {
               }}
             </p>
           </div>
+        </div>
+
+        <!-- ── Skill editor ──────────────────────────────── -->
+        <div v-if="showSkillEditor" class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-4">
+            <h2 class="text-sm font-semibold text-gray-900">Claude Skill — koryla.md</h2>
+            <div class="flex items-center gap-2">
+              <span v-if="skillMsg" class="text-xs text-green-600 font-medium">{{ skillMsg }}</span>
+              <a href="/api/public/skill/download" download="koryla.md"
+                class="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">
+                ↓ Download
+              </a>
+              <button :disabled="skillRegenerating"
+                class="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-colors"
+                @click="regenerateSkill">
+                {{ skillRegenerating ? 'Regenerating…' : '↺ Regenerate from plans' }}
+              </button>
+              <button :disabled="skillSaving"
+                class="text-xs px-3 py-1.5 rounded-lg bg-[#0F2235] text-white hover:bg-[#1a3a5c] disabled:opacity-40 transition-colors"
+                @click="saveSkill">
+                {{ skillSaving ? 'Saving…' : 'Save' }}
+              </button>
+            </div>
+          </div>
+          <textarea
+            v-model="skillContent"
+            class="w-full h-[600px] px-5 py-4 text-xs font-mono text-gray-800 bg-gray-50 resize-none focus:outline-none focus:bg-white transition-colors"
+            spellcheck="false"
+          />
         </div>
 
         <!-- ── Workspace table ────────────────────────────── -->
