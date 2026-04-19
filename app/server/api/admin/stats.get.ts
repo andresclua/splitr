@@ -87,6 +87,11 @@ export default defineEventHandler(async (event) => {
     else if (e.event_type === 'conversion') conversionsThisMonth++
   }
 
+  // ── Skill downloads ──────────────────────────────────────
+  const { count: skillDownloads } = await supabase
+    .from('skill_downloads')
+    .select('id', { count: 'exact', head: true })
+
   // ── Last API key activity per workspace ──────────────────
   const { data: apiKeysRaw } = await supabase
     .from('api_keys')
@@ -147,5 +152,6 @@ export default defineEventHandler(async (event) => {
     impressions_this_month: impressionsThisMonth,
     conversions_this_month: conversionsThisMonth,
     workspaces: workspacesOut,
+    skill_downloads: skillDownloads ?? 0,
   }
 })

@@ -88,7 +88,7 @@ const limitBar = (used: number, limit: number | null) => {
       <template v-else-if="data">
 
         <!-- ── Top stats ───────────────────────────────────── -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
           <div class="bg-white rounded-xl border border-gray-200 px-5 py-4">
             <p class="text-[11px] text-gray-400 uppercase tracking-wider mb-1">Workspaces</p>
             <p class="text-2xl font-bold text-gray-900">{{ data.total_workspaces }}</p>
@@ -109,6 +109,12 @@ const limitBar = (used: number, limit: number | null) => {
             <p class="text-[11px] text-gray-400 uppercase tracking-wider mb-1">Impressions</p>
             <p class="text-2xl font-bold text-gray-900">{{ data.total_impressions_30d.toLocaleString() }}</p>
             <p class="text-xs text-gray-400 mt-2">{{ data.impressions_this_month.toLocaleString() }} este mes</p>
+          </div>
+
+          <div class="bg-white rounded-xl border border-gray-200 px-5 py-4">
+            <p class="text-[11px] text-gray-400 uppercase tracking-wider mb-1">Claude Skill</p>
+            <p class="text-2xl font-bold text-gray-900">{{ data.skill_downloads }}</p>
+            <p class="text-xs text-gray-400 mt-2">descargas totales</p>
           </div>
 
           <div class="bg-white rounded-xl border border-gray-200 px-5 py-4">
