@@ -12,14 +12,40 @@ useSeoMeta({
   twitterDescription: 'Run A/B experiments at the edge or inside your components. No flicker, no performance hit.',
 })
 
-const activeVariant = ref<'control' | 'b'>('control')
-let interval: ReturnType<typeof setInterval>
-onMounted(() => {
-  interval = setInterval(() => {
-    activeVariant.value = activeVariant.value === 'control' ? 'b' : 'control'
-  }, 3200)
-})
-onUnmounted(() => clearInterval(interval))
+const splitPos = ref(50)
+const splitContainer = ref<HTMLElement | null>(null)
+let dragging = false
+
+function updatePos(clientX: number) {
+  if (!splitContainer.value) return
+  const rect = splitContainer.value.getBoundingClientRect()
+  const pct = ((clientX - rect.left) / rect.width) * 100
+  splitPos.value = Math.min(Math.max(pct, 5), 95)
+}
+
+function startDrag(e: MouseEvent) {
+  dragging = true
+  updatePos(e.clientX)
+  window.addEventListener('mousemove', onMouseMove)
+  window.addEventListener('mouseup', stopDrag)
+}
+
+function startDragTouch(e: TouchEvent) {
+  dragging = true
+  updatePos(e.touches[0].clientX)
+  window.addEventListener('touchmove', onTouchMove)
+  window.addEventListener('touchend', stopDrag)
+}
+
+function onMouseMove(e: MouseEvent) { if (dragging) updatePos(e.clientX) }
+function onTouchMove(e: TouchEvent) { if (dragging) updatePos(e.touches[0].clientX) }
+function stopDrag() {
+  dragging = false
+  window.removeEventListener('mousemove', onMouseMove)
+  window.removeEventListener('mouseup', stopDrag)
+  window.removeEventListener('touchmove', onTouchMove)
+  window.removeEventListener('touchend', stopDrag)
+}
 </script>
 
 <template>
@@ -90,13 +116,19 @@ onUnmounted(() => clearInterval(interval))
     <!-- Demo -->
     <section class="py-24 px-6" style="background: #0F2235;">
       <div class="max-w-5xl mx-auto">
-        <div class="text-center mb-14">
-          <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Watch the traffic split happen</h2>
-          <p class="text-gray-400 text-lg">Visitor A gets the control. Visitor B gets the variant. Zero code changes on your site.</p>
+
+        <!-- Narrative -->
+        <div class="text-center mb-14 max-w-2xl mx-auto">
+          <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Same URL. Two completely different pages.</h2>
+          <p class="text-gray-400 text-lg leading-relaxed">
+            The edge function runs <em>before</em> any HTML leaves the server. Visitor A gets the control. Visitor B gets the variant. Their browsers always show the same URL — they never know a test is running.
+          </p>
+          <p class="mt-4 text-sm text-gray-500">Drag the handle to compare both variants ↔</p>
         </div>
 
-        <!-- Browser mockup -->
+        <!-- Browser mockup with split-screen -->
         <div class="rounded-2xl overflow-hidden border border-white/10" style="background: #1A3550;">
+          <!-- Chrome bar -->
           <div class="px-4 py-3 flex items-center gap-3 border-b border-white/10" style="background: #162D42;">
             <div class="flex gap-1.5">
               <div class="w-3 h-3 rounded-full bg-red-400/70"></div>
@@ -111,52 +143,73 @@ onUnmounted(() => clearInterval(interval))
                 yoursite.com/pricing
               </div>
             </div>
-            <div
-              class="px-3 py-1 rounded-full text-xs font-semibold transition-all duration-500"
-              :style="activeVariant === 'control' ? 'background: #F5EDE0; color: #0F2235;' : 'background: #FEF0E8; color: #C96A3F;'"
-            >
-              {{ activeVariant === 'control' ? 'Control' : 'Variant B' }}
-            </div>
           </div>
 
-          <div class="relative overflow-hidden" style="height: 340px;">
-            <transition name="fade">
-              <div v-if="activeVariant === 'control'" class="absolute inset-0 p-8 md:p-12 flex flex-col items-center justify-center text-center bg-white">
-                <div class="inline-block text-xs font-semibold px-3 py-1 rounded-full mb-5 tracking-wide" style="background: #FEF0E8; color: #C96A3F;">SERVER-SIDE A/B TESTING · NEXT.JS</div>
-                <h3 class="text-3xl md:text-4xl font-black tracking-tight mb-4" style="color: #0F2235;">Ship faster<br/>with data</h3>
-                <p class="text-gray-500 text-base max-w-md mb-7">Stop debating in meetings. Run a test, get an answer in days — not quarters.</p>
-                <div class="flex gap-3">
-                  <span class="text-white px-6 py-2.5 rounded-xl text-sm font-semibold" style="background: #C96A3F;">Start for free</span>
-                  <span class="bg-gray-50 text-gray-700 border border-gray-200 px-6 py-2.5 rounded-xl text-sm font-semibold">See pricing</span>
+          <!-- Split screen -->
+          <div
+            ref="splitContainer"
+            class="relative overflow-hidden select-none"
+            style="height: 360px; cursor: col-resize;"
+            @mousedown="startDrag"
+            @touchstart.prevent="startDragTouch"
+          >
+            <!-- Variant B (full width, behind) -->
+            <div class="absolute inset-0 flex items-center bg-white p-8 md:p-12">
+              <div class="max-w-xs shrink-0">
+                <div class="inline-flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full mb-4" style="background: #FEF0E8; color: #C96A3F;">
+                  <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>
+                  TRUSTED BY 1,200 TEAMS · NO CREDIT CARD
                 </div>
+                <h3 class="text-2xl font-black tracking-tight mb-3" style="color: #0F2235; line-height: 1.1;">Build what users<br/><span style="color: #C96A3F;">actually want.</span></h3>
+                <p class="text-gray-500 text-sm mb-5 leading-relaxed">Run your first A/B test in under 5 minutes — no code changes, no flicker.</p>
+                <span class="inline-block text-white px-5 py-2 rounded-xl text-sm font-semibold" style="background: #0F2235;">Start free today</span>
               </div>
-            </transition>
-            <transition name="fade">
-              <div v-if="activeVariant === 'b'" class="absolute inset-0 p-8 md:p-12 flex items-center bg-white">
-                <div class="max-w-xs">
-                  <div class="inline-flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full mb-5" style="background: #FEF0E8; color: #C96A3F;">
-                    <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>
-                    TRUSTED BY 1,200 TEAMS · NO CREDIT CARD
-                  </div>
-                  <h3 class="text-2xl md:text-3xl font-black tracking-tight mb-3" style="color: #0F2235;">Build what users<br/><span style="color: #C96A3F;">actually want.</span></h3>
-                  <p class="text-gray-500 text-sm mb-6 leading-relaxed">Run your first A/B test in under 5 minutes — no code changes, no flicker, no developer bottleneck.</p>
-                  <span class="inline-block text-white px-6 py-2.5 rounded-xl text-sm font-semibold" style="background: #0F2235;">Start free today</span>
-                </div>
-                <div class="hidden md:flex flex-col gap-2.5 ml-8 flex-1">
-                  <div v-for="item in [['⚡','Zero flicker','Variants assigned before the browser renders.'],['🔒','No client JS','Works server-side — ad blockers can\'t interfere.'],['📊','Live results','See impressions and conversions in real time.'],['🔌','Any stack','Next.js, Astro, WordPress, Nuxt.']]" :key="item[0]"
-                    class="flex items-start gap-3 border rounded-xl px-3 py-2.5" style="background: #F5EDE0; border-color: #EAD9C4;">
-                    <span class="text-base">{{ item[0] }}</span>
-                    <div>
-                      <p class="text-xs font-bold" style="color: #0F2235;">{{ item[1] }}</p>
-                      <p class="text-xs text-gray-500">{{ item[2] }}</p>
-                    </div>
+              <div class="hidden md:flex flex-col gap-2 ml-8 flex-1">
+                <div v-for="item in [['⚡','Zero flicker','Assigned before the browser renders.'],['🔒','No client JS','Ad blockers can\'t interfere.'],['📊','Live results','Impressions and conversions in real time.'],['🔌','Any stack','Next.js, Astro, WordPress, Nuxt.']]" :key="item[0]"
+                  class="flex items-start gap-3 border rounded-xl px-3 py-2" style="background: #F5EDE0; border-color: #EAD9C4;">
+                  <span class="text-sm">{{ item[0] }}</span>
+                  <div>
+                    <p class="text-xs font-bold" style="color: #0F2235;">{{ item[1] }}</p>
+                    <p class="text-xs text-gray-500">{{ item[2] }}</p>
                   </div>
                 </div>
               </div>
-            </transition>
+            </div>
+
+            <!-- Control (clipped on left) -->
+            <div
+              class="absolute inset-0 flex flex-col items-center justify-center text-center bg-white p-8 md:p-12"
+              :style="`clip-path: inset(0 ${100 - splitPos}% 0 0);`"
+            >
+              <div class="inline-block text-xs font-semibold px-3 py-1 rounded-full mb-4 tracking-wide" style="background: #FEF0E8; color: #C96A3F;">SERVER-SIDE A/B TESTING</div>
+              <h3 class="text-3xl font-black tracking-tight mb-3" style="color: #0F2235; line-height: 1.1;">Ship faster<br/>with data</h3>
+              <p class="text-gray-500 text-sm max-w-xs mb-6">Stop debating in meetings. Run a test, get an answer in days — not quarters.</p>
+              <div class="flex gap-3">
+                <span class="text-white px-5 py-2 rounded-xl text-sm font-semibold" style="background: #C96A3F;">Start for free</span>
+                <span class="bg-gray-50 text-gray-700 border border-gray-200 px-5 py-2 rounded-xl text-sm font-semibold">See pricing</span>
+              </div>
+            </div>
+
+            <!-- Labels -->
+            <div class="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-xs font-bold text-white pointer-events-none" style="background: rgba(15,34,53,0.75);">Control</div>
+            <div class="absolute top-3 right-3 px-2.5 py-1 rounded-lg text-xs font-bold pointer-events-none" style="background: #C96A3F; color: #fff;">Variant B</div>
+
+            <!-- Divider handle -->
+            <div
+              class="absolute top-0 bottom-0 flex items-center justify-center pointer-events-none"
+              :style="`left: ${splitPos}%; transform: translateX(-50%);`"
+            >
+              <div class="w-0.5 h-full" style="background: #C96A3F; opacity: 0.8;"></div>
+              <div class="absolute w-8 h-8 rounded-full border-2 flex items-center justify-center shadow-lg" style="background: #C96A3F; border-color: #fff;">
+                <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l-3 3 3 3M16 9l3 3-3 3" />
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
 
+        <!-- Stats -->
         <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
           <div v-for="stat in [
             { value: '+23%', label: 'Conv. rate — Variant B', accent: true },
@@ -362,13 +415,3 @@ onUnmounted(() => clearInterval(interval))
   </div>
 </template>
 
-<style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.6s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-</style>
