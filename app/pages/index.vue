@@ -146,7 +146,7 @@ function startDragTouch(e: TouchEvent, type: string) {
         <!-- Tab: Edge -->
         <template v-if="activeTab === 'Edge'">
           <div class="mb-4 text-center">
-            <p class="text-sm text-gray-400">The middleware intercepts the request and rewrites it to a completely different page — browser always shows the same URL.</p>
+            <p class="text-sm text-gray-400 mx-auto" style="max-width: 520px;">The middleware intercepts the request and rewrites it to a completely different page — browser always shows the same URL.</p>
           </div>
           <div class="rounded-2xl overflow-hidden border border-white/10" style="background: #1A3550;">
             <div class="px-4 py-3 flex items-center gap-3 border-b border-white/10" style="background: #162D42;">
