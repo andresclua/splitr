@@ -12,39 +12,43 @@ useSeoMeta({
   twitterDescription: 'Run A/B experiments at the edge or inside your components. No flicker, no performance hit.',
 })
 
-const splitPos = ref(50)
-const splitContainer = ref<HTMLElement | null>(null)
+const activeTab = ref('Edge')
+const edgeSplit = ref(50)
+const sdkSplit = ref(50)
+const edgeContainer = ref<HTMLElement | null>(null)
+const sdkContainer = ref<HTMLElement | null>(null)
 let dragging = false
 
-function updatePos(clientX: number) {
-  if (!splitContainer.value) return
-  const rect = splitContainer.value.getBoundingClientRect()
+function getContainer(type: string) {
+  return type === 'edge' ? edgeContainer.value : sdkContainer.value
+}
+
+function updatePos(clientX: number, type: string) {
+  const el = getContainer(type)
+  if (!el) return
+  const rect = el.getBoundingClientRect()
   const pct = ((clientX - rect.left) / rect.width) * 100
-  splitPos.value = Math.min(Math.max(pct, 5), 95)
+  const clamped = Math.min(Math.max(pct, 5), 95)
+  if (type === 'edge') edgeSplit.value = clamped
+  else sdkSplit.value = clamped
 }
 
-function startDrag(e: MouseEvent) {
+function startDrag(e: MouseEvent, type: string) {
   dragging = true
-  updatePos(e.clientX)
-  window.addEventListener('mousemove', onMouseMove)
-  window.addEventListener('mouseup', stopDrag)
+  updatePos(e.clientX, type)
+  const mm = (ev: MouseEvent) => { if (dragging) updatePos(ev.clientX, type) }
+  const mu = () => { dragging = false; window.removeEventListener('mousemove', mm); window.removeEventListener('mouseup', mu) }
+  window.addEventListener('mousemove', mm)
+  window.addEventListener('mouseup', mu)
 }
 
-function startDragTouch(e: TouchEvent) {
+function startDragTouch(e: TouchEvent, type: string) {
   dragging = true
-  updatePos(e.touches[0].clientX)
-  window.addEventListener('touchmove', onTouchMove)
-  window.addEventListener('touchend', stopDrag)
-}
-
-function onMouseMove(e: MouseEvent) { if (dragging) updatePos(e.clientX) }
-function onTouchMove(e: TouchEvent) { if (dragging) updatePos(e.touches[0].clientX) }
-function stopDrag() {
-  dragging = false
-  window.removeEventListener('mousemove', onMouseMove)
-  window.removeEventListener('mouseup', stopDrag)
-  window.removeEventListener('touchmove', onTouchMove)
-  window.removeEventListener('touchend', stopDrag)
+  updatePos(e.touches[0].clientX, type)
+  const tm = (ev: TouchEvent) => { if (dragging) updatePos(ev.touches[0].clientX, type) }
+  const tu = () => { dragging = false; window.removeEventListener('touchmove', tm); window.removeEventListener('touchend', tu) }
+  window.addEventListener('touchmove', tm)
+  window.addEventListener('touchend', tu)
 }
 </script>
 
@@ -117,97 +121,152 @@ function stopDrag() {
     <section class="py-24 px-6" style="background: #0F2235;">
       <div class="max-w-5xl mx-auto">
 
-        <!-- Narrative -->
-        <div class="text-center mb-14 max-w-2xl mx-auto">
-          <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Same URL. Two completely different pages.</h2>
+        <!-- Header -->
+        <div class="text-center mb-10 max-w-2xl mx-auto">
+          <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Two ways to run experiments</h2>
           <p class="text-gray-400 text-lg leading-relaxed">
-            The edge function runs <em>before</em> any HTML leaves the server. Visitor A gets the control. Visitor B gets the variant. Their browsers always show the same URL — they never know a test is running.
+            Drag the handle to compare what each visitor actually sees.
           </p>
-          <p class="mt-4 text-sm text-gray-500">Drag the handle to compare both variants ↔</p>
         </div>
 
-        <!-- Browser mockup with split-screen -->
-        <div class="rounded-2xl overflow-hidden border border-white/10" style="background: #1A3550;">
-          <!-- Chrome bar -->
-          <div class="px-4 py-3 flex items-center gap-3 border-b border-white/10" style="background: #162D42;">
-            <div class="flex gap-1.5">
-              <div class="w-3 h-3 rounded-full bg-red-400/70"></div>
-              <div class="w-3 h-3 rounded-full bg-yellow-400/70"></div>
-              <div class="w-3 h-3 rounded-full bg-green-400/70"></div>
-            </div>
-            <div class="flex-1 flex justify-center">
-              <div class="px-4 py-1 rounded-md text-xs text-gray-400 flex items-center gap-2" style="background: #0F2235; min-width: 200px; text-align: center;">
-                <svg class="w-3 h-3 text-green-400 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
-                </svg>
-                yoursite.com/pricing
-              </div>
-            </div>
+        <!-- Tabs -->
+        <div class="flex justify-center mb-8">
+          <div class="inline-flex rounded-xl p-1 gap-1" style="background: #1A3550;">
+            <button
+              v-for="tab in ['Edge', 'SDK']" :key="tab"
+              @click="activeTab = tab"
+              class="px-6 py-2.5 rounded-lg text-sm font-semibold transition-all"
+              :style="activeTab === tab
+                ? 'background: #C96A3F; color: #fff;'
+                : 'background: transparent; color: #9ca3af;'"
+            >{{ tab }}</button>
           </div>
+        </div>
 
-          <!-- Split screen -->
-          <div
-            ref="splitContainer"
-            class="relative overflow-hidden select-none"
-            style="height: 360px; cursor: col-resize;"
-            @mousedown="startDrag"
-            @touchstart.prevent="startDragTouch"
-          >
-            <!-- Variant B (full width, behind) -->
-            <div class="absolute inset-0 flex items-center bg-white p-8 md:p-12">
-              <div class="max-w-xs shrink-0">
-                <div class="inline-flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full mb-4" style="background: #FEF0E8; color: #C96A3F;">
-                  <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>
-                  TRUSTED BY 1,200 TEAMS · NO CREDIT CARD
-                </div>
-                <h3 class="text-2xl font-black tracking-tight mb-3" style="color: #0F2235; line-height: 1.1;">Build what users<br/><span style="color: #C96A3F;">actually want.</span></h3>
-                <p class="text-gray-500 text-sm mb-5 leading-relaxed">Run your first A/B test in under 5 minutes — no code changes, no flicker.</p>
-                <span class="inline-block text-white px-5 py-2 rounded-xl text-sm font-semibold" style="background: #0F2235;">Start free today</span>
+        <!-- Tab: Edge -->
+        <template v-if="activeTab === 'Edge'">
+          <div class="mb-4 text-center">
+            <p class="text-sm text-gray-400">The middleware intercepts the request and rewrites it to a completely different page — browser always shows the same URL.</p>
+          </div>
+          <div class="rounded-2xl overflow-hidden border border-white/10" style="background: #1A3550;">
+            <div class="px-4 py-3 flex items-center gap-3 border-b border-white/10" style="background: #162D42;">
+              <div class="flex gap-1.5">
+                <div class="w-3 h-3 rounded-full bg-red-400/70"></div>
+                <div class="w-3 h-3 rounded-full bg-yellow-400/70"></div>
+                <div class="w-3 h-3 rounded-full bg-green-400/70"></div>
               </div>
-              <div class="hidden md:flex flex-col gap-2 ml-8 flex-1">
-                <div v-for="item in [['⚡','Zero flicker','Assigned before the browser renders.'],['🔒','No client JS','Ad blockers can\'t interfere.'],['📊','Live results','Impressions and conversions in real time.'],['🔌','Any stack','Next.js, Astro, WordPress, Nuxt.']]" :key="item[0]"
-                  class="flex items-start gap-3 border rounded-xl px-3 py-2" style="background: #F5EDE0; border-color: #EAD9C4;">
-                  <span class="text-sm">{{ item[0] }}</span>
-                  <div>
-                    <p class="text-xs font-bold" style="color: #0F2235;">{{ item[1] }}</p>
-                    <p class="text-xs text-gray-500">{{ item[2] }}</p>
+              <div class="flex-1 flex justify-center">
+                <div class="px-4 py-1 rounded-md text-xs text-gray-400 flex items-center gap-2" style="background: #0F2235; min-width: 200px;">
+                  <svg class="w-3 h-3 text-green-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
+                  yoursite.com/hero
+                </div>
+              </div>
+            </div>
+            <div ref="edgeContainer" class="relative overflow-hidden select-none" style="height: 360px; cursor: col-resize;" @mousedown="e => startDrag(e, 'edge')" @touchstart.prevent="e => startDragTouch(e, 'edge')">
+              <!-- Variant B: two-column -->
+              <div class="absolute inset-0 bg-white flex items-center px-10 py-8 gap-8">
+                <div class="flex-1 min-w-0">
+                  <div class="inline-flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full mb-4" style="background:#FEF0E8;color:#C96A3F;">
+                    <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>TRUSTED BY 1,200 TEAMS
+                  </div>
+                  <h3 class="text-2xl font-black mb-3 leading-tight" style="color:#0F2235;">Build what users<br/><span style="color:#C96A3F;">actually want.</span></h3>
+                  <p class="text-gray-500 text-sm mb-4 leading-relaxed">Run your first A/B test in under 5 minutes — no flicker, no developer bottleneck.</p>
+                  <span class="inline-block text-white px-5 py-2 rounded-xl text-sm font-semibold" style="background:#0F2235;">Start free today</span>
+                </div>
+                <div class="flex-1 min-w-0 hidden md:flex flex-col gap-2">
+                  <div v-for="f in [['⚡','Zero flicker'],['🔒','No client JS'],['📊','Live results'],['🔌','Any stack']]" :key="f[0]" class="flex items-center gap-3 rounded-xl px-3 py-2.5 border" style="background:#F5EDE0;border-color:#EAD9C4;">
+                    <span class="text-sm">{{f[0]}}</span><p class="text-xs font-bold" style="color:#0F2235;">{{f[1]}}</p>
                   </div>
                 </div>
               </div>
-            </div>
-
-            <!-- Control (clipped on left) -->
-            <div
-              class="absolute inset-0 flex flex-col items-center justify-center text-center bg-white p-8 md:p-12"
-              :style="`clip-path: inset(0 ${100 - splitPos}% 0 0);`"
-            >
-              <div class="inline-block text-xs font-semibold px-3 py-1 rounded-full mb-4 tracking-wide" style="background: #FEF0E8; color: #C96A3F;">SERVER-SIDE A/B TESTING</div>
-              <h3 class="text-3xl font-black tracking-tight mb-3" style="color: #0F2235; line-height: 1.1;">Ship faster<br/>with data</h3>
-              <p class="text-gray-500 text-sm max-w-xs mb-6">Stop debating in meetings. Run a test, get an answer in days — not quarters.</p>
-              <div class="flex gap-3">
-                <span class="text-white px-5 py-2 rounded-xl text-sm font-semibold" style="background: #C96A3F;">Start for free</span>
-                <span class="bg-gray-50 text-gray-700 border border-gray-200 px-5 py-2 rounded-xl text-sm font-semibold">See pricing</span>
+              <!-- Control: single-column (clipped) -->
+              <div class="absolute inset-0 bg-white flex flex-col items-center justify-center text-center px-10 py-8" :style="`clip-path: inset(0 ${100 - edgeSplit}% 0 0);`">
+                <div class="inline-block text-xs font-semibold px-3 py-1 rounded-full mb-4" style="background:#FEF0E8;color:#C96A3F;">SERVER-SIDE A/B TESTING</div>
+                <h3 class="text-3xl font-black mb-3 leading-tight" style="color:#0F2235;">Ship faster<br/>with data</h3>
+                <p class="text-gray-500 text-sm max-w-xs mb-5">Stop debating in meetings. Run a test, get an answer in days.</p>
+                <div class="flex gap-3">
+                  <span class="text-white px-5 py-2 rounded-xl text-sm font-semibold" style="background:#C96A3F;">Start for free</span>
+                  <span class="text-gray-700 border border-gray-200 bg-gray-50 px-5 py-2 rounded-xl text-sm font-semibold">See pricing</span>
+                </div>
               </div>
-            </div>
-
-            <!-- Labels -->
-            <div class="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-xs font-bold text-white pointer-events-none" style="background: rgba(15,34,53,0.75);">Control</div>
-            <div class="absolute top-3 right-3 px-2.5 py-1 rounded-lg text-xs font-bold pointer-events-none" style="background: #C96A3F; color: #fff;">Variant B</div>
-
-            <!-- Divider handle -->
-            <div
-              class="absolute top-0 bottom-0 flex items-center justify-center pointer-events-none"
-              :style="`left: ${splitPos}%; transform: translateX(-50%);`"
-            >
-              <div class="w-0.5 h-full" style="background: #C96A3F; opacity: 0.8;"></div>
-              <div class="absolute w-8 h-8 rounded-full border-2 flex items-center justify-center shadow-lg" style="background: #C96A3F; border-color: #fff;">
-                <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l-3 3 3 3M16 9l3 3-3 3" />
-                </svg>
+              <!-- Labels -->
+              <div class="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-xs font-bold text-white pointer-events-none" style="background:rgba(15,34,53,0.8);">Control</div>
+              <div class="absolute top-3 right-3 px-2.5 py-1 rounded-lg text-xs font-bold text-white pointer-events-none" style="background:#C96A3F;">Variant B</div>
+              <!-- Handle -->
+              <div class="absolute top-0 bottom-0 flex items-center justify-center pointer-events-none" :style="`left:${edgeSplit}%;transform:translateX(-50%);`">
+                <div class="w-0.5 h-full" style="background:#C96A3F;"></div>
+                <div class="absolute w-8 h-8 rounded-full border-2 border-white flex items-center justify-center shadow-lg" style="background:#C96A3F;">
+                  <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 9l-3 3 3 3M16 9l3 3-3 3"/></svg>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </template>
+
+        <!-- Tab: SDK -->
+        <template v-if="activeTab === 'SDK'">
+          <div class="mb-4 text-center">
+            <p class="text-sm text-gray-400">Same page, same URL — only one component changes. The server reads a URL parameter and renders a different button. No middleware needed.</p>
+          </div>
+          <div class="rounded-2xl overflow-hidden border border-white/10" style="background: #1A3550;">
+            <div class="px-4 py-3 flex items-center gap-3 border-b border-white/10" style="background: #162D42;">
+              <div class="flex gap-1.5">
+                <div class="w-3 h-3 rounded-full bg-red-400/70"></div>
+                <div class="w-3 h-3 rounded-full bg-yellow-400/70"></div>
+                <div class="w-3 h-3 rounded-full bg-green-400/70"></div>
+              </div>
+              <div class="flex-1 flex justify-center">
+                <div class="px-4 py-1 rounded-md text-xs text-gray-400 flex items-center gap-2" style="background: #0F2235; min-width: 240px;">
+                  <svg class="w-3 h-3 text-green-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
+                  yoursite.com/pricing
+                </div>
+              </div>
+            </div>
+            <div ref="sdkContainer" class="relative overflow-hidden select-none" style="height: 360px; cursor: col-resize;" @mousedown="e => startDrag(e, 'sdk')" @touchstart.prevent="e => startDragTouch(e, 'sdk')">
+              <!-- Both sides: same pricing layout -->
+              <!-- Variant B (behind, full width) -->
+              <div class="absolute inset-0 bg-white flex flex-col justify-center px-8 py-6">
+                <div class="flex gap-4 mb-6 justify-center">
+                  <div v-for="plan in [{n:'Free',p:'$0',per:'forever',hi:false},{n:'Starter',p:'$29',per:'/mo',hi:true},{n:'Growth',p:'$79',per:'/mo',hi:false}]" :key="plan.n"
+                    class="flex-1 rounded-2xl p-5 border relative"
+                    :style="plan.hi ? 'background:#0F2235;border-color:#0F2235;' : 'background:#fff;border-color:#e5e7eb;'">
+                    <div v-if="plan.hi" class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-xs font-bold text-white" style="background:#C96A3F;">Most popular</div>
+                    <p class="font-bold text-sm mb-1" :style="plan.hi ? 'color:#fff;' : 'color:#0F2235;'">{{plan.n}}</p>
+                    <p class="text-2xl font-black mb-3" :style="plan.hi ? 'color:#fff;' : 'color:#0F2235;'">{{plan.p}} <span class="text-xs font-normal" :style="plan.hi ? 'color:#94a3b8;' : 'color:#9ca3af;'">{{plan.per}}</span></p>
+                    <!-- Variant B: filled terracotta button -->
+                    <div class="w-full text-center py-2 rounded-xl text-xs font-semibold" :style="plan.hi ? 'background:#C96A3F;color:#fff;' : 'background:#C96A3F;color:#fff;'">Get started</div>
+                  </div>
+                </div>
+                <p class="text-center text-xs text-gray-400">Variant B — filled button</p>
+              </div>
+              <!-- Control (clipped, same layout, different button) -->
+              <div class="absolute inset-0 bg-white flex flex-col justify-center px-8 py-6" :style="`clip-path: inset(0 ${100 - sdkSplit}% 0 0);`">
+                <div class="flex gap-4 mb-6 justify-center">
+                  <div v-for="plan in [{n:'Free',p:'$0',per:'forever',hi:false},{n:'Starter',p:'$29',per:'/mo',hi:true},{n:'Growth',p:'$79',per:'/mo',hi:false}]" :key="plan.n"
+                    class="flex-1 rounded-2xl p-5 border relative"
+                    :style="plan.hi ? 'background:#0F2235;border-color:#0F2235;' : 'background:#fff;border-color:#e5e7eb;'">
+                    <div v-if="plan.hi" class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-xs font-bold text-white" style="background:#C96A3F;">Most popular</div>
+                    <p class="font-bold text-sm mb-1" :style="plan.hi ? 'color:#fff;' : 'color:#0F2235;'">{{plan.n}}</p>
+                    <p class="text-2xl font-black mb-3" :style="plan.hi ? 'color:#fff;' : 'color:#0F2235;'">{{plan.p}} <span class="text-xs font-normal" :style="plan.hi ? 'color:#94a3b8;' : 'color:#9ca3af;'">{{plan.per}}</span></p>
+                    <!-- Control: outlined button -->
+                    <div class="w-full text-center py-2 rounded-xl text-xs font-semibold border" :style="plan.hi ? 'background:transparent;color:#C96A3F;border-color:#C96A3F;' : 'background:#FEF0E8;color:#C96A3F;border-color:transparent;'">Get started</div>
+                  </div>
+                </div>
+                <p class="text-center text-xs text-gray-400">Control — outlined button</p>
+              </div>
+              <!-- Labels -->
+              <div class="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-xs font-bold text-white pointer-events-none" style="background:rgba(15,34,53,0.8);">Control</div>
+              <div class="absolute top-3 right-3 px-2.5 py-1 rounded-lg text-xs font-bold text-white pointer-events-none" style="background:#C96A3F;">Variant B</div>
+              <!-- Handle -->
+              <div class="absolute top-0 bottom-0 flex items-center justify-center pointer-events-none" :style="`left:${sdkSplit}%;transform:translateX(-50%);`">
+                <div class="w-0.5 h-full" style="background:#C96A3F;"></div>
+                <div class="absolute w-8 h-8 rounded-full border-2 border-white flex items-center justify-center shadow-lg" style="background:#C96A3F;">
+                  <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 9l-3 3 3 3M16 9l3 3-3 3"/></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
 
         <!-- Stats -->
         <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
