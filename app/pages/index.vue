@@ -122,11 +122,11 @@ onUnmounted(() => clearInterval(interval))
           <div class="relative overflow-hidden" style="height: 340px;">
             <transition name="fade">
               <div v-if="activeVariant === 'control'" class="absolute inset-0 p-8 md:p-12 flex flex-col items-center justify-center text-center bg-white">
-                <div class="inline-block bg-gray-100 text-gray-500 text-xs font-semibold px-3 py-1 rounded-full mb-5 tracking-wide">ANALYTICS FOR DEVELOPERS</div>
-                <h3 class="text-3xl md:text-4xl font-black tracking-tight text-gray-900 mb-4">Know what your<br/>users actually do</h3>
-                <p class="text-gray-500 text-base max-w-md mb-7">Real-time insights without cookies, GDPR headaches, or bloated JS bundles.</p>
+                <div class="inline-block text-xs font-semibold px-3 py-1 rounded-full mb-5 tracking-wide" style="background: #FEF0E8; color: #C96A3F;">SERVER-SIDE A/B TESTING · NEXT.JS</div>
+                <h3 class="text-3xl md:text-4xl font-black tracking-tight mb-4" style="color: #0F2235;">Ship faster<br/>with data</h3>
+                <p class="text-gray-500 text-base max-w-md mb-7">Stop debating in meetings. Run a test, get an answer in days — not quarters.</p>
                 <div class="flex gap-3">
-                  <span class="bg-gray-900 text-white px-6 py-2.5 rounded-xl text-sm font-semibold">Start for free</span>
+                  <span class="text-white px-6 py-2.5 rounded-xl text-sm font-semibold" style="background: #C96A3F;">Start for free</span>
                   <span class="bg-gray-50 text-gray-700 border border-gray-200 px-6 py-2.5 rounded-xl text-sm font-semibold">See pricing</span>
                 </div>
               </div>
@@ -135,19 +135,19 @@ onUnmounted(() => clearInterval(interval))
               <div v-if="activeVariant === 'b'" class="absolute inset-0 p-8 md:p-12 flex items-center bg-white">
                 <div class="max-w-xs">
                   <div class="inline-flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full mb-5" style="background: #FEF0E8; color: #C96A3F;">
-                    <span class="w-1.5 h-1.5 rounded-full" style="background: #C96A3F;"></span>
-                    PRIVACY-FIRST · NO COOKIES
+                    <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>
+                    TRUSTED BY 1,200 TEAMS · NO CREDIT CARD
                   </div>
-                  <h3 class="text-2xl md:text-3xl font-black tracking-tight text-gray-900 mb-3">Stop guessing.<br/><span style="color: #C96A3F;">Start knowing.</span></h3>
-                  <p class="text-gray-500 text-sm mb-6 leading-relaxed">Track every click, scroll and session — without collecting personal data.</p>
-                  <span class="inline-block text-white px-6 py-2.5 rounded-xl text-sm font-semibold" style="background: #C96A3F;">Get started free</span>
+                  <h3 class="text-2xl md:text-3xl font-black tracking-tight mb-3" style="color: #0F2235;">Build what users<br/><span style="color: #C96A3F;">actually want.</span></h3>
+                  <p class="text-gray-500 text-sm mb-6 leading-relaxed">Run your first A/B test in under 5 minutes — no code changes, no flicker, no developer bottleneck.</p>
+                  <span class="inline-block text-white px-6 py-2.5 rounded-xl text-sm font-semibold" style="background: #0F2235;">Start free today</span>
                 </div>
                 <div class="hidden md:flex flex-col gap-2.5 ml-8 flex-1">
-                  <div v-for="item in [['⚡','Real-time','See events as they happen.'],['🔒','Privacy-first','GDPR compliant, no personal data.'],['📦','< 2KB','20× lighter than GA.'],['🔌','Any stack','Next.js, Astro, WordPress.']]" :key="item[0]"
-                    class="flex items-start gap-3 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2.5">
+                  <div v-for="item in [['⚡','Zero flicker','Variants assigned before the browser renders.'],['🔒','No client JS','Works server-side — ad blockers can\'t interfere.'],['📊','Live results','See impressions and conversions in real time.'],['🔌','Any stack','Next.js, Astro, WordPress, Nuxt.']]" :key="item[0]"
+                    class="flex items-start gap-3 border rounded-xl px-3 py-2.5" style="background: #F5EDE0; border-color: #EAD9C4;">
                     <span class="text-base">{{ item[0] }}</span>
                     <div>
-                      <p class="text-xs font-bold text-gray-900">{{ item[1] }}</p>
+                      <p class="text-xs font-bold" style="color: #0F2235;">{{ item[1] }}</p>
                       <p class="text-xs text-gray-500">{{ item[2] }}</p>
                     </div>
                   </div>
