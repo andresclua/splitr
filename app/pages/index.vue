@@ -264,7 +264,7 @@ onUnmounted(() => clearInterval(interval))
               name: 'Free',
               price: '$0',
               period: 'forever',
-              features: ['1 workspace', '3 experiments', 'Edge + SDK testing', 'Community support'],
+              features: ['1 workspace', '3 experiments', 'Edge + SDK testing'],
               cta: 'Get started',
               highlight: false,
             },
