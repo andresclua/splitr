@@ -3,6 +3,7 @@ title: Plans & Limits
 description: What's included in each Koryla plan and what happens when you hit a limit.
 section: Account
 slug: plans
+order: 18
 ---
 
 # Plans & Limits

@@ -3,6 +3,7 @@ title: How It Works
 description: A deep dive into the Koryla architecture — edge middleware, in-memory caching, variant assignment and sticky sessions.
 section: Introduction
 slug: how-it-works
+order: 2
 ---
 
 # How It Works

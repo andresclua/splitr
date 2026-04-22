@@ -3,6 +3,7 @@ title: Getting Started
 description: Set up Koryla on your site in under 5 minutes. Works with Netlify, Next.js, Cloudflare, WordPress, and more.
 section: Introduction
 slug: getting-started
+order: 1
 ---
 
 # Getting Started

@@ -3,6 +3,7 @@ title: Variants
 description: How to set up A/B and multivariate test variants, traffic weights and URL rewriting.
 section: Core Concepts
 slug: variants
+order: 4
 ---
 
 # Variants

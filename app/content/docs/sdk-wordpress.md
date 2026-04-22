@@ -3,6 +3,7 @@ title: WordPress
 description: A/B test WordPress pages with the Koryla plugin. No npm, no build step — install and configure from the WP admin.
 section: SDK
 slug: sdk-wordpress
+order: 10
 ---
 
 # WordPress

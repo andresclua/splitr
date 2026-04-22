@@ -3,6 +3,7 @@ title: Amplitude
 description: Forward Koryla experiment events to Amplitude for behavioral and conversion analysis.
 section: Integrations
 slug: integrations-amplitude
+order: 12
 ---
 
 # Amplitude

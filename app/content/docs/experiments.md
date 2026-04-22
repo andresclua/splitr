@@ -3,6 +3,7 @@ title: Experiments
 description: How to create, manage and analyze A/B experiments in Koryla.
 section: Core Concepts
 slug: experiments
+order: 3
 ---
 
 # Experiments

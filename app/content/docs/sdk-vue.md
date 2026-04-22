@@ -3,6 +3,7 @@ title: Vue / Nuxt
 description: A/B test Nuxt 4 pages and components with @koryla/vue. Server-side, zero flicker.
 section: SDK
 slug: sdk-vue
+order: 9
 ---
 
 # Vue / Nuxt

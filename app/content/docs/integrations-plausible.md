@@ -3,6 +3,7 @@ title: Plausible
 description: Track Koryla experiment assignments as custom Plausible goals — no cookies, no GDPR headaches.
 section: Integrations
 slug: integrations-plausible
+order: 15
 ---
 
 # Plausible

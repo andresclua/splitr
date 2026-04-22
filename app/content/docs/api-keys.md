@@ -3,6 +3,7 @@ title: API Keys
 description: How to create and manage API keys that authenticate the Koryla Worker.
 section: Core Concepts
 slug: api-keys
+order: 5
 ---
 
 # API Keys

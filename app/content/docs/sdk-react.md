@@ -3,6 +3,7 @@ title: React / Next.js
 description: A/B test React Server Components with @koryla/react and @koryla/next middleware. Zero flicker, zero client JS.
 section: SDK
 slug: sdk-react
+order: 8
 ---
 
 # React / Next.js

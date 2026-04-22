@@ -3,6 +3,7 @@ title: SDK Overview
 description: Install Koryla in your framework — React, Vue, Astro, or WordPress. Zero JS on the client, zero flicker.
 section: SDK
 slug: sdk
+order: 6
 ---
 
 # SDK Overview

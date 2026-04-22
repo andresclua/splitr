@@ -3,6 +3,7 @@ title: Worker Setup
 description: How to deploy and configure the Koryla Cloudflare Worker for your domain.
 section: Worker
 slug: worker-setup
+order: 19
 ---
 
 # Worker Setup
