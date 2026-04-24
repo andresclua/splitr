@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 import { extractDomain, isPublicDomain } from '~/lib/publicDomains'
 import { sendWelcomeEmail } from '~/server/utils/resend'
+import { PLANS } from '~/lib/plans'
+import type { PlanKey } from '~/lib/plans'
 
 interface Body {
   userId: string
@@ -21,11 +23,11 @@ export default defineEventHandler(async (event) => {
     process.env.SUPABASE_SERVICE_KEY!
   )
 
-  // Enforce 1 workspace per account
+  // Enforce workspace limit based on plan
   if (!joinWorkspaceId) {
     const { data: ownedMembers } = await supabase
       .from('workspace_members')
-      .select('workspace:workspaces(id, is_demo)')
+      .select('workspace:workspaces(plan, is_demo)')
       .eq('user_id', userId)
       .eq('role', 'owner')
 
@@ -33,10 +35,17 @@ export default defineEventHandler(async (event) => {
       .map((m: any) => m.workspace)
       .filter((w: any) => w && !w.is_demo)
 
-    if (ownedWorkspaces.length >= 1) {
+    const highestPlan = ownedWorkspaces.reduce((best: string, w: any) => {
+      const order = ['free', 'starter', 'growth', 'scale']
+      return order.indexOf(w.plan) > order.indexOf(best) ? w.plan : best
+    }, 'free')
+
+    const planConfig = PLANS[(highestPlan as PlanKey)] ?? PLANS.free
+    const limit = planConfig.workspaces
+    if (isFinite(limit as number) && ownedWorkspaces.length >= (limit as number)) {
       throw createError({
         statusCode: 403,
-        message: 'You already have a workspace. Each account is limited to one workspace.',
+        message: `Your ${highestPlan} plan allows up to ${limit} workspace${limit === 1 ? '' : 's'}. Upgrade to create more.`,
       })
     }
   }
