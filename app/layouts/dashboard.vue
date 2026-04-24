@@ -155,31 +155,8 @@ const navLinks = computed(() => [
         </NuxtLink>
       </nav>
 
-      <!-- New workspace + sign out -->
+      <!-- Sign out -->
       <div class="px-3 py-3 border-t border-gray-100 shrink-0 space-y-1">
-        <div class="relative group">
-          <button
-            :disabled="atLimit"
-            class="w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            :class="atLimit ? 'text-gray-300' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'"
-            @click="!atLimit && (showNewWs = true)"
-          >
-            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
-            New workspace
-          </button>
-          <div v-if="atLimit" class="pointer-events-none absolute bottom-full left-1/2 mb-2 hidden -translate-x-1/2 group-hover:block z-50">
-            <div class="bg-gray-900 text-white text-xs rounded-lg px-3 py-2 w-52 text-center leading-snug shadow-lg">
-              <span class="capitalize">{{ highestPlan }}</span> plan allows {{ wsLimit }} workspace{{ wsLimit === 1 ? '' : 's' }}.
-              <NuxtLink
-                :to="`/dashboard/${currentWorkspace?.slug}/billing`"
-                class="pointer-events-auto underline text-[#F4A87C] hover:text-white ml-0.5"
-              >Upgrade to Growth →</NuxtLink>
-            </div>
-            <div class="w-2 h-2 bg-gray-900 rotate-45 mx-auto -mt-1" />
-          </div>
-        </div>
         <button
           class="w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors"
           @click="signOut"
