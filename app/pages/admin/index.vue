@@ -87,7 +87,7 @@ onMounted(() => loadSkill())
 
 // ── Users ─────────────────────────────────────────────────
 const activeTab = ref<'workspaces' | 'users'>('workspaces')
-const { data: usersData } = await useFetch('/api/admin/users')
+const { data: usersData, refresh: refreshUsers } = await useFetch('/api/admin/users')
 
 const userSearch = ref('')
 const filteredUsers = computed(() => {
@@ -96,6 +96,37 @@ const filteredUsers = computed(() => {
   if (!q) return usersData.value
   return usersData.value.filter((u: any) => u.email?.toLowerCase().includes(q))
 })
+
+// ── Grant workspace modal ──────────────────────────────────
+const grantModal = ref<{ userId: string; email: string } | null>(null)
+const grantName = ref('')
+const grantLoading = ref(false)
+const grantError = ref('')
+
+const openGrant = (u: any) => {
+  grantModal.value = { userId: u.id, email: u.email }
+  grantName.value = ''
+  grantError.value = ''
+}
+
+const submitGrant = async () => {
+  if (!grantName.value.trim() || !grantModal.value) return
+  grantLoading.value = true
+  grantError.value = ''
+  try {
+    await $fetch('/api/admin/users/grant-workspace', {
+      method: 'POST',
+      body: { userId: grantModal.value.userId, workspaceName: grantName.value.trim() },
+    })
+    grantModal.value = null
+    await refreshUsers()
+    toast.success('Workspace created')
+  } catch (e: any) {
+    grantError.value = e?.data?.message ?? 'Failed to create workspace'
+  } finally {
+    grantLoading.value = false
+  }
+}
 
 const planBadge: Record<string, string> = {
   free:    'bg-gray-100 text-gray-600',
@@ -364,6 +395,7 @@ const limitBar = (used: number, limit: number | null) => {
                   <th class="text-left px-5 py-3 font-medium">Workspaces</th>
                   <th class="text-left px-5 py-3 font-medium">Last sign in</th>
                   <th class="text-left px-5 py-3 font-medium">Created</th>
+                  <th class="text-left px-5 py-3 font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -386,6 +418,12 @@ const limitBar = (used: number, limit: number | null) => {
                   </td>
                   <td class="px-5 py-3.5 text-gray-500 text-xs">{{ formatRelative(u.last_sign_in_at) }}</td>
                   <td class="px-5 py-3.5 text-gray-500 text-xs">{{ formatDate(u.created_at) }}</td>
+                  <td class="px-5 py-3.5">
+                    <button
+                      class="text-xs font-medium px-2.5 py-1 rounded-lg border border-gray-200 text-gray-600 hover:border-[#C96A3F] hover:text-[#C96A3F] transition-colors"
+                      @click="openGrant(u)"
+                    >+ Workspace</button>
+                  </td>
                 </tr>
                 <tr v-if="filteredUsers.length === 0">
                   <td colspan="5" class="px-5 py-10 text-center text-sm text-gray-400">No results.</td>
@@ -398,4 +436,31 @@ const limitBar = (used: number, limit: number | null) => {
       </template>
     </main>
   </div>
+
+  <!-- Grant workspace modal -->
+  <Teleport to="body">
+    <div v-if="grantModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="grantModal = null">
+      <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
+        <h2 class="text-base font-semibold text-gray-900 mb-1">Grant workspace</h2>
+        <p class="text-sm text-gray-400 mb-4">Creating a workspace for <span class="font-medium text-gray-600">{{ grantModal.email }}</span> — bypasses plan limits.</p>
+        <input
+          v-model="grantName"
+          type="text"
+          placeholder="Workspace name"
+          class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C96A3F] mb-3"
+          @keydown.enter="submitGrant"
+          @keydown.esc="grantModal = null"
+        />
+        <p v-if="grantError" class="text-xs text-red-600 mb-3">{{ grantError }}</p>
+        <div class="flex gap-2">
+          <button class="flex-1 px-4 py-2 rounded-xl text-sm border border-gray-200 text-gray-500 hover:bg-gray-50" @click="grantModal = null">Cancel</button>
+          <button
+            :disabled="!grantName.trim() || grantLoading"
+            class="flex-1 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-[#C96A3F] hover:bg-[#A8522D] disabled:opacity-40 transition-colors"
+            @click="submitGrant"
+          >{{ grantLoading ? 'Creating…' : 'Create workspace' }}</button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
