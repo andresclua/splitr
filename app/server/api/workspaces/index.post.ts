@@ -74,7 +74,7 @@ export default defineEventHandler(async (event) => {
   if (existing) {
     throw createError({
       statusCode: 409,
-      message: `A workspace with that name already exists. Please choose a different name.`,
+      message: `This project already exists. Contact whoever manages this website to get access to Koryla.`,
     })
   }
 
