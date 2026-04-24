@@ -158,7 +158,7 @@ const navLinks = computed(() => [
 
       <!-- New workspace + sign out -->
       <div class="px-3 py-3 border-t border-gray-100 shrink-0 space-y-1">
-        <div class="relative" @mouseenter="showUpgradeTooltip = atLimit" @mouseleave="showUpgradeTooltip = false">
+        <div>
           <button
             :disabled="atLimit"
             class="w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
@@ -170,16 +170,12 @@ const navLinks = computed(() => [
             </svg>
             New workspace
           </button>
-          <div v-if="showUpgradeTooltip" class="absolute bottom-full left-1/2 mb-1 -translate-x-1/2 z-50">
-            <div class="bg-gray-900 text-white text-xs rounded-lg px-3 py-2 w-52 text-center leading-snug shadow-lg">
-              <span class="capitalize">{{ highestPlan }}</span> plan allows {{ wsLimit }} workspace{{ wsLimit === 1 ? '' : 's' }}.
-              <NuxtLink
-                :to="`/dashboard/${currentWorkspace?.slug}/billing`"
-                class="underline text-[#F4A87C] hover:text-white ml-0.5"
-              >Upgrade →</NuxtLink>
-            </div>
-            <div class="w-2 h-2 bg-gray-900 rotate-45 mx-auto -mt-1" />
-          </div>
+          <NuxtLink
+            v-if="atLimit"
+            :to="`/dashboard/${currentWorkspace?.slug}/billing`"
+            class="block px-3 pb-1 text-xs font-medium"
+            style="color: #C96A3F;"
+          >Upgrade to add more →</NuxtLink>
         </div>
         <button
           class="w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors"
