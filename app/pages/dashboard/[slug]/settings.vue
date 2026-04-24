@@ -415,58 +415,7 @@ const toggleDemo = (val: boolean) => {
       </div>
     </section>
 
-    <!-- Members -->
-    <section class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-      <div class="px-6 py-4 border-b border-gray-100">
-        <h2 class="text-sm font-semibold text-gray-900">Members</h2>
-      </div>
-      <div class="divide-y divide-gray-100">
-        <div v-for="member in members" :key="member.id" class="px-6 py-3.5 flex items-center gap-3">
-          <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style="background: linear-gradient(135deg, #C96A3F, #0F2235);">
-            <span class="text-white text-xs font-semibold">{{ member.email?.[0]?.toUpperCase() }}</span>
-          </div>
-          <div class="flex-1 min-w-0">
-            <p class="text-sm text-gray-800 truncate">{{ member.email }}</p>
-            <p class="text-xs text-gray-400 capitalize">{{ member.role }}</p>
-          </div>
-          <button v-if="isOwner && member.role !== 'owner'"
-            class="text-xs text-red-400 hover:text-red-600 transition-colors"
-            @click="removeMember(member.id)">
-            Remove
-          </button>
-          <span v-else-if="member.role === 'owner'"
-            class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Owner</span>
-        </div>
-      </div>
-
-      <!-- Invite -->
-      <div v-if="isOwner" class="px-6 py-5 border-t border-gray-100 bg-gray-50">
-        <p class="text-sm font-medium text-gray-700 mb-3">Invite a member</p>
-        <div class="flex gap-2">
-          <input v-model="inviteEmail" type="email" placeholder="colleague@company.com"
-            class="flex-1 border border-gray-300 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C96A3F]" />
-          <select v-model="inviteRole"
-            class="border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C96A3F] bg-white">
-            <option value="member">Member</option>
-            <option value="readonly">Read-only</option>
-          </select>
-          <button :disabled="inviting || !inviteEmail"
-            class="bg-[#C96A3F] text-white text-sm font-medium px-4 py-2 rounded-xl hover:bg-[#A8522D] disabled:opacity-40 transition-colors shrink-0"
-            @click="sendInvite">
-            {{ inviting ? '…' : 'Invite' }}
-          </button>
-        </div>
-        <p v-if="inviteError" class="text-xs text-red-600 mt-2">{{ inviteError }}</p>
-
-        <div v-if="inviteLink" class="mt-3 p-3 bg-white border border-[#F0C9B0] rounded-xl">
-          <p class="text-xs text-gray-500 mb-1.5">Share this invite link (expires in 7 days):</p>
-          <div class="flex items-center gap-2">
-            <code class="flex-1 text-xs text-gray-700 truncate">{{ inviteLink }}</code>
-            <button class="text-xs text-[#C96A3F] font-medium shrink-0" @click="copyInvite">Copy</button>
-          </div>
-        </div>
-      </div>
-    </section>
+    <!-- Members: coming soon -->
 
     <!-- Claude AI Skill -->
     <section class="bg-white border border-gray-200 rounded-2xl overflow-hidden">

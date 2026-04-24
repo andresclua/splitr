@@ -1,8 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { extractDomain, isPublicDomain } from '~/lib/publicDomains'
 import { sendWelcomeEmail } from '~/server/utils/resend'
-import { PLANS } from '~/lib/plans'
-import type { PlanKey } from '~/lib/plans'
 
 interface Body {
   userId: string
@@ -23,11 +21,11 @@ export default defineEventHandler(async (event) => {
     process.env.SUPABASE_SERVICE_KEY!
   )
 
-  // Enforce workspace limit based on highest plan across owned workspaces
+  // Enforce 1 workspace per account
   if (!joinWorkspaceId) {
     const { data: ownedMembers } = await supabase
       .from('workspace_members')
-      .select('workspace:workspaces(plan, is_demo)')
+      .select('workspace:workspaces(id, is_demo)')
       .eq('user_id', userId)
       .eq('role', 'owner')
 
@@ -35,17 +33,10 @@ export default defineEventHandler(async (event) => {
       .map((m: any) => m.workspace)
       .filter((w: any) => w && !w.is_demo)
 
-    const highestPlan = ownedWorkspaces.reduce((best: string, w: any) => {
-      const order = ['free', 'starter', 'growth', 'scale']
-      return order.indexOf(w.plan) > order.indexOf(best) ? w.plan : best
-    }, 'free')
-
-    const planConfig = PLANS[(highestPlan as PlanKey)] ?? PLANS.free
-    const limit = planConfig.workspaces
-    if (isFinite(limit as number) && ownedWorkspaces.length >= (limit as number)) {
+    if (ownedWorkspaces.length >= 1) {
       throw createError({
         statusCode: 403,
-        message: `Your ${highestPlan} plan allows up to ${limit} workspace${limit === 1 ? '' : 's'}. Upgrade to create more.`,
+        message: 'You already have a workspace. Each account is limited to one workspace.',
       })
     }
   }
@@ -68,22 +59,23 @@ export default defineEventHandler(async (event) => {
   }
 
   // Create new workspace
-  const baseSlug = workspaceName
+  const slug = workspaceName
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '')
 
-  // Ensure slug uniqueness
-  let slug = baseSlug
-  let i = 1
-  while (true) {
-    const { data: existing } = await supabase
-      .from('workspaces')
-      .select('id')
-      .eq('slug', slug)
-      .maybeSingle()
-    if (!existing) break
-    slug = `${baseSlug}-${i++}`
+  // Reject if slug already taken
+  const { data: existing } = await supabase
+    .from('workspaces')
+    .select('id')
+    .eq('slug', slug)
+    .maybeSingle()
+
+  if (existing) {
+    throw createError({
+      statusCode: 409,
+      message: `A workspace with that name already exists. Please choose a different name.`,
+    })
   }
 
   const domain = email && !isPublicDomain(email) ? extractDomain(email) : null
