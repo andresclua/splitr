@@ -11,7 +11,7 @@ const filteredWorkspaces = computed(() => {
   if (!data.value?.workspaces) return []
   const q = search.value.toLowerCase().trim()
   let list = data.value.workspaces.filter((ws: any) =>
-    !ws.is_demo && (!q || ws.name.toLowerCase().includes(q) || ws.slug.toLowerCase().includes(q))
+    !q || ws.name.toLowerCase().includes(q) || ws.slug.toLowerCase().includes(q)
   )
   list = [...list].sort((a: any, b: any) => {
     if (sortBy.value === 'impressions_30d') return (b.impressions_30d ?? 0) - (a.impressions_30d ?? 0)
@@ -52,8 +52,13 @@ const skillRegenerating = ref(false)
 const skillMsg = ref('')
 
 async function loadSkill() {
-  const { content } = await $fetch<{ content: string }>('/api/admin/skill')
-  skillContent.value = content
+  try {
+    const { content } = await $fetch<{ content: string }>('/api/admin/skill')
+    skillContent.value = content
+  } catch (e) {
+    console.error('loadSkill error:', e)
+    skillContent.value = ''
+  }
 }
 
 async function saveSkill() {
@@ -71,12 +76,26 @@ async function regenerateSkill() {
     const { content } = await $fetch<{ content: string }>('/api/admin/skill/regenerate', { method: 'POST' })
     skillContent.value = content
     skillMsg.value = 'Regenerated!'
-  } catch { skillMsg.value = 'Error regenerating' }
-  finally { skillRegenerating.value = false; setTimeout(() => skillMsg.value = '', 2500) }
+  } catch (e) {
+    console.error('regenerateSkill error:', e)
+    skillMsg.value = 'Error regenerating'
+  } finally { skillRegenerating.value = false; setTimeout(() => skillMsg.value = '', 2500) }
 }
 
-const showSkillEditor = ref(false)
-watch(showSkillEditor, (v) => { if (v && !skillContent.value) loadSkill() })
+const skillOpen = ref(false)
+onMounted(() => loadSkill())
+
+// ── Users ─────────────────────────────────────────────────
+const activeTab = ref<'workspaces' | 'users'>('workspaces')
+const { data: usersData } = await useFetch('/api/admin/users')
+
+const userSearch = ref('')
+const filteredUsers = computed(() => {
+  if (!usersData.value) return []
+  const q = userSearch.value.toLowerCase().trim()
+  if (!q) return usersData.value
+  return usersData.value.filter((u: any) => u.email?.toLowerCase().includes(q))
+})
 
 const planBadge: Record<string, string> = {
   free:    'bg-gray-100 text-gray-600',
@@ -141,13 +160,13 @@ const limitBar = (used: number, limit: number | null) => {
           <div class="bg-white rounded-xl border border-gray-200 px-5 py-4">
             <p class="text-[11px] text-gray-400 uppercase tracking-wider mb-1">Impressions</p>
             <p class="text-2xl font-bold text-gray-900">{{ data.total_impressions_30d.toLocaleString() }}</p>
-            <p class="text-xs text-gray-400 mt-2">{{ data.impressions_this_month.toLocaleString() }} este mes</p>
+            <p class="text-xs text-gray-400 mt-2">{{ data.impressions_this_month.toLocaleString() }} this month</p>
           </div>
 
-          <div class="bg-white rounded-xl border border-gray-200 px-5 py-4 cursor-pointer hover:border-gray-300 transition-colors" @click="showSkillEditor = !showSkillEditor">
+          <div class="bg-white rounded-xl border border-gray-200 px-5 py-4">
             <p class="text-[11px] text-gray-400 uppercase tracking-wider mb-1">Claude Skill</p>
             <p class="text-2xl font-bold text-gray-900">{{ data.skill_downloads }}</p>
-            <p class="text-xs text-gray-400 mt-2">descargas · click para editar</p>
+            <p class="text-xs text-gray-400 mt-2">total downloads</p>
           </div>
 
           <div class="bg-white rounded-xl border border-gray-200 px-5 py-4">
@@ -164,21 +183,19 @@ const limitBar = (used: number, limit: number | null) => {
         </div>
 
         <!-- ── Skill editor ──────────────────────────────── -->
-        <div v-if="showSkillEditor" class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-4">
-            <h2 class="text-sm font-semibold text-gray-900">Claude Skill — koryla.md</h2>
-            <div class="flex items-center gap-2">
+        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div class="px-5 py-4 flex items-center justify-between gap-4 cursor-pointer select-none" @click="skillOpen = !skillOpen">
+            <h2 class="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              Claude Skill — koryla.md
+              <span class="text-gray-400 text-xs transition-transform" :class="skillOpen ? 'rotate-180' : ''">▼</span>
+            </h2>
+            <div class="flex items-center gap-2" @click.stop>
               <span v-if="skillMsg" class="text-xs text-green-600 font-medium">{{ skillMsg }}</span>
               <a href="/api/public/skill/download" download="koryla.md"
                 class="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">
                 ↓ Download
               </a>
-              <button :disabled="skillRegenerating"
-                class="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-colors"
-                @click="regenerateSkill">
-                {{ skillRegenerating ? 'Regenerating…' : '↺ Regenerate from plans' }}
-              </button>
-              <button :disabled="skillSaving"
+<button :disabled="skillSaving"
                 class="text-xs px-3 py-1.5 rounded-lg bg-[#0F2235] text-white hover:bg-[#1a3a5c] disabled:opacity-40 transition-colors"
                 @click="saveSkill">
                 {{ skillSaving ? 'Saving…' : 'Save' }}
@@ -186,36 +203,58 @@ const limitBar = (used: number, limit: number | null) => {
             </div>
           </div>
           <textarea
+            v-if="skillOpen"
             v-model="skillContent"
-            class="w-full h-[600px] px-5 py-4 text-xs font-mono text-gray-800 bg-gray-50 resize-none focus:outline-none focus:bg-white transition-colors"
+            class="w-full h-[600px] px-5 py-4 text-xs font-mono text-gray-800 bg-gray-50 resize-none focus:outline-none focus:bg-white transition-colors border-t border-gray-100"
             spellcheck="false"
           />
         </div>
 
-        <!-- ── Workspace table ────────────────────────────── -->
+        <!-- ── Tabs ───────────────────────────────────────── -->
         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-4 flex-wrap">
-            <h2 class="text-sm font-semibold text-gray-900 shrink-0">Clientes</h2>
 
-            <!-- Sort -->
+            <!-- Tab switcher -->
             <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5 text-[11px]">
-              <button v-for="s in [
-                { value: 'impressions_30d', label: 'Más activos' },
-                { value: 'created_at',      label: 'Más nuevos' },
-                { value: 'experiment_count', label: 'Experiments' },
-              ]" :key="s.value"
-                :class="['px-2.5 py-1 rounded-md font-medium transition-all', sortBy === s.value ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700']"
-                @click="sortBy = s.value as any"
-              >{{ s.label }}</button>
+              <button
+                :class="['px-2.5 py-1 rounded-md font-medium transition-all', activeTab === 'workspaces' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700']"
+                @click="activeTab = 'workspaces'"
+              >Workspaces</button>
+              <button
+                :class="['px-2.5 py-1 rounded-md font-medium transition-all', activeTab === 'users' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700']"
+                @click="activeTab = 'users'"
+              >Users</button>
             </div>
 
-            <input
-              v-model="search" type="search" placeholder="Buscar workspace..."
-              class="ml-auto text-sm border border-gray-200 rounded-lg px-3 py-1.5 w-52 outline-none focus:border-gray-400 transition-colors placeholder-gray-300"
-            />
+            <!-- Workspace sort -->
+            <template v-if="activeTab === 'workspaces'">
+              <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5 text-[11px]">
+                <button v-for="s in [
+                  { value: 'impressions_30d', label: 'Most active' },
+                  { value: 'created_at',      label: 'Newest' },
+                  { value: 'experiment_count', label: 'Experiments' },
+                ]" :key="s.value"
+                  :class="['px-2.5 py-1 rounded-md font-medium transition-all', sortBy === s.value ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700']"
+                  @click="sortBy = s.value as any"
+                >{{ s.label }}</button>
+              </div>
+              <input
+                v-model="search" type="search" placeholder="Search workspace..."
+                class="ml-auto text-sm border border-gray-200 rounded-lg px-3 py-1.5 w-52 outline-none focus:border-gray-400 transition-colors placeholder-gray-300"
+              />
+            </template>
+
+            <!-- User search -->
+            <template v-if="activeTab === 'users'">
+              <input
+                v-model="userSearch" type="search" placeholder="Search email..."
+                class="ml-auto text-sm border border-gray-200 rounded-lg px-3 py-1.5 w-52 outline-none focus:border-gray-400 transition-colors placeholder-gray-300"
+              />
+            </template>
           </div>
 
-          <div class="overflow-x-auto">
+          <!-- ── Workspaces tab ─────────────────────────── -->
+          <div v-if="activeTab === 'workspaces'" class="overflow-x-auto">
             <table class="w-full text-sm">
               <thead>
                 <tr class="text-[11px] text-gray-400 uppercase tracking-wider border-b border-gray-100 bg-gray-50/50">
@@ -224,8 +263,8 @@ const limitBar = (used: number, limit: number | null) => {
                   <th class="text-left px-5 py-3 font-medium">Experiments</th>
                   <th class="text-left px-5 py-3 font-medium">Impressions 30d</th>
                   <th class="text-left px-5 py-3 font-medium">Conv. rate 30d</th>
-                  <th class="text-left px-5 py-3 font-medium">Última actividad</th>
-                  <th class="text-left px-5 py-3 font-medium">Creado</th>
+                  <th class="text-left px-5 py-3 font-medium">Last active</th>
+                  <th class="text-left px-5 py-3 font-medium">Created</th>
                   <th class="text-left px-5 py-3 font-medium"></th>
                 </tr>
               </thead>
@@ -238,7 +277,7 @@ const limitBar = (used: number, limit: number | null) => {
                   <td class="px-5 py-3.5">
                     <p class="font-medium text-gray-900">{{ ws.name }}</p>
                     <p class="text-xs text-gray-400 mt-0.5 font-mono">{{ ws.slug }}</p>
-                    <p class="text-xs text-gray-400 mt-0.5">{{ ws.member_count }} miembro{{ ws.member_count !== 1 ? 's' : '' }}</p>
+                    <p class="text-xs text-gray-400 mt-0.5">{{ ws.member_count }} member{{ ws.member_count !== 1 ? 's' : '' }}</p>
                   </td>
 
                   <!-- Plan -->
@@ -272,7 +311,7 @@ const limitBar = (used: number, limit: number | null) => {
                     <p :class="['font-semibold tabular-nums', ws.impressions_30d > 0 ? 'text-gray-900' : 'text-gray-300']">
                       {{ ws.impressions_30d.toLocaleString() }}
                     </p>
-                    <p v-if="ws.impressions_30d === 0" class="text-[11px] text-gray-300 mt-0.5">sin actividad</p>
+                    <p v-if="ws.impressions_30d === 0" class="text-[11px] text-gray-300 mt-0.5">no activity</p>
                   </td>
 
                   <!-- Conv. rate -->
@@ -302,14 +341,54 @@ const limitBar = (used: number, limit: number | null) => {
                     <NuxtLink
                       :to="`/dashboard/${ws.slug}`"
                       class="text-xs font-medium text-[#C96A3F] hover:text-[#A8522D] transition-colors"
-                    >Ver →</NuxtLink>
+                    >View →</NuxtLink>
                   </td>
                 </tr>
 
                 <tr v-if="filteredWorkspaces.length === 0">
                   <td colspan="8" class="px-5 py-10 text-center text-sm text-gray-400">
-                    Sin resultados.
+                    No results.
                   </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- ── Users tab ──────────────────────────────── -->
+          <div v-if="activeTab === 'users'" class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="text-[11px] text-gray-400 uppercase tracking-wider border-b border-gray-100 bg-gray-50/50">
+                  <th class="text-left px-5 py-3 font-medium">Email</th>
+                  <th class="text-left px-5 py-3 font-medium">Provider</th>
+                  <th class="text-left px-5 py-3 font-medium">Workspaces</th>
+                  <th class="text-left px-5 py-3 font-medium">Last sign in</th>
+                  <th class="text-left px-5 py-3 font-medium">Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="u in filteredUsers" :key="u.id"
+                  class="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors"
+                >
+                  <td class="px-5 py-3.5 font-medium text-gray-900">{{ u.email }}</td>
+                  <td class="px-5 py-3.5">
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium capitalize">{{ u.provider }}</span>
+                  </td>
+                  <td class="px-5 py-3.5">
+                    <div v-if="u.workspaces.length" class="flex flex-wrap gap-1">
+                      <span
+                        v-for="ws in u.workspaces" :key="ws?.slug"
+                        class="text-[11px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium"
+                      >{{ ws?.name }}</span>
+                    </div>
+                    <span v-else class="text-gray-300">—</span>
+                  </td>
+                  <td class="px-5 py-3.5 text-gray-500 text-xs">{{ formatRelative(u.last_sign_in_at) }}</td>
+                  <td class="px-5 py-3.5 text-gray-500 text-xs">{{ formatDate(u.created_at) }}</td>
+                </tr>
+                <tr v-if="filteredUsers.length === 0">
+                  <td colspan="5" class="px-5 py-10 text-center text-sm text-gray-400">No results.</td>
                 </tr>
               </tbody>
             </table>

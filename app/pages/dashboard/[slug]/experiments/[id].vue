@@ -32,6 +32,10 @@ interface Experiment {
 const { data: experiments, refresh } = await useFetch<Experiment[]>(() => `/api/workspaces/${route.params.slug}/experiments`)
 const experiment = computed(() => experiments.value?.find(e => e.id === id) ?? null)
 
+interface Destination { id: string; provider: string; enabled: boolean }
+const { data: destinations } = await useFetch<Destination[]>(() => `/api/workspaces/${route.params.slug}/destinations`)
+const ga4Connected = computed(() => destinations.value?.some(d => d.provider === 'ga4' && d.enabled) ?? false)
+
 if (!experiment.value) await navigateTo(`/dashboard/${slug}`, { replace: true })
 
 const updating = ref(false)
@@ -81,6 +85,58 @@ const selectedNode = ref('')
 
 const variantConvRate = (v: Variant) =>
   v.impressions ? (v.conversion_count / v.impressions) * 100 : 0
+
+// ── Statistics helpers ─────────────────────────────────────
+function normalCDF(z: number): number {
+  const az = Math.abs(z)
+  const t = 1 / (1 + 0.2316419 * az)
+  const d = 0.3989423 * Math.exp(-az * az / 2)
+  const poly = t * (0.3193815 + t * (-0.3565638 + t * (1.7814779 + t * (-1.8212560 + t * 1.3302744))))
+  const p = 1 - d * poly
+  return z >= 0 ? p : 1 - p
+}
+
+function confidenceLevel(z: number): number {
+  return Math.round((2 * normalCDF(Math.abs(z)) - 1) * 100)
+}
+
+interface VariantStat {
+  z: number
+  confidence: number
+  liftPp: number
+  liftPct: number
+  hasEnoughData: boolean
+}
+
+const controlVariant = computed(() =>
+  experiment.value?.variants.find(v => v.is_control) ?? null
+)
+
+const hasEnoughData = computed(() =>
+  Object.values(variantStatsMap.value).some(s => s.hasEnoughData)
+)
+
+const variantStatsMap = computed((): Record<string, VariantStat> => {
+  const ctrl = controlVariant.value
+  if (!ctrl || ctrl.impressions < 5) return {}
+  const p1 = ctrl.conversion_count / ctrl.impressions
+  const result: Record<string, VariantStat> = {}
+  for (const v of (experiment.value?.variants ?? [])) {
+    if (v.is_control || v.impressions < 5) continue
+    const p2 = v.conversion_count / v.impressions
+    const pPool = (ctrl.conversion_count + v.conversion_count) / (ctrl.impressions + v.impressions)
+    const se = Math.sqrt(pPool * (1 - pPool) * (1 / ctrl.impressions + 1 / v.impressions))
+    const z = se > 0 ? (p2 - p1) / se : 0
+    result[v.id] = {
+      z,
+      confidence: confidenceLevel(z),
+      liftPp: (p2 - p1) * 100,
+      liftPct: p1 > 0 ? (p2 - p1) / p1 * 100 : 0,
+      hasEnoughData: ctrl.conversion_count >= 30 && v.conversion_count >= 30,
+    }
+  }
+  return result
+})
 
 const leadingConvId = computed(() => {
   if (!experiment.value) return null
@@ -448,10 +504,10 @@ const saveNewVariant = async () => {
 
         <!-- Traffic node -->
         <div
-          :class="['w-full max-w-sm border rounded-2xl px-4 py-3.5 cursor-pointer transition-all duration-150 relative border-green-400 bg-green-50 hover:-translate-y-px hover:shadow-md', selectedNode === 'traffic' ? 'ring-2 ring-[#C96A3F]' : '']"
+          :class="['w-full max-w-sm border rounded-2xl px-4 py-3.5 cursor-pointer transition-all duration-150 relative border-green-400 bg-green-50 hover:-translate-y-px hover:shadow-md', selectedNode === 'traffic' ? 'ring-2 ring-[#0F2235]' : '']"
           @click="selectedNode = 'traffic'"
         >
-          <span class="absolute top-2 right-3 text-[9px] text-gray-300">click for details</span>
+          <span class="absolute top-2 right-3 text-[10px] text-gray-400 font-medium">click for details</span>
           <div class="flex items-center gap-3">
             <span class="text-2xl">🌐</span>
             <div>
@@ -469,15 +525,15 @@ const saveNewVariant = async () => {
 
         <!-- Experiment node -->
         <div
-          :class="['w-full max-w-sm border rounded-2xl px-4 py-3.5 cursor-pointer transition-all duration-150 relative border-[#C96A3F] bg-[#FEF0E8] hover:-translate-y-px hover:shadow-md', selectedNode === 'experiment' ? 'ring-2 ring-[#C96A3F]' : '']"
+          :class="['w-full max-w-sm border rounded-2xl px-4 py-3.5 cursor-pointer transition-all duration-150 relative border-[#C96A3F] bg-[#FEF0E8] hover:-translate-y-px hover:shadow-md', selectedNode === 'experiment' ? 'ring-2 ring-[#0F2235]' : '']"
           @click="selectedNode = 'experiment'"
         >
-          <span class="absolute top-2 right-3 text-[9px] text-gray-300">click for details</span>
+          <span class="absolute top-2 right-3 text-[10px] text-gray-400 font-medium">click for details</span>
           <div class="flex items-center gap-3">
             <span class="text-2xl">🔀</span>
             <div>
               <p class="text-[13px] font-bold text-gray-900">{{ experiment.name }}</p>
-              <p class="text-xs text-gray-500 mt-0.5">Random split · {{ experiment.variants.map(v => v.traffic_weight + '%').join(' / ') }}</p>
+              <p class="text-xs text-gray-500 mt-0.5">Random split · {{ experiment.variants.map(v => v.traffic_weight + '%').join(' / ') }} · {{ experiment.type === 'edge' ? 'Edge' : 'SDK' }}</p>
             </div>
           </div>
         </div>
@@ -496,10 +552,10 @@ const saveNewVariant = async () => {
               <div class="w-0 h-0 border-l-[5px] border-r-[5px] border-t-[7px] border-transparent border-t-gray-200"></div>
             </div>
             <div
-              :class="['mt-1 w-full border rounded-xl px-3 py-3 text-center cursor-pointer transition-all duration-150 relative hover:-translate-y-px hover:shadow-md hover:border-[#C96A3F]', selectedNode === 'variant-' + v.id ? 'border-[#C96A3F] ring-2 ring-[#C96A3F]' : 'border-gray-200']"
+              :class="['mt-1 w-full border rounded-xl px-3 py-3 text-center cursor-pointer transition-all duration-150 relative hover:-translate-y-px hover:shadow-md hover:border-[#C96A3F]', selectedNode === 'variant-' + v.id ? 'border-[#C96A3F] ring-2 ring-[#0F2235]' : 'border-gray-200']"
               @click="selectedNode = 'variant-' + v.id"
             >
-              <span class="absolute top-1.5 right-2 text-[8px] text-gray-300">click</span>
+              <span class="absolute top-1.5 right-2 text-[10px] text-gray-400 font-medium">click</span>
               <div :class="['w-3 h-3 rounded-full mx-auto mb-1.5', variantColors[i] ?? 'bg-gray-400']"></div>
               <p class="text-[11px] font-bold text-gray-700 truncate">{{ v.name }}</p>
               <p :class="['text-[13px] font-bold mt-1', leadingConvId === v.id ? 'text-green-600' : 'text-gray-700']">
@@ -522,7 +578,7 @@ const saveNewVariant = async () => {
               :class="[
                 'mt-1 w-full border rounded-xl px-3 py-3 text-center cursor-pointer transition-all duration-150 border-dashed',
                 selectedNode === 'add-variant'
-                  ? 'border-[#C96A3F] ring-2 ring-[#C96A3F] bg-white opacity-100'
+                  ? 'border-[#C96A3F] ring-2 ring-[#0F2235] bg-white opacity-100'
                   : 'border-gray-300 bg-gray-50 opacity-20 group-hover:opacity-60'
               ]"
               @click="selectedNode = 'add-variant'"
@@ -546,10 +602,11 @@ const saveNewVariant = async () => {
 
         <!-- Conversion node -->
         <div
-          :class="['w-full max-w-sm border rounded-2xl px-4 py-3.5 cursor-pointer transition-all duration-150 relative border-blue-400 bg-blue-50 hover:-translate-y-px hover:shadow-md', selectedNode === 'conversion' ? 'ring-2 ring-[#C96A3F]' : '']"
+          :class="['w-full max-w-sm border rounded-2xl px-4 py-3.5 cursor-pointer transition-all duration-150 relative border-blue-400 bg-blue-50 hover:-translate-y-px hover:shadow-md', selectedNode === 'conversion' ? 'ring-2 ring-[#0F2235]' : '']"
+          :style="hasEnoughData ? { animation: 'ga4pulse 2s ease-in-out infinite' } : {}"
           @click="selectedNode = 'conversion'"
         >
-          <span class="absolute top-2 right-3 text-[9px] text-gray-300">click for details</span>
+          <span class="absolute top-2 right-3 text-[10px] text-gray-400 font-medium">click for details</span>
           <div class="flex items-center gap-3">
             <span class="text-2xl">🎯</span>
             <div>
@@ -1035,6 +1092,92 @@ const saveNewVariant = async () => {
               <span class="text-[11px] text-gray-400 w-12 text-right shrink-0 tabular-nums">{{ v.impressions ? variantConvRate(v).toFixed(1) + '%' : '—' }}</span>
             </div>
           </div>
+          <!-- Statistical significance -->
+          <div v-if="controlVariant && experiment.variants.length > 1" class="bg-white border border-gray-200 rounded-2xl p-5 mb-4">
+            <p class="text-xs font-bold text-gray-700 mb-0.5">Statistical significance</p>
+            <p class="text-[11px] text-gray-400 mb-4">Z-test for proportions · vs control ({{ controlVariant.name }})</p>
+
+            <div v-if="!controlVariant.impressions" class="text-center py-3">
+              <p class="text-xs text-gray-400">No data yet. Start the experiment to collect impressions.</p>
+            </div>
+
+            <template v-else>
+              <div v-for="v in experiment.variants.filter(v => !v.is_control)" :key="'stat-' + v.id" class="pb-4 mb-4 border-b border-gray-100 last:border-0 last:pb-0 last:mb-0">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-xs font-semibold text-gray-700">{{ v.name }}</span>
+                  <span v-if="!variantStatsMap[v.id]" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-400">Not enough data</span>
+                  <span v-else-if="!variantStatsMap[v.id].hasEnoughData" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 ring-1 ring-inset ring-amber-200">Collecting data</span>
+                  <span v-else-if="variantStatsMap[v.id].confidence >= 95" :class="['text-[10px] font-semibold px-2 py-0.5 rounded-full ring-1 ring-inset', variantStatsMap[v.id].liftPp >= 0 ? 'bg-green-50 text-green-700 ring-green-200' : 'bg-red-50 text-red-700 ring-red-200']">
+                    {{ variantStatsMap[v.id].confidence }}% confidence
+                  </span>
+                  <span v-else class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 ring-1 ring-inset ring-blue-200">
+                    {{ variantStatsMap[v.id]?.confidence ?? 0 }}% confidence
+                  </span>
+                </div>
+
+                <div v-if="variantStatsMap[v.id]" class="flex items-center gap-5 text-[11px]">
+                  <div>
+                    <span class="text-gray-400">Lift</span>
+                    <span :class="['ml-1 font-semibold tabular-nums', variantStatsMap[v.id].liftPp >= 0 ? 'text-green-600' : 'text-red-500']">
+                      {{ variantStatsMap[v.id].liftPp >= 0 ? '+' : '' }}{{ variantStatsMap[v.id].liftPp.toFixed(2) }}pp
+                    </span>
+                  </div>
+                  <div>
+                    <span class="text-gray-400">Relative</span>
+                    <span :class="['ml-1 font-semibold tabular-nums', variantStatsMap[v.id].liftPct >= 0 ? 'text-green-600' : 'text-red-500']">
+                      {{ variantStatsMap[v.id].liftPct >= 0 ? '+' : '' }}{{ variantStatsMap[v.id].liftPct.toFixed(1) }}%
+                    </span>
+                  </div>
+                  <div>
+                    <span class="text-gray-400">Z</span>
+                    <span class="ml-1 font-semibold text-gray-600 tabular-nums">{{ variantStatsMap[v.id].z.toFixed(2) }}</span>
+                  </div>
+                </div>
+
+                <p v-if="variantStatsMap[v.id] && !variantStatsMap[v.id].hasEnoughData" class="mt-1.5 text-[10px] text-amber-600">
+                  Need ≥ 30 conversions per variant for reliable results
+                  <span v-if="v.conversion_count > 0">({{ v.conversion_count }}/30)</span>
+                </p>
+              </div>
+            </template>
+          </div>
+
+          <!-- GA4 callout -->
+          <div class="relative mb-4">
+            <div v-if="!ga4Connected" class="absolute inset-0 rounded-2xl bg-[#C96A3F]/30 animate-ping" style="animation-duration:2s"></div>
+            <div class="relative bg-[#0F2235] rounded-2xl p-5">
+            <div class="flex items-start gap-3">
+              <span class="text-xl mt-0.5 shrink-0">📊</span>
+              <div class="flex-1">
+                <div class="flex items-center justify-between mb-1">
+                  <p class="text-sm font-bold text-white">Go deeper with Google Analytics 4</p>
+                  <span v-if="ga4Connected" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 ring-1 ring-green-500/30">Connected</span>
+                  <span v-else class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/10 text-gray-400">Not connected</span>
+                </div>
+                <p class="text-xs text-[#94a3b8] leading-relaxed mb-2">
+                  Koryla forwards every event to GA4 via Measurement Protocol — server-side, never blocked by ad blockers.
+                  Each event includes custom dimensions you can use to slice results in GA4 Explore:
+                </p>
+                <div class="grid grid-cols-2 gap-x-4 gap-y-1 mb-2">
+                  <div v-for="dim in ['variant_name', 'device_type', 'utm_source', 'utm_medium', 'utm_campaign', 'referrer', 'page_url']" :key="dim"
+                    class="flex items-center gap-1.5 text-[10px] text-[#94a3b8]">
+                    <span class="w-1 h-1 rounded-full bg-[#C96A3F] shrink-0"></span>
+                    <code class="font-mono">{{ dim }}</code>
+                  </div>
+                </div>
+
+                <p class="text-[11px] text-[#94a3b8]">
+                  Use events <code class="bg-white/10 px-1 rounded text-gray-300">experiment_assigned</code> and <code class="bg-white/10 px-1 rounded text-gray-300">experiment_converted</code> in GA4 Explore to build custom funnels and segments.
+                </p>
+                <NuxtLink v-if="!ga4Connected" :to="`/dashboard/${slug}/integrations`" class="inline-block text-[11px] text-[#C96A3F] hover:text-[#e07a4a] mt-2 font-semibold transition-colors">
+                  Connect GA4 → Analytics destinations
+                </NuxtLink>
+                <p v-else class="text-[11px] text-green-400 mt-2">Events are being forwarded to GA4 in real time.</p>
+              </div>
+            </div>
+            </div>
+          </div>
+
           <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
             <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-3">
               <span class="text-2xl">🎯</span>
@@ -1147,3 +1290,10 @@ const saveNewVariant = async () => {
   </div>
 
 </template>
+
+<style>
+@keyframes ga4pulse {
+  0%, 100% { filter: drop-shadow(0 0 0px rgba(201, 106, 63, 0)); }
+  50%       { filter: drop-shadow(0 0 8px rgba(201, 106, 63, 0.7)); }
+}
+</style>

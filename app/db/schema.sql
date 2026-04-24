@@ -130,6 +130,14 @@ create table workspace_invites (
   created_at timestamptz default now()
 );
 
+-- Claude skill downloads
+create table skill_downloads (
+  id uuid primary key default gen_random_uuid(),
+  skill_name text not null,
+  created_at timestamptz default now()
+);
+alter table skill_downloads enable row level security;
+
 -- Atomic impression counter increment (run in Supabase SQL editor)
 create or replace function increment_monthly_impressions(p_workspace_id uuid, p_month text)
 returns void language plpgsql as $$

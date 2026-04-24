@@ -351,59 +351,6 @@ const toggleDemo = (val: boolean) => {
       </div>
     </section>
 
-    <!-- Members -->
-    <section class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-      <div class="px-6 py-4 border-b border-gray-100">
-        <h2 class="text-sm font-semibold text-gray-900">Members</h2>
-      </div>
-      <div class="divide-y divide-gray-100">
-        <div v-for="member in members" :key="member.id" class="px-6 py-3.5 flex items-center gap-3">
-          <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style="background: linear-gradient(135deg, #C96A3F, #0F2235);">
-            <span class="text-white text-xs font-semibold">{{ member.email?.[0]?.toUpperCase() }}</span>
-          </div>
-          <div class="flex-1 min-w-0">
-            <p class="text-sm text-gray-800 truncate">{{ member.email }}</p>
-            <p class="text-xs text-gray-400 capitalize">{{ member.role }}</p>
-          </div>
-          <button v-if="isOwner && member.role !== 'owner'"
-            class="text-xs text-red-400 hover:text-red-600 transition-colors"
-            @click="removeMember(member.id)">
-            Remove
-          </button>
-          <span v-else-if="member.role === 'owner'"
-            class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Owner</span>
-        </div>
-      </div>
-
-      <!-- Invite -->
-      <div v-if="isOwner" class="px-6 py-5 border-t border-gray-100 bg-gray-50">
-        <p class="text-sm font-medium text-gray-700 mb-3">Invite a member</p>
-        <div class="flex gap-2">
-          <input v-model="inviteEmail" type="email" placeholder="colleague@company.com"
-            class="flex-1 border border-gray-300 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C96A3F]" />
-          <select v-model="inviteRole"
-            class="border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C96A3F] bg-white">
-            <option value="member">Member</option>
-            <option value="readonly">Read-only</option>
-          </select>
-          <button :disabled="inviting || !inviteEmail"
-            class="bg-[#C96A3F] text-white text-sm font-medium px-4 py-2 rounded-xl hover:bg-[#A8522D] disabled:opacity-40 transition-colors shrink-0"
-            @click="sendInvite">
-            {{ inviting ? '…' : 'Invite' }}
-          </button>
-        </div>
-        <p v-if="inviteError" class="text-xs text-red-600 mt-2">{{ inviteError }}</p>
-
-        <div v-if="inviteLink" class="mt-3 p-3 bg-white border border-[#F0C9B0] rounded-xl">
-          <p class="text-xs text-gray-500 mb-1.5">Share this invite link (expires in 7 days):</p>
-          <div class="flex items-center gap-2">
-            <code class="flex-1 text-xs text-gray-700 truncate">{{ inviteLink }}</code>
-            <button class="text-xs text-[#C96A3F] font-medium shrink-0" @click="copyInvite">Copy</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <!-- Analytics destinations -->
     <section class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-100">
@@ -468,38 +415,56 @@ const toggleDemo = (val: boolean) => {
       </div>
     </section>
 
-    <!-- Danger zone -->
-    <section v-if="isOwner" class="bg-white border border-red-100 rounded-2xl overflow-hidden">
-      <div class="px-6 py-4 border-b border-red-100">
-        <h2 class="text-sm font-semibold text-red-600">Danger zone</h2>
+    <!-- Members -->
+    <section class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100">
+        <h2 class="text-sm font-semibold text-gray-900">Members</h2>
       </div>
-      <div class="px-6 py-5 space-y-4">
-        <div>
-          <p class="text-sm font-medium text-gray-700">Delete workspace</p>
-          <p class="text-xs text-gray-400 mt-0.5">Permanently deletes this workspace, all experiments, variants, events and API keys. This cannot be undone.</p>
+      <div class="divide-y divide-gray-100">
+        <div v-for="member in members" :key="member.id" class="px-6 py-3.5 flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style="background: linear-gradient(135deg, #C96A3F, #0F2235);">
+            <span class="text-white text-xs font-semibold">{{ member.email?.[0]?.toUpperCase() }}</span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm text-gray-800 truncate">{{ member.email }}</p>
+            <p class="text-xs text-gray-400 capitalize">{{ member.role }}</p>
+          </div>
+          <button v-if="isOwner && member.role !== 'owner'"
+            class="text-xs text-red-400 hover:text-red-600 transition-colors"
+            @click="removeMember(member.id)">
+            Remove
+          </button>
+          <span v-else-if="member.role === 'owner'"
+            class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Owner</span>
         </div>
+      </div>
 
-        <div v-if="currentWorkspace?.stripe_subscription_id" class="flex items-start gap-2.5 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-          <svg class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-          </svg>
-          <p class="text-xs text-amber-700">You have an active subscription on this workspace. Deleting it will cancel your plan immediately — you might want to <a :href="`/dashboard/${slug}/billing`" class="underline font-medium">downgrade first</a> instead.</p>
+      <!-- Invite -->
+      <div v-if="isOwner" class="px-6 py-5 border-t border-gray-100 bg-gray-50">
+        <p class="text-sm font-medium text-gray-700 mb-3">Invite a member</p>
+        <div class="flex gap-2">
+          <input v-model="inviteEmail" type="email" placeholder="colleague@company.com"
+            class="flex-1 border border-gray-300 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C96A3F]" />
+          <select v-model="inviteRole"
+            class="border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C96A3F] bg-white">
+            <option value="member">Member</option>
+            <option value="readonly">Read-only</option>
+          </select>
+          <button :disabled="inviting || !inviteEmail"
+            class="bg-[#C96A3F] text-white text-sm font-medium px-4 py-2 rounded-xl hover:bg-[#A8522D] disabled:opacity-40 transition-colors shrink-0"
+            @click="sendInvite">
+            {{ inviting ? '…' : 'Invite' }}
+          </button>
         </div>
+        <p v-if="inviteError" class="text-xs text-red-600 mt-2">{{ inviteError }}</p>
 
-        <div>
-          <label class="block text-xs text-gray-500 mb-1.5">Type <span class="font-mono font-semibold text-gray-700">{{ currentWorkspace?.name }}</span> to confirm</label>
-          <input
-            v-model="deleteConfirmName"
-            type="text"
-            :placeholder="currentWorkspace?.name"
-            class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
-          />
+        <div v-if="inviteLink" class="mt-3 p-3 bg-white border border-[#F0C9B0] rounded-xl">
+          <p class="text-xs text-gray-500 mb-1.5">Share this invite link (expires in 7 days):</p>
+          <div class="flex items-center gap-2">
+            <code class="flex-1 text-xs text-gray-700 truncate">{{ inviteLink }}</code>
+            <button class="text-xs text-[#C96A3F] font-medium shrink-0" @click="copyInvite">Copy</button>
+          </div>
         </div>
-        <button
-          :disabled="!canConfirmDelete || deleteLoading"
-          class="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-red-500 hover:bg-red-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          @click="deleteWorkspace"
-        >{{ deleteLoading ? 'Deleting…' : 'Delete workspace' }}</button>
       </div>
     </section>
 
@@ -543,6 +508,41 @@ const toggleDemo = (val: boolean) => {
         >
           <span :class="['inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform', showDemo ? 'translate-x-6' : 'translate-x-1']" />
         </button>
+      </div>
+    </section>
+
+    <!-- Danger zone -->
+    <section v-if="isOwner" class="bg-white border border-red-100 rounded-2xl overflow-hidden">
+      <div class="px-6 py-4 border-b border-red-100">
+        <h2 class="text-sm font-semibold text-red-600">Danger zone</h2>
+      </div>
+      <div class="px-6 py-5 space-y-4">
+        <div>
+          <p class="text-sm font-medium text-gray-700">Delete workspace</p>
+          <p class="text-xs text-gray-400 mt-0.5">Permanently deletes this workspace, all experiments, variants, events and API keys. This cannot be undone.</p>
+        </div>
+
+        <div v-if="currentWorkspace?.stripe_subscription_id" class="flex items-start gap-2.5 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+          <svg class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+          </svg>
+          <p class="text-xs text-amber-700">You have an active subscription on this workspace. Deleting it will cancel your plan immediately — you might want to <a :href="`/dashboard/${slug}/billing`" class="underline font-medium">downgrade first</a> instead.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs text-gray-500 mb-1.5">Type <span class="font-mono font-semibold text-gray-700">{{ currentWorkspace?.name }}</span> to confirm</label>
+          <input
+            v-model="deleteConfirmName"
+            type="text"
+            :placeholder="currentWorkspace?.name"
+            class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+          />
+        </div>
+        <button
+          :disabled="!canConfirmDelete || deleteLoading"
+          class="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-red-500 hover:bg-red-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          @click="deleteWorkspace"
+        >{{ deleteLoading ? 'Deleting…' : 'Delete workspace' }}</button>
       </div>
     </section>
 
