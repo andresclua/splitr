@@ -206,7 +206,7 @@ function startDragTouch(e: TouchEvent, type: string) {
         <!-- Tab: SDK -->
         <template v-if="activeTab === 'SDK'">
           <div class="mb-4 text-center">
-            <p class="text-sm text-gray-400 mx-auto" style="max-width: 520px;">Same page, same URL — only one component changes. No JavaScript, no flicker. Any dev can wire it up in minutes — or download the Koryla skill and let your AI do it.</p>
+            <p class="text-sm text-gray-400 mx-auto" style="max-width: 520px;">Same page, same URL — only one component changes. No JavaScript, no flicker. Any dev can wire it up in minutes — or <a href="/skill" style="color:#C96A3F;font-weight:600;">download the Koryla skill</a> and let your AI do it.</p>
           </div>
           <div class="rounded-2xl overflow-hidden border border-white/10" style="background: #1A3550;">
             <div class="px-4 py-3 flex items-center gap-3 border-b border-white/10" style="background: #162D42;">
